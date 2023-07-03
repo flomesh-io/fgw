@@ -40,7 +40,7 @@
               "type": "Prefix",
               "path": "/path"
             },
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
@@ -51,19 +51,19 @@
                   "c": "3"
                 }
               ]
-            },
+            }],
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": {
+            "QueryParams": [{
               "type": "Exact",
               "params": [
                 {
                   "abc": "1"
                 }
               ]
-            },
+            }],
             "BackendService": {
               "www8088": 100
             }
@@ -78,26 +78,26 @@
               "type": "Prefix",
               "path": "/repo"
             },
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
                   "b": "2"
                 }
               ]
-            },
+            }],
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": {
+            "QueryParams": [{
               "type": "Exact",
               "params": [
                 {
                   "abc": "1"
                 }
               ]
-            },
+            }],
             "BackendService": {
               "www8088": 100
             }

@@ -42,26 +42,26 @@
               "type": "Prefix",
               "path": "/repo1"
             },
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
                   "a": "1"
                 }
               ]
-            },
+            }],
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": {
+            "QueryParams": [{
               "type": "Exact",
               "params": [
                 {
                   "abc": "1"
                 }
               ]
-            },
+            }],
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
             }
@@ -128,14 +128,14 @@
         "RouteType": "GRPC",
         "Matches": [
           {
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
                   "canary": "true"
                 }
               ]
-            },
+            }],
             "Method": {
               "type": "Exact",
               "service": "com.example.GreetingService",

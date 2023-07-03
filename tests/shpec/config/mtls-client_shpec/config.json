@@ -167,26 +167,26 @@
               "type": "Prefix",
               "path": "/repo"
             },
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
                   "b": "2"
                 }
               ]
-            },
+            }],
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": {
+            "QueryParams": [{
               "type": "Exact",
               "params": [
                 {
                   "abc": "1"
                 }
               ]
-            },
+            }],
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
             }
@@ -203,26 +203,26 @@
               "type": "Prefix",
               "path": "/repo1"
             },
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
                   "a": "1"
                 }
               ]
-            },
+            }],
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": {
+            "QueryParams": [{
               "type": "Exact",
               "params": [
                 {
                   "abc": "1"
                 }
               ]
-            },
+            }],
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
             }
@@ -289,7 +289,7 @@
         "RouteType": "GRPC",
         "Matches": [
           {
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
@@ -300,7 +300,7 @@
                   "region": "gz"
                 }
               ]
-            },
+            }],
             "Method": {
               "type": "Exact",
               "service": "com.example.GreetingService",
@@ -311,7 +311,7 @@
             }
           },
           {
-            "Headers": {
+            "Headers": [{
               "type": "Exact",
               "headers": [
                 {
@@ -321,7 +321,7 @@
                   "version": "2"
                 }
               ]
-            },
+            }],
             "Method": {
               "type": "Exact",
               "service": "com.example.secure",

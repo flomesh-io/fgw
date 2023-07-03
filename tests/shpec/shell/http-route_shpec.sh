@@ -34,13 +34,13 @@ describe "SHPEC http route Test"
 
   start="$(date +%s%3N)"
   output_header1_8848="$(curl -s -i -H 'a:1' -H 'b:2' http://127.0.0.1/path?abc=1)"
-  output_header2_8848="$(curl -s -i -H 'a:1' -H 'b:2' http://127.0.0.1/path?def=2)"
-  output_header3_8848="$(curl -s -i -H 'a:2' -H 'c:3' -X GET http://127.0.0.1/path?def=2)"
-  output_header4_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/path?def=2)"
-  output_header5_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/path/aaa?def=2)"
+  output_header2_8848="$(curl -s -i -H 'c:3' http://127.0.0.1/path?def=2)"
+  output_header3_8848="$(curl -s -i -H 'a:1' -H 'b:2' 'http://127.0.0.1/path?abc=1&def=2' | sed 's/&//g')"
+  output_header4_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' 'http://127.0.0.1/path?abc=1&def=2' | sed 's/&//g')"
+  output_header5_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/path/abc?def=2)"
   output_header6_8849="$(curl -s -i -H 'a:2' -H 'b:2' -X GET http://127.0.0.1/path?def=2)"
-  output_method1_8848="$(curl -s -i -H 'a:1' -H 'b:2' -X GET http://127.0.0.1/path?def=2)"
-  output_method2_8848="$(curl -s -i -H 'a:1' -H 'b:2' -X POST http://127.0.0.1/path?def=2)"
+  output_method1_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' -X GET 'http://127.0.0.1/path?abc=1&def=2' | sed 's/&//g')"
+  output_method2_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' -X POST 'http://127.0.0.1/path?abc=1&def=2' | sed 's/&//g')"
   output_method3_8849="$(curl -s -i -H 'a:1' -H 'b:2' -X DELETE http://127.0.0.1/path?def=2)"
   output_param1_8849="$(curl -s -i -H 'a:1' -H 'b:2' http://127.0.0.1/path?abc=2)"
   output_param2_8849="$(curl -s -i -H 'a:1' -H 'b:2' http://127.0.0.1/path?def=1)"
@@ -49,27 +49,27 @@ describe "SHPEC http route Test"
   output_path3_8846="$(curl -s -i http://127.0.0.1/path/abc/tail)"
   output_path4_8847="$(curl -s -i http://127.0.0.1/path/tail)"
   output_path5_8847="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' -X POST http://127.0.0.1/path/abc/tail?def=1)"
-  output_path6_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/path/abc/tail?def=2)"
-  output_path7_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/path/abc?def=2)"
+  output_path6_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' 'http://127.0.0.1/path/abc/tail?abc=1&def=2' | sed 's/&//g')"
+  output_path7_8848="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' 'http://127.0.0.1/path/abc?abc=1&def=2' | sed 's/&//g')"
   output_path8_8849="$(curl -s -i -H 'a:1' -H 'b:20' -H 'c:30' http://127.0.0.1/path?def=2)"
   output_path9_8849="$(curl -s -i -H 'a:1' -H 'b:2' -H 'c:3' http://127.0.0.1/pat?def=2)"
   end="$(date +%s%3N)"
   runtime=$((end-start))
 
   it "match header case 1"
-    assert grep "$output_header1_8848" 'www-port-8848'
+    assert grep "$output_header1_8848" 'www-port-8849'
   end
   it "match header case 2"
-    assert grep "$output_header2_8848" 'www-port-8848'
+    assert grep "$output_header2_8848" 'www-port-8849'
   end
   it "match header case 3"
-    assert grep "$output_header3_8848" 'www-port-8848'
+    assert grep "$output_header3_8848" 'www-port-8849'
   end
   it "match header case 4"
     assert grep "$output_header4_8848" 'www-port-8848'
   end
   it "match header case 5"
-    assert grep "$output_header5_8848" 'www-port-8848'
+    assert grep "$output_header5_8848" 'www-port-8846'
   end
   it "match header case 6"
     assert grep "$output_header6_8849" 'www-port-8849'

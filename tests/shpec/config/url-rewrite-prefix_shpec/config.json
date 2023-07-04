@@ -214,10 +214,10 @@
       "http/forward.js",
       "http/default.js"
     ],
-    "HTTPSPassthrough": [
+    "TLSPassthrough": [
       "common/access-control.js",
       "common/ratelimit.js",
-      "https/passthrough.js",
+      "tls/passthrough.js",
       "common/consumer.js"
     ],
     "TLSTerminate": [

@@ -117,7 +117,7 @@
           "Type": "RequestRedirect0",
           "scheme": "https",
           "hostname": "",
-          "path": "/abc",
+          "Path": "/abc",
           "port": 8443,
           "statusCode": 301
         },
@@ -132,8 +132,8 @@
         {
           "Type": "HTTPURLRewriteFilter0",
           "hostname": "",
-          "path": {
-            "type": "ReplaceFullPath",
+          "Path": {
+            "Type": "ReplaceFullPath",
             "replaceFullPath": "/repo/"
           }
         }

@@ -124,16 +124,16 @@
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "path": {
-            "type": "ReplacePrefixMatch",
+          "Path": {
+            "Type": "ReplacePrefixMatch",
             "replacePrefixMatch": "/repo"
           }
         },
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "path": {
-            "type": "ReplaceFullPath",
+          "Path": {
+            "Type": "ReplaceFullPath",
             "replaceFullPath": "/repo/"
           }
         }

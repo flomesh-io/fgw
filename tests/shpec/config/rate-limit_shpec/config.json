@@ -37,12 +37,12 @@
         "Matches": [
           {
             "Path": {
-              "type": "Prefix",
-              "path": "/path"
+              "Type": "Prefix",
+              "Path": "/path"
             },
             "Headers": [{
-              "type": "Exact",
-              "headers": [
+              "Type": "Exact",
+              "Headers": [
                 {
                   "a": "1",
                   "b": "2"
@@ -57,8 +57,8 @@
               "POST"
             ],
             "QueryParams": [{
-              "type": "Exact",
-              "params": [
+              "Type": "Exact",
+              "Params": [
                 {
                   "abc": "1"
                 }

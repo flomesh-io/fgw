@@ -90,8 +90,8 @@
         "Matches": [
           {
             "Path": {
-              "type": "Prefix",
-              "path": "/slow"
+              "Type": "Prefix",
+              "Path": "/slow"
             },
             "BackendService": {
               "www8844": 100
@@ -99,8 +99,8 @@
           },
           {
             "Path": {
-              "type": "Exact",
-              "path": "/path/abc"
+              "Type": "Exact",
+              "Path": "/path/abc"
             },
             "Methods": [
               "GET"
@@ -111,8 +111,8 @@
           },
           {
             "Path": {
-              "type": "Exact",
-              "path": "/path/abc/tail"
+              "Type": "Exact",
+              "Path": "/path/abc/tail"
             },
             "Methods": [
               "GET"
@@ -123,8 +123,8 @@
           },
           {
             "Path": {
-              "type": "Regex",
-              "path": ".*/tail"
+              "Type": "Regex",
+              "Path": ".*/tail"
             },
             "Methods": [
               "GET",
@@ -165,12 +165,12 @@
         "Matches": [
           {
             "Path": {
-              "type": "Prefix",
-              "path": "/repo"
+              "Type": "Prefix",
+              "Path": "/repo"
             },
             "Headers": [{
-              "type": "Exact",
-              "headers": [
+              "Type": "Exact",
+              "Headers": [
                 {
                   "b": "2"
                 }
@@ -181,8 +181,8 @@
               "POST"
             ],
             "QueryParams": [{
-              "type": "Exact",
-              "params": [
+              "Type": "Exact",
+              "Params": [
                 {
                   "abc": "1"
                 }
@@ -201,12 +201,12 @@
         "Matches": [
           {
             "Path": {
-              "type": "Prefix",
-              "path": "/repo1"
+              "Type": "Prefix",
+              "Path": "/repo1"
             },
             "Headers": [{
-              "type": "Exact",
-              "headers": [
+              "Type": "Exact",
+              "Headers": [
                 {
                   "a": "1"
                 }
@@ -217,8 +217,8 @@
               "POST"
             ],
             "QueryParams": [{
-              "type": "Exact",
-              "params": [
+              "Type": "Exact",
+              "Params": [
                 {
                   "abc": "1"
                 }
@@ -230,8 +230,8 @@
           },
           {
             "Path": {
-              "type": "Prefix",
-              "path": "/repo2"
+              "Type": "Prefix",
+              "Path": "/repo2"
             },
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
@@ -239,8 +239,8 @@
           },
           {
             "Path": {
-              "type": "Regex",
-              "path": ".*"
+              "Type": "Regex",
+              "Path": ".*"
             },
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
@@ -291,8 +291,8 @@
         "Matches": [
           {
             "Headers": [{
-              "type": "Exact",
-              "headers": [
+              "Type": "Exact",
+              "Headers": [
                 {
                   "canary": "true"
                 },
@@ -303,9 +303,9 @@
               ]
             }],
             "Method": {
-              "type": "Exact",
-              "service": "com.example.GreetingService",
-              "method": "Hello"
+              "Type": "Exact",
+              "Service": "com.example.GreetingService",
+              "Method": "Hello"
             },
             "BackendService": {
               "www8846": 100
@@ -313,8 +313,8 @@
           },
           {
             "Headers": [{
-              "type": "Exact",
-              "headers": [
+              "Type": "Exact",
+              "Headers": [
                 {
                   "canary": "true"
                 },
@@ -324,9 +324,9 @@
               ]
             }],
             "Method": {
-              "type": "Exact",
-              "service": "com.example.secure",
-              "method": "login"
+              "Type": "Exact",
+              "Service": "com.example.secure",
+              "Method": "login"
             },
             "BackendService": {
               "www8847": 100
@@ -539,23 +539,23 @@
           "Type": "RequestRedirect0",
           "scheme": "https",
           "hostname": "",
-          "path": "/abc",
+          "Path": "/abc",
           "port": 8443,
           "statusCode": 301
         },
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "path": {
-            "type": "ReplacePrefixMatch",
+          "Path": {
+            "Type": "ReplacePrefixMatch",
             "replacePrefixMatch": "/repo"
           }
         },
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "path": {
-            "type": "ReplaceFullPath",
+          "Path": {
+            "Type": "ReplaceFullPath",
             "replaceFullPath": "/repo/"
           }
         }

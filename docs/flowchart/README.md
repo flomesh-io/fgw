@@ -4,7 +4,7 @@
 <img width="2000" alt="image" src="https://raw.githubusercontent.com/flomesh-io/fgw/main/docs/flowchart/HTTPRoute.png">  
 
 ## 2. TLSPassthrough 流程图  
-![](https://raw.githubusercontent.com/flomesh-io/fgw/main/docs/flowchart/TLSPassthrough.png)
+![](https://raw.githubusercontent.com/flomesh-io/fgw/main/docs/flowchart/HTTPSPassthrough.png)
 
 ## 3. TLSTerminate 流程图  
 ![](https://raw.githubusercontent.com/flomesh-io/fgw/main/docs/flowchart/TLSTerminate.png)

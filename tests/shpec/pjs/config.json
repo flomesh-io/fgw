@@ -448,23 +448,23 @@
           "Type": "RequestRedirect",
           "scheme": "https",
           "hostname": "",
-          "Path": "/abc",
+          "path": "/abc",
           "port": 8443,
           "statusCode": 301
         },
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "Path": {
-            "Type": "ReplacePrefixMatch",
+          "path": {
+            "type": "ReplacePrefixMatch",
             "replacePrefixMatch": "/repo"
           }
         },
         {
           "Type": "HTTPURLRewriteFilter",
           "hostname": "",
-          "Path": {
-            "Type": "ReplaceFullPath",
+          "path": {
+            "type": "ReplaceFullPath",
             "replaceFullPath": "/repo/"
           }
         }

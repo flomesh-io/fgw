@@ -22,7 +22,7 @@ done
 describe "SHPEC black white list Test"
 
   it "Check white list 1"
-    assert curl_code "--interface 127.0.0.1 http://127.0.0.1/" "52"
+    assert curl_code "--interface 127.0.0.1 http://127.0.0.1/" "56"
   end
 
   it "Check white list 2"
@@ -30,7 +30,7 @@ describe "SHPEC black white list Test"
   end
 
   it "Check black list 1"
-    assert curl_code "--interface 127.0.0.11 http://127.0.0.1:81/" "52"
+    assert curl_code "--interface 127.0.0.11 http://127.0.0.1:81/" "56"
   end
 
   it "Check black list 2"

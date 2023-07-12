@@ -376,6 +376,8 @@
       }
     },
     "bookstore/bookstore-v1|14001|local": {
+      "StickyCookieName": "_srv_id_",
+      "StickyCookieExpires": 3600,
       "Endpoints": {
         "127.0.0.1:8088": {
           "Weight": 0,

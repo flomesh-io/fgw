@@ -126,7 +126,7 @@
           "hostname": "",
           "path": {
             "type": "ReplacePrefixMatch",
-            "replacePrefixMatch": "/repo"
+            "replacePrefixMatch": "/xyz"
           }
         },
         {

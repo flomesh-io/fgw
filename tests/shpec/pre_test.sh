@@ -6,7 +6,7 @@
     exit 1
  fi
 
-for port in 80 443 2000 3000 4000 8443 8844 8845 8846 8847 8848 8849 8850 9443 ;
+for port in 80 81 443 2000 3000 4000 8443 8844 8845 8846 8847 8848 8849 8850 9443 ;
     do
        netstat -tulpn 2>&1 | grep LISTEN | grep ":$port "
        if [ $? -eq 0 ]; then

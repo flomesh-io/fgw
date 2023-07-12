@@ -32,20 +32,43 @@
     )
   )(),
 
+  pathPrefix = (path, prefix) => (
+    path.startsWith(prefix) && (
+      prefix.endsWith('/') || (
+        (
+          lastChar = path.charAt(prefix.length),
+        ) => (
+          lastChar === '' || lastChar === '/'
+        )
+      )()
+    )
+  ),
+
   makeHeadHandler = cfg => (
     (cfg?.path?.type === 'ReplacePrefixMatch') ? (
       head => (
         (
-          prefix = getPrefix(head?.path),
-          suffix = (head?.path || '').substring(prefix.length),
+          match = pathPrefix(head?.path, cfg?.path?.replacePrefixMatch),
+          suffix = match && (head?.path || '').substring(cfg.path.replacePrefixMatch.length),
+          replace = cfg?.path?.replacePrefix || '/',
         ) => (
-          cfg?.path?.replacePrefixMatch === '/' ? (
-            head.path = suffix
-          ) : (
-            head.path = cfg?.path?.replacePrefixMatch + suffix
-          ),
-          cfg?.hostname && head.headers && (
-            head.headers.host = cfg.hostname
+          match && (
+            replace.endsWith('/') ? (
+              suffix.startsWith('/') ? (
+                head.path = replace + suffix.substring(1)
+              ) : (
+                head.path = replace + suffix
+              )
+            ) : (
+              suffix.startsWith('/') ? (
+                head.path = replace + suffix
+              ) : (
+                head.path = replace + '/' + suffix
+              )
+            ),
+            cfg?.hostname && head.headers && (
+              head.headers.host = cfg.hostname
+            )
           )
         )
       )()

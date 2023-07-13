@@ -164,7 +164,8 @@
             )
           )
         ),
-        backendServiceBalancer: new algo.RoundRobinLoadBalancer(rule?.BackendService || {})
+        backendServiceBalancer: new algo.RoundRobinLoadBalancer(rule?.BackendService || {}),
+        ...(rule?.ServerRoot && { serverRoot: rule.ServerRoot })
       }
     )
   )(),
@@ -202,7 +203,7 @@
     (
       matches = [],
     ) => (
-      (routeTypeMatches?.RouteType === 'HTTP' || routeTypeMatches?.RouteType === 'HTTP2') && (
+      (!routeTypeMatches?.RouteType || routeTypeMatches?.RouteType === 'HTTP' || routeTypeMatches?.RouteType === 'HTTP2') && (
         matches = (routeTypeMatches?.Matches || []).map(
           m => makeHttpMatches(m)
         )

@@ -44,13 +44,18 @@
 
 .import({
   __route: 'route',
+  __root: 'web-server',
 })
 
 .pipeline()
 .handleMessageStart(
   () => (
-    (_serviceName = __route?.backendServiceBalancer?.borrow?.({})?.id) && (
-      __service = serviceHandlers.get(_serviceName)
+    __route?.serverRoot ? (
+      __root = __route.serverRoot
+    ) : (
+      (_serviceName = __route?.backendServiceBalancer?.borrow?.({})?.id) && (
+        __service = serviceHandlers.get(_serviceName)
+      )
     )
   )
 )
@@ -58,12 +63,15 @@
   isDebugEnabled, (
     $=>$.handleStreamStart(
       () => (
-        console.log('[service] name, endpoints:', _serviceName, Object.keys(__service?.Endpoints || {}))
+        console.log('[service] name, root, endpoints:', _serviceName, __root, Object.keys(__service?.Endpoints || {}))
       )
     )
   )
 )
 .branch(
+  () => __root, (
+    $=>$.use('server/web-server.js')
+  ),
   () => __service, (
     $=>$.chain()
   ), (

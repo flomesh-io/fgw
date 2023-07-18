@@ -157,6 +157,8 @@
   _cookies: null,
   _cookieId: null,
   _isRetry: false,
+  _unhealthCache: null,
+  _healthCheckTarget: null,
 })
 
 .import({
@@ -165,6 +167,8 @@
   __cert: 'connect-tls',
   __target: 'connect-tcp',
   __metricLabel: 'connect-tcp',
+  __healthCheckTargets: 'health-check',
+  __healthCheckServices: 'health-check',
 })
 
 .pipeline()
@@ -176,7 +180,8 @@
       _targetBalancer = _serviceConfig.targetBalancer,
       _serviceConfig.failoverBalancer && (
         _failoverBalancer = _serviceConfig.failoverBalancer
-      )
+      ),
+      _unhealthCache = __healthCheckServices?.[__service.name]
     )
   )
 )
@@ -209,13 +214,15 @@
       _serviceConfig.stickyCookie && (
         _cookieId = null,
         !_isRetry && (_cookies = getCookies(msg?.head?.headers?.cookie)) && (_cookieId = _cookies[_serviceConfig.stickyCookie.name]) && (
-          _cookieId = _serviceConfig.stickyCookie.hashTable[_cookieId]
+          (_cookieId = _serviceConfig.stickyCookie.hashTable[_cookieId]) && (
+            _unhealthCache?.get?.(_cookieId) && (_cookieId = null)
+          )
         )
       ),
       _cookieId ? (
         __target = _cookieId
       ) : (
-        __target = _targetBalancer?.borrow?.({})?.id
+        __target = _targetBalancer?.borrow?.({}, undefined, _unhealthCache)?.id
       ),
       __target
     ) && (
@@ -274,6 +281,17 @@
           $=>$.use('lib/connect-tls.js')
         ), (
           $=>$.use('lib/connect-tcp.js')
+        )
+      )
+    )
+    .handleMessage(
+      msg => (
+        (_healthCheckTarget = __healthCheckTargets?.[__target + '@' + __service.name]) && (
+          (!msg?.head?.status || (msg?.head?.status > 499)) ? (
+            _healthCheckTarget.service.fail(_healthCheckTarget)
+          ) : (
+            _healthCheckTarget.service.ok(_healthCheckTarget)
+          )
         )
       )
     )

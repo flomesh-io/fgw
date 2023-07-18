@@ -38,6 +38,7 @@
         failTimeout = serviceConfig.HealthCheck?.FailTimeout, // || 300, passivity
         uri = serviceConfig.HealthCheck?.Uri, // for HTTP
         matches = serviceConfig.HealthCheck?.Matches || [{ Type: "status", Value: "200" }], // for HTTP
+        type = uri ? 'HTTP' : 'TCP',
       ) => (
         {
           name,
@@ -59,7 +60,7 @@
                 healthCheckServices[name].remove(target.target)
               ),
               isDebugEnabled && (
-                console.log('[health-check] ok - service, target:', name, target.target)
+                console.log('[health-check] ok - service, type, target:', name, type, target.target)
               )
             )
           ),
@@ -77,7 +78,7 @@
                 )
               ),
               isDebugEnabled && (
-                console.log('[health-check] fail - service, target:', name, target.target)
+                console.log('[health-check] fail - service, type, target:', name, type, target.target)
               )
             )
           ),
@@ -117,22 +118,17 @@
           )(),
 
           check: target => (
-            (
-              agent = new http.Agent(target.target),
-              promise = agent.request('GET', uri),
-            ) => (
-              promise.then(
-                result => (
-                  target.service.match(result) ? (
-                    target.service.ok(target)
-                  ) : (
-                    target.service.fail(target)
-                  ),
-                  {}
-                )
+            new http.Agent(target.target).request('GET', uri).then(
+              result => (
+                target.service.match(result) ? (
+                  target.service.ok(target)
+                ) : (
+                  target.service.fail(target)
+                ),
+                {}
               )
             )
-          )(),
+          ),
         }
       )
     )()
@@ -142,6 +138,10 @@
 
 ) => pipy({
   _service: null,
+  _target: null,
+  _resolve: null,
+  _tcpTargets: null,
+  _targetPromises: null,
 })
 
 .export('health-check', {
@@ -183,17 +183,67 @@
   () => new Message
 )
 .replaceMessage(
-  () => (
+  msg => (
+    _tcpTargets = [],
+    _targetPromises = [],
     Object.values(healthCheckTargets).forEach(
       target => (
         (target.service.interval > 0 && ++target.tick >= target.service.interval) && (
           target.tick = 0,
-          target.service.check(target)
+          target.service.uri ? ( // for HTTP
+            target.service.check(target)
+          ) : ( // for TCP
+            _targetPromises.push(new Promise(r => _resolve = r)),
+            _tcpTargets.push(new Message({ target, resolve: _resolve }))
+          )
         )
       )
     ),
-    new StreamEnd
+    _tcpTargets.length > 0 ? _tcpTargets : msg
   )
+)
+.branch(
+  () => _tcpTargets.length > 0, (
+    $=>$
+    .demux().to(
+      $=>$.replaceMessage(
+        msg => (
+          _target = msg.head.target,
+          _resolve = msg.head.resolve,
+          new Data
+        )
+      )
+      .connect(() => _target.target,
+        {
+          connectTimeout: 0.1,
+          readTimeout: 0.1,
+          idleTimeout: 0.1,
+        }
+      )
+      .replaceData(
+        () => new Data
+      )
+      .replaceStreamEnd(
+        e => (
+          (!e.error || e.error === "ReadTimeout" || e.error === "IdleTimeout") ? (
+            _target.service.ok(_target)
+          ) : (
+            _target.service.fail(_target)
+          ),
+          _resolve(),
+          new Message
+        )
+      )
+    )
+    .wait(
+      () => Promise.all(_targetPromises)
+    )
+  ), (
+    $=>$
+  )
+)
+.replaceMessage(
+  () => new StreamEnd
 )
 
 .task('1s')
@@ -207,7 +257,7 @@
         (target.alive === 0 && target.service.failTimeout > 0 && !(target.service.interval > 0)) && (
           (++target.failTick >= target.service.failTimeout) && (
             isDebugEnabled && (
-              console.log('[health-check] reset - service, target, failTick:', target.name, target.target, target.failTick)
+              console.log('[health-check] reset - service, type, target, failTick:', target.name, type, target.target, target.failTick)
             ),
             target.service.ok(target)
           )

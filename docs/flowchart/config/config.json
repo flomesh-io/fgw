@@ -133,9 +133,7 @@
                 ]
               }
             ],
-            "BackendService": {
-              "bookstore/bookstore-v1|14001|local": 100
-            }
+            "ServerRoot": "www1"            
           }
         ]
       },
@@ -376,6 +374,20 @@
       }
     },
     "bookstore/bookstore-v1|14001|local": {
+      "StickyCookieName": "_srv_id",
+      "StickyCookieExpires": 3600,
+      "HealthCheck": {
+        "Interval": 10,
+        "MaxFails": 3,
+        "FailTimeout": 30,
+        "Uri": "/",
+        "Matches": [
+          {
+            "Type": "status",
+            "Value": "200"
+          }
+        ]
+      },
       "Endpoints": {
         "127.0.0.1:8088": {
           "Weight": 0,

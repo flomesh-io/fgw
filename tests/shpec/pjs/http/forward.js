@@ -238,7 +238,7 @@
           _cookieId = null
         ) : (
           _serviceConfig?.stickyCookie && attrs?.hash && (
-            _cookieId = _serviceConfig.stickyCookie.name + '=' + attrs.hash + '; expires='
+            _cookieId = _serviceConfig.stickyCookie.name + '=' + attrs.hash + '; path=/; expires='
                       + new Date(new Date().getTime() + 1000 * _serviceConfig.stickyCookie.expires).toUTCString()
                       + '; max-age=' + _serviceConfig.stickyCookie.expires
           )

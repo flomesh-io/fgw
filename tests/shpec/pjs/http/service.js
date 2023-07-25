@@ -36,6 +36,7 @@
 
 ) => pipy({
   _serviceName: null,
+  _unauthorized: undefined,
 })
 
 .export('service', {
@@ -45,11 +46,15 @@
 .import({
   __route: 'route',
   __root: 'web-server',
+  __consumer: 'consumer',
 })
 
 .pipeline()
 .handleMessageStart(
   () => (
+    __route?.config?.EnableHeadersAuthorization && (
+      (!__consumer || !__consumer?.['Headers-Authorization']) ? (_unauthorized = true) : (_unauthorized = false)
+    ),
     __route?.serverRoot ? (
       __root = __route.serverRoot
     ) : (
@@ -63,12 +68,17 @@
   isDebugEnabled, (
     $=>$.handleStreamStart(
       () => (
-        console.log('[service] name, root, endpoints:', _serviceName, __root, Object.keys(__service?.Endpoints || {}))
+        console.log('[service] name, root, endpoints, unauthorized:', _serviceName, __root, Object.keys(__service?.Endpoints || {}), _unauthorized)
       )
     )
   )
 )
 .branch(
+  () => _unauthorized, (
+    $=>$.replaceMessage(
+      () => new Message({status: 401})
+    )
+  ),
   () => __root, (
     $=>$.use('server/web-server.js')
   ),

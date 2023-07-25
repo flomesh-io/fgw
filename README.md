@@ -13,3 +13,6 @@ pipy、netstat、cat、grep、openssl、curl、shpec
 <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/wanpf/fgw/main/docs/fgw%E9%85%8D%E7%BD%AE%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3.html">config.json 配置字典</a>  
 ## 4. 测试用例表格  
 <a href="https://htmlpreview.github.io/?raw.githubusercontent.com/wanpf/fgw/main/docs/TestCase%E8%A1%A8%E6%A0%BC.html">TestCase表格</a>  
+
+## 5. 模块及变量说明
+![模块及变量说明](https://raw.githubusercontent.com/wanpf/fgw/39eda3b549f3b28c337e0a3f586600f6dc4e8557/docs/fgw-modules.jpg)

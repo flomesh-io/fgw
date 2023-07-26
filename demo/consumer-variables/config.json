@@ -113,7 +113,27 @@
             "replacePrefix": "$consumer_app"
           }
         }
-      ]
+      ],
+      "Plugins": {
+        "cors": {
+          "allowCredentials": true,
+          "allowHeaders": [
+            "*"
+          ],
+          "allowMethods": [
+            "*"
+          ],
+          "allowOrigins": [
+            {
+              "regex": ".*"
+            }
+          ],
+          "exposeHeaders": [
+            "*"
+          ],
+          "maxAge": "1h"
+        }
+      }
     }
   },
   "Chains": {
@@ -134,6 +154,7 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
+      "plugins/cors.js",
       "http/forward.js",
       "http/default.js"
     ],
@@ -155,6 +176,7 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
+      "plugins/cors.js",
       "http/forward.js",
       "http/default.js"
     ],

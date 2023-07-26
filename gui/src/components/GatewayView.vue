@@ -1,0 +1,275 @@
+<script setup>
+import {
+  CheckCircleFilled,ExclamationCircleOutlined,SafetyCertificateFilled,SettingFilled,ArrowRightOutlined
+} from '@ant-design/icons-vue';
+import { computed, ref } from 'vue'
+
+const prop = defineProps({
+  d: String,
+})
+
+const json = computed(() => {
+	try{
+		return JSON.parse(prop.d);
+	}catch(e){
+		return null;
+	}
+})
+
+const findRouteRule = computed(() => (port) => {
+	const _json = json.value;
+	let _rtn = null
+	Object.keys(_json.RouteRules).forEach((portKey)=>{
+		const portAry = portKey.split(",");
+		if(portAry.indexOf(`${port}`) > -1 ){
+			_rtn = _json.RouteRules[portKey]
+		}
+	});
+	return _rtn;
+});
+const treeData = computed(() => (title, files) => {
+	let rtn = [{title, key:title, children:[] }];
+	files.forEach((file) => {
+		rtn[0].children.push({title: file, key: file})
+	});
+	return rtn;
+});
+const colorMap = {'HTTPS':'bg-green'}
+</script>
+
+<template>
+	<div class="pd-15">
+		<a-result v-if="!json" status="warning" title="Typing..."/>
+		<div v-else>
+			<section v-if="json.Configs">
+				<h4><SettingFilled class="gray" /> Config</h4>
+				<div class="config-block flex mb-20" >
+					<b class="flex-item">Enable Debug</b>
+					<div class="width-60">
+						<CheckCircleFilled v-if="json.Configs.EnableDebug" class="font-green"/><b v-else>-</b>
+					</div>
+					<b class="flex-item">Strip Any Host Port</b>
+					<div class="width-60">
+						<CheckCircleFilled v-if="json.Configs.StripAnyHostPort" class="font-green"/><b v-else>-</b>
+					</div>
+					<b class="flex-item">Default Passthrough Upstream Port</b>
+					<div class="width-60">
+						<a-tag color="blue">{{json.Configs.DefaultPassthroughUpstreamPort || 'None'}}</a-tag>
+					</div>
+				</div>
+			</section>
+			
+			<section v-if="json.Listeners">
+				<h4><SettingFilled class="gray" /> Listeners => RouteRules</h4>
+				<a-timeline v-if="json.Listeners.length>0">
+					<a-timeline-item v-for="(listener) in json.Listeners">
+						<div class="listener-block" >
+							<a-space>
+								<a-button :class="colorMap[listener.Protocol]" type="primary" >{{listener.Protocol}}</a-button>
+								<!-- <a-tag color="#2db7f5">{{listener.Protocol}}</a-tag> -->
+								<b class="nowrap">Port:</b>
+								<a-tag color="blue">{{listener.Port}}</a-tag>
+								<span class="nowrap" v-if="listener.Listen"><ArrowRightOutlined/></span>
+								<b class="nowrap" v-if="listener.Listen">Listen:</b>
+								<a-tag v-if="listener.Listen" color="blue">{{listener.Listen}}</a-tag>
+								<b class="nowrap">Route</b>
+								<div v-if="findRouteRule(listener.Port)" class="route-block" >
+									<a-space>
+										<ol>
+											<li class="mb-10" v-for="(host) in Object.keys(findRouteRule(listener.Port))">
+												<a-space v-if="typeof(findRouteRule(listener.Port)[host]) == 'object'">
+													<a-button v-if="!!findRouteRule(listener.Port)[host].RouteType" size="small" :class="colorMap[findRouteRule(listener.Port)[host].RouteType]" type="primary" >
+														{{findRouteRule(listener.Port)[host].RouteType}}
+													</a-button>
+													<b>{{host}}</b> 
+													<span class="nowrap"><ArrowRightOutlined/></span> 
+													<ul v-if="!!findRouteRule(listener.Port)[host].Matches">
+														<li v-for="(matche) in findRouteRule(listener.Port)[host].Matches">
+																<a-tag v-if="matche.Path"> {{matche.Path?.Type}} | {{matche.Path?.Path}}</a-tag>
+																<a-tag v-if="matche.BackendService" v-for="(backend) in Object.keys(matche.BackendService)"> {{backend}}:{{matche.BackendService[backend]}}</a-tag>
+																<a-tag v-if="matche.ServerRoot">Server Root: {{matche.ServerRoot}}</a-tag>
+																<a-popover title="Header">
+																	<template #content>
+																		<p v-for="(header) in Object.keys(matche.Headers)"><b>{{header}}</b>: <a-tag>{{matche.Headers[header]}}</a-tag></p>
+																	</template>
+																	<ExclamationCircleOutlined class="font-primary"/>
+																</a-popover>
+														</li>
+													</ul>
+													<a-tag v-else v-for="(backend) in Object.keys(findRouteRule(listener.Port)[host])"> {{backend}}:{{findRouteRule(listener.Port)[host][backend]}}</a-tag>
+												</a-space>
+												<a-space v-else>
+													<b>{{host}}</b> 
+													<span class="nowrap"><ArrowRightOutlined/></span> 
+													<span class="ml-5">{{findRouteRule(listener.Port)[host]}}</span>
+												</a-space>
+											</li>
+										</ol>
+									</a-space>
+								</div>
+								<div v-else>
+									<a-tag>None</a-tag>
+								</div>
+							</a-space>
+						</div>
+					</a-timeline-item>
+				</a-timeline>
+			</section>
+			
+			<section v-if="json.Services">
+				<h4><SettingFilled class="gray" /> Services</h4>
+				<a-timeline v-if="Object.keys(json.Services).length>0">
+					<a-timeline-item v-for="(service) in Object.keys(json.Services)">
+						<div class="service-block mb-20" >
+							<div class="flex">
+								<b class="flex-item nowrap">Service</b>
+								<div class="flex-item" style="flex: 2;">
+									<a-tag color="blue">{{service}}</a-tag>
+								</div>
+								<b class="flex-item">Sticky Cookie</b>
+								<div class="flex-item">
+									{{json.Services[service].StickyCookieName || '-'}}
+								</div>
+								<b class="flex-item">Cookie Expires (s)</b>
+								<div class="flex-item">
+									{{json.Services[service].StickyCookieExpires || '-'}}
+								</div>
+							</div>
+							<div class="flex">
+								<b class="flex-item nowrap">Endpoints</b>
+								<div class="flex-item" style="flex: 5;">
+									<div class="endpoint-block" >
+										<ol>
+											<li v-for="(endpoint) in Object.keys(json.Services[service].Endpoints)">
+												<a-space>
+													<b class="nowrap">{{endpoint}}</b>
+													<span><ArrowRightOutlined/></span> 
+													<div class="inline-block">
+														<div>
+															<a-tag>Weight:{{json.Services[service].Endpoints[endpoint].Weight}}</a-tag>
+															<a-tag v-for="(tag) in Object.keys(json.Services[service].Endpoints[endpoint].Tags)">{{tag}}:{{json.Services[service].Endpoints[endpoint].Tags[tag]}}</a-tag>
+														</div>
+														<div class="flex" v-if="json.Services[service].Endpoints[endpoint].UpstreamCert">
+															<div class="flex-item nowrap" v-if="!!json.Services[service].Endpoints[endpoint].UpstreamCert.CertChain">Cert Chain
+																<a-tooltip :title="json.Services[service].Endpoints[endpoint].UpstreamCert?.CertChain" color="#00adef">
+																	<SafetyCertificateFilled  class="font-green"/>
+																</a-tooltip>
+															</div>
+															<div class="flex-item nowrap" v-if="!!json.Services[service].Endpoints[endpoint].UpstreamCert.PrivateKey">Private Key
+																<a-tooltip :title="json.Services[service].Endpoints[endpoint].UpstreamCert?.PrivateKey" color="#00adef">
+																	<SafetyCertificateFilled class="font-green"/>
+																</a-tooltip>
+															</div>
+															<div class="flex-item nowrap" v-if="!!json.Services[service].Endpoints[endpoint].UpstreamCert.IssuingCA">Issuing CA
+																<a-tooltip :title="json.Services[service].Endpoints[endpoint].UpstreamCert?.IssuingCA" color="#00adef">
+																	<SafetyCertificateFilled class="font-green"/>
+																</a-tooltip>
+															</div>
+														</div>
+													</div>
+												</a-space>
+												
+											</li>
+										</ol>
+									</div>
+								</div>
+							</div>
+							<div class="flex" v-if="json.Services[service].Filters">
+								<b class="flex-item nowrap">Filters</b>
+								<div class="flex-item" style="flex: 5;">
+									<div class="endpoint-block" >
+										<ul class="mt-10">
+											<li class="mb-10" v-for="(filter) in json.Services[service].Filters">
+												<a-popover>
+													<template #content>
+														<p v-for="(filterKey) in Object.keys(filter)"><b>{{filterKey}}</b>: <a-tag>{{filter[filterKey]}}</a-tag></p>
+													</template>
+													<a>{{filter.Type}}</a>
+												</a-popover>
+											</li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<div class="flex" v-if="json.Services[service].HealthCheck">
+								<b class="flex-item nowrap">Health Check</b>
+								<div class="flex-item" style="flex: 5;">
+									<a-tag v-for="(HealthCheckKey) in Object.keys(json.Services[service].HealthCheck)"> {{HealthCheckKey}}: {{json.Services[service].HealthCheck[HealthCheckKey]}}</a-tag>
+								</div>
+							</div>
+						</div>
+					</a-timeline-item>
+				</a-timeline>
+			</section>
+			<section v-if="json.Certificate">
+				<h4><SettingFilled class="gray" /> Certificate</h4>
+				<div  class="config-block flex mb-20" >
+					<b class="flex-item">Cert Chain</b>
+					<div class="width-60">
+						<a-tooltip :title="json.Certificate?.CertChain" color="#00adef">
+							<SafetyCertificateFilled v-if="!!json.Certificate.CertChain" class="font-green"/><b v-else>-</b>
+						</a-tooltip>
+					</div>
+					<b class="flex-item">Private Key</b>
+					<div class="width-60">
+						<a-tooltip :title="json.Certificate?.PrivateKey" color="#00adef">
+							<SafetyCertificateFilled v-if="!!json.Certificate.PrivateKey" class="font-green"/><b v-else>-</b>
+						</a-tooltip>
+					</div>
+					<b class="flex-item">Issuing CA</b>
+					<div class="width-60">
+						<a-tooltip :title="json.Certificate?.IssuingCA" color="#00adef">
+							<SafetyCertificateFilled v-if="!!json.Certificate.IssuingCA" class="font-green"/><b v-else>-</b>
+						</a-tooltip>
+					</div>
+				</div>
+			</section>
+			
+			<section v-if="json.Chains">
+				<h4><SettingFilled class="gray" /> Chains</h4>
+				<div class="config-block flex mb-20" >
+					<a-row class="full">
+						<a-col :span="8" v-for="(chainKey) in Object.keys(json.Chains)">
+							<a-tree
+								:defaultExpandAll="true"
+								:tree-data="treeData(chainKey, json.Chains[chainKey])"
+							/>
+						</a-col>
+					</a-row>
+				</div>
+			</section>
+		</div>
+	</div>
+</template>
+
+<style scoped>
+.listener-block,.config-block {
+  border: 2px solid #00adef;
+	border-radius: 10px;
+	padding:5px 5px;
+}
+.service-block{
+  border: 2px solid lightseagreen;
+	border-radius: 10px;
+	padding: 10px;
+}
+.service-block b,.service-block div{
+	padding: 5px;
+}
+.route-block {
+  border: 2px dashed #00adef;
+	margin: 15px 15px 15px 0;
+	border-radius: 10px;
+	padding:15px 15px 5px 5px;
+}
+.endpoint-block{
+  border: 2px dashed lightseagreen;
+	border-radius: 10px;
+}
+.config-block b,.config-block div{
+	padding: 10px;
+}
+section{
+	margin-bottom: 10px;
+}
+</style>

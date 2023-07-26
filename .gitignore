@@ -1,0 +1,27 @@
+.DS_Store
+node_modules/
+dist/
+admindb/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+/test/unit/coverage/
+/test/e2e/reports/
+selenium-debug.log
+cypress/videos/
+cypress/screenshots/
+cypress/fixtures/pipy/
+cypress/fixtures/pipy4lb/
+flomesh-testsuites/
+gui/node_modules/
+
+# Editor directories and files
+.idea
+.vscode
+*.suo
+*.gz
+*.ntvs*
+*.njsproj
+*.sln
+package-lock.json
+.env.production.local

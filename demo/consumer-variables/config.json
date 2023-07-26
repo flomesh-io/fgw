@@ -42,6 +42,7 @@
               "Type": "Prefix",
               "Path": "/"
             },
+            "EnableHeadersAuthorization": true,
             "BackendService": {
               "backendService1": 100
             }
@@ -53,6 +54,7 @@
       "*": {
         "Matches": [
           {
+            "EnableHeadersAuthorization": true,
             "ServerRoot": "www1"
           }
         ]

@@ -50,5 +50,5 @@ jobs:
           build-args: |
             PIPY_VERSION=${{ inputs.tag }}
             GO_VERSION=1.20
-            LDFLAGS=-s -w
+            LDFLAGS='"-s -w"'
           

@@ -1,8 +1,4 @@
-# Setting SHELL to bash allows bash commands to be executed by recipes.
-# This is a requirement for 'setup-envtest.sh' in the test target.
-# Options are set to exit when a recipe line exits non-zero or a piped command fails.
-SHELL = /usr/bin/env bash -o pipefail
-.SHELLFLAGS = -ec
+#!make
 
 BUILD_DIR ?= ./bin
 LDFLAGS ?= "-s -w"
@@ -20,7 +16,7 @@ vet: ## Run go vet against code.
 .PHONY: build
 build: fmt vet ## Build fgw with release args, the result will be optimized.
 	@mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=0 go build -v -o $(BUILD_DIR)/fgw -ldflags $(LDFLAGS) ./
+	CGO_ENABLED=0 go build -v -o $(BUILD_DIR)/fgw -ldflags ${LDFLAGS} ./
 
 
 ##@ Help

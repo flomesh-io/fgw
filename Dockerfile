@@ -21,7 +21,7 @@ COPY . .
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    GOOS=$TARGETOS GOARCH=$TARGETARCH make build
+    GOOS=$TARGETOS GOARCH=$TARGETARCH LDFLAGS=$LDFLAGS make build
 
 # Build the final image
 FROM flomesh/pipy-repo:$PIPY_VERSION

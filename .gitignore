@@ -25,3 +25,4 @@ gui/node_modules/
 *.sln
 package-lock.json
 .env.production.local
+/bin/

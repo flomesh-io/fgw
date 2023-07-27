@@ -1,0 +1,53 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fgw-repo
+  labels:
+    app: fgw-repo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fgw-repo
+  template:
+    metadata:
+      labels:
+        app: fgw-repo
+    spec:
+      containers:
+        - name: repo
+          image: flomesh/fgw:0.90.2-44
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: repo
+              containerPort: 6060
+            - name: health
+              containerPort: 8081
+          command:
+            - fgw
+          livenessProbe:
+            initialDelaySeconds: 1
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8081
+          readinessProbe:
+            initialDelaySeconds: 1
+            timeoutSeconds: 5
+            tcpSocket:
+              port: 8081
+      priorityClassName: system-node-critical
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fgw-repo
+spec:
+  ports:
+    - name: repo
+      port: 6060
+      targetPort: 6060
+      protocol: TCP
+  selector:
+    app: fgw-repo

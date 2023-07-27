@@ -3,21 +3,21 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: fgw-repo
-  labels:
-    app: fgw-repo
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: fgw-repo
+      flomesh.io/app: fgw-repo
   template:
     metadata:
       labels:
         app: fgw-repo
+        flomesh.io/app: fgw-repo
     spec:
       containers:
         - name: repo
-          image: flomesh/fgw:0.90.2-44
+          image: flomesh/fgw:0.90.2-41
           imagePullPolicy: IfNotPresent
           ports:
             - name: repo

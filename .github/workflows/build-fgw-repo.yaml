@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-pipy:
-    name: Build pipy image
+    name: Build fgw image
     runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU

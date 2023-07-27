@@ -40,30 +40,22 @@
               "Type": "Prefix",
               "Path": "/path"
             },
-            "Headers": [{
-              "Type": "Exact",
-              "Headers": [
-                {
-                  "a": "1",
-                  "b": "2"
-                },
-                {
-                  "c": "3"
-                }
-              ]
-            }],
+            "Headers": {
+              "Exact": {
+                "a": "1",
+                "b": "2",
+                "c": "3"
+              }
+            },
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": [{
-              "Type": "Exact",
-              "Params": [
-                {
-                  "abc": "1"
-                }
-              ]
-            }],
+            "QueryParams": {
+              "Exact": {
+                "abc": "1"
+              }
+            },
             "BackendService": {
               "www8848": 100
             }
@@ -156,8 +148,14 @@
     ]
   },
   "Features": {
-    "Logging": {},
-    "Tracing": {},
-    "Metrics": {}
+    "Logging": {
+
+    },
+    "Tracing": {
+
+    },
+    "Metrics": {
+
+    }
   }
 }

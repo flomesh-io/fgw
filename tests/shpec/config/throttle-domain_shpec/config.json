@@ -1,4 +1,3 @@
-
 {
   "Configs": {
     "DefaultPassthroughUpstreamPort": 443,
@@ -168,26 +167,20 @@
               "Type": "Prefix",
               "Path": "/repo"
             },
-            "Headers": [{
-              "Type": "Exact",
-              "Headers": [
-                {
-                  "b": "2"
-                }
-              ]
-            }],
+            "Headers": {
+              "Exact": {
+                "b": "2"
+              }
+            },
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": [{
-              "Type": "Exact",
-              "Params": [
-                {
-                  "abc": "1"
-                }
-              ]
-            }],
+            "QueryParams": {
+              "Exact": {
+                "abc": "1"
+              }
+            },
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
             }
@@ -204,26 +197,20 @@
               "Type": "Prefix",
               "Path": "/repo1"
             },
-            "Headers": [{
-              "Type": "Exact",
-              "Headers": [
-                {
-                  "a": "1"
-                }
-              ]
-            }],
+            "Headers": {
+              "Exact": {
+                "a": "1"
+              }
+            },
             "Methods": [
               "GET",
               "POST"
             ],
-            "QueryParams": [{
-              "Type": "Exact",
-              "Params": [
-                {
-                  "abc": "1"
-                }
-              ]
-            }],
+            "QueryParams": {
+              "Exact": {
+                "abc": "1"
+              }
+            },
             "BackendService": {
               "bookstore/bookstore-v1|14001|local": 100
             }
@@ -290,18 +277,13 @@
         "RouteType": "GRPC",
         "Matches": [
           {
-            "Headers": [{
-              "Type": "Exact",
-              "Headers": [
-                {
-                  "canary": "true"
-                },
-                {
-                  "version": "2",
-                  "region": "gz"
-                }
-              ]
-            }],
+            "Headers": {
+              "Exact": {
+                "canary": "true",
+                "version": "2",
+                "region": "gz"
+              }
+            },
             "Method": {
               "Type": "Exact",
               "Service": "com.example.GreetingService",
@@ -312,17 +294,12 @@
             }
           },
           {
-            "Headers": [{
-              "Type": "Exact",
-              "Headers": [
-                {
-                  "canary": "true"
-                },
-                {
-                  "version": "2"
-                }
-              ]
-            }],
+            "Headers": {
+              "Exact": {
+                "canary": "true",
+                "version": "2"
+              }
+            },
             "Method": {
               "Type": "Exact",
               "Service": "com.example.secure",
@@ -389,7 +366,7 @@
           "CircuitBreaking": {
             "MinRequestAmount": 3,
             "StatTimeWindow": 10,
-            "SlowTimeThreshold": 1.0,
+            "SlowTimeThreshold": 1,
             "SlowAmountThreshold": 4,
             "SlowRatioThreshold": 0.5,
             "ErrorAmountThreshold": 4,
@@ -658,10 +635,14 @@
     ]
   },
   "Features": {
-    "Logging": {},
-    "Tracing": {},
-    "Metrics": {}
+    "Logging": {
+
+    },
+    "Tracing": {
+
+    },
+    "Metrics": {
+
+    }
   }
 }
-
-

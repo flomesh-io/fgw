@@ -234,9 +234,14 @@
     ]
   },
   "Features": {
-    "Logging": {},
-    "Tracing": {},
-    "Metrics": {}
+    "Logging": {
+
+    },
+    "Tracing": {
+
+    },
+    "Metrics": {
+
+    }
   }
 }
-

@@ -85,29 +85,25 @@
     )
   )(),
 
-  makeDictionaryMatches = (dictionary, name) => (
+  makeDictionaryMatches = dictionary => (
     (
-      tests = (dictionary || []).map(
-        d => (
-          (d.Type === 'Exact') ? (
-            (d[name] || []).map(
-              h => Object.keys(h || {}).map(
-                k => (obj => obj?.[k] === h[k])
-              )
-            ).flat()
+      tests = Object.entries(dictionary || {}).map(
+        ([type, dict]) => (
+          (type === 'Exact') ? (
+            Object.keys(dict || {}).map(
+              k => (obj => obj?.[k] === dict[k])
+            )
           ) : (
-            (d.Type === 'Regex') ? (
-              (d[name] || []).map(
-                h => Object.keys(h || {}).map(
-                  k => (
-                    (
-                      regex = new RegExp(h[k])
-                    ) => (
-                      obj => regex.test(obj?.[k] || '')
-                    )
-                  )()
-                )
-              ).flat()
+            (type === 'Regex') ? (
+              Object.keys(dict || {}).map(
+                k => (
+                  (
+                    regex = new RegExp(dict[k])
+                  ) => (
+                    obj => regex.test(obj?.[k] || '')
+                  )
+                )()
+              )
             ) : [() => false]
           )
         )
@@ -147,11 +143,11 @@
           () => false
         )
       ),
-      matchHeaders = makeDictionaryMatches(rule?.Headers, 'Headers'),
+      matchHeaders = makeDictionaryMatches(rule?.Headers),
       matchMethod = (
         rule?.Methods && Object.fromEntries((rule.Methods).map(m => [m, true]))
       ),
-      matchParams = makeDictionaryMatches(rule?.QueryParams, 'Params'),
+      matchParams = makeDictionaryMatches(rule?.QueryParams),
     ) => (
       {
         config: rule,
@@ -172,7 +168,7 @@
 
   makeGrpcMatches = rule => (
     (
-      matchHeaders = makeDictionaryMatches(rule?.Headers, 'Headers'),
+      matchHeaders = makeDictionaryMatches(rule?.Headers),
       matchMethod = (
         rule?.Method?.Type === 'Exact' && (
           path => (

@@ -52,6 +52,8 @@ for port in 80 81 443 2000 3000 4000 8080 8081 8082 8443 8844 8845 8846 8847 884
     exit 1
  fi
 
+cp -rf ../../pjs .
+mkdir -p tmp
 
 echo "Use command 'shpec' to run all tests"
 

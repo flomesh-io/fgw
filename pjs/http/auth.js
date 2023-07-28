@@ -23,23 +23,27 @@
 })
 
 .pipeline()
+.handleStreamStart(
+  msg => (
+    Object.keys(headersAuthorization).forEach(
+      h => !_consumer && (
+        (_consumer = headersAuthorization[h][msg?.head?.headers?.[h]]) && (
+          __consumer ? (
+            Object.keys(_consumer).forEach(
+              k => (__consumer[k] = _consumer[k])
+            )
+          ) : (
+            __consumer = _consumer
+          )
+        )
+      )
+    )
+  )
+)
 .branch(
   isDebugEnabled, (
     $=>$.handleStreamStart(
       msg => (
-        Object.keys(headersAuthorization).forEach(
-          h => !_consumer && (
-            (_consumer = headersAuthorization[h][msg?.head?.headers?.[h]]) && (
-              __consumer ? (
-                Object.keys(_consumer).forEach(
-                  k => (__consumer[k] = _consumer[k])
-                )
-              ) : (
-                __consumer = _consumer
-              )
-            )
-          )
-        ),
         console.log('[auth] consumer, msg:', __consumer, msg)
       )
     )

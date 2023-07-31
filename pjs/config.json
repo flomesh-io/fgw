@@ -37,7 +37,16 @@
       "*": {
         "Matches": [
           {
-            "ServerRoot": "www1"
+            "ServerRoot": "/var/www/html",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ],
+            "TryFiles": [
+              "$uri",
+              "$uri/default/",
+              "=404"
+            ]
           }
         ]
       }
@@ -46,7 +55,11 @@
       "*": {
         "Matches": [
           {
-            "ServerRoot": "www2"
+            "ServerRoot": "www2",
+            "Index": [
+              "default.html",
+              "index.htm"
+            ]
           }
         ]
       }

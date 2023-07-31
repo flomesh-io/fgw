@@ -14,69 +14,156 @@
   ))(),
 
   matchContentType = ext => (
-    extTypes?.[ext] || 'text/html'
+    (ext === '') ? (
+      'text/html'
+    ) : (
+      extTypes?.[ext] || 'application/octet-stream'
+    )
+  ),
+
+  checkFileMode = filepath => (
+    (
+      s = os.stat(filepath)
+    ) => (
+      s ? (
+        ((s.mode & 16384) === 16384) ? 1 : 0
+      ) : -1
+    )
+  )(),
+
+  uriCache = new algo.Cache(
+    uri => __route && (
+      (
+        tryFiles = __route.config?.TryFiles && __route.config.TryFiles.map(
+          f => (
+            (
+              e = f.split('/')
+            ) => (
+              e.map(
+                i => i.replace('$uri', uri)
+              ).join('/').replace('//', '/')
+            )
+          )()
+        )
+      ) => (
+        { index: __route.config?.Index, tryFiles }
+      )
+    )(),
+    null,
+    { ttl: 3600 }
+  ),
+
+  serverCache = new algo.Cache(
+    route => (
+      uri => uriCache.get(uri)
+    )
+  ),
+
+  getExt = url => (
+    (
+      dot = url.lastIndexOf('.'),
+      slash = url.lastIndexOf('/'),
+    ) => (
+      (dot > slash) ? (
+        url.substring(dot + 1)
+      ) : ''
+    )
+  )(),
+
+  makeMessage = (uri, indexes) => (
+    uri.startsWith('=') ? (
+      (
+        status = uri.substring(1)
+      ) => (
+        status > 0 ? (
+          new Message({ status })
+        ) : (
+          new Message({status: 404}, 'Not Found')
+        )
+      )
+    )() : (
+      _filepath = __root + uri,
+      _mode = checkFileMode(_filepath),
+      (_mode === 1) ? (
+        indexes && (
+          indexes.find(
+            i => (
+              _filepath.endsWith('/') ? (
+                _indexpath = _filepath + i
+              ) : (
+                _indexpath = _filepath + '/' + i
+              ),
+              (checkFileMode(_indexpath) === 0) && (_data = os.readFile(_indexpath)) && (
+                _message = new Message({ status: 200, headers: { 'content-type': matchContentType(_extName = getExt(_indexpath)) } }, _data),
+                _filepath = _indexpath
+              )
+            )
+          )
+        )
+      ) : (_mode === 0) && (
+        (checkFileMode(_filepath) === 0) && (_data = os.readFile(_filepath)) && (
+          _message = new Message({ status: 200, headers: { 'content-type': matchContentType(_extName = getExt(uri)) } }, _data)
+        )
+      ),
+      _message
+    )
   ),
 
 ) => pipy({
-  _pos: 0,
+  _uri: null,
+  _mode: null,
   _file: null,
   _data: null,
+  _message: null,
   _extName: null,
   _filepath: null,
-  _message: undefined,
+  _indexpath: null,
+  _serverConfig: null,
 })
 
 .export('web-server', {
   __root: null,
 })
 
+.import({
+  __route: 'route',
+})
+
 .pipeline()
 .replaceMessage(
   msg => (
-    msg?.head?.path && (msg.head.path.indexOf('/../') < 0) && (
-      __root?.startsWith('/') ? (
-        _filepath = __root + msg.head.path,
-        msg.head.path.endsWith('/') ? (
-          _filepath = _filepath + 'index.html'
-        ) : (
-          (msg.head.path.lastIndexOf('/') > msg.head.path.lastIndexOf('.')) && (
-            _filepath = _filepath + '/index.html'
-          )
-        ),
-        _filepath = _filepath.replace('//', '/'),
-        ((_pos = _filepath.lastIndexOf('.')) > 0) && (
-          _extName = _filepath.substring(_pos + 1)
-        ),
-        os.stat(_filepath)?.isFile?.() && (_data = os.readFile(_filepath)) && (
-          _message = new Message({ status: 200, headers: {'content-type': matchContentType(_extName)}}, _data)
+    (_uri = msg?.head?.path?.split('?')?.[0]) && (_uri.indexOf('/../') < 0) && (
+      _serverConfig = serverCache.get(__route)?.(_uri),
+
+      __root.startsWith('/') ? (
+        (_serverConfig?.tryFiles || [_uri]).find(
+          tf => (_message = makeMessage(tf, _serverConfig?.index))
         )
       ) : (
-        __root && (
-          _filepath = 'static/' + __root + msg.head.path,
-          msg.head.path.endsWith('/') ? (
-            _filepath = _filepath + 'index.html'
-          ) : (
-            (msg.head.path.lastIndexOf('/') > msg.head.path.lastIndexOf('.')) && (
-              _filepath = _filepath + '/index.html'
-            )
-          ),
-          _filepath = _filepath.replace('//', '/'),
-          ((_pos = _filepath.lastIndexOf('.')) > 0) && (
-            _extName = _filepath.substring(_pos + 1)
-          ),
-          (_file = http.File.from(_filepath)) && (
-            (_message = _file.toMessage(msg.head?.headers?.['accept-encoding'])) && (
-              _message.head.headers['content-type'] = matchContentType(_extName)
+        _filepath = 'static/' + __root + _uri,
+        [''].concat(_serverConfig?.index || []).find(
+          i => (
+            (i === '') ? (
+              _indexpath = _filepath
+            ) : _filepath.endsWith('/') ? (
+              _indexpath = _filepath + i
+            ) : (
+              _indexpath = _filepath + '/' + i
+            ),
+            _indexpath = _indexpath.replace('//', '/'),
+            (_file = http.File.from(_indexpath)) && (
+              (_message = _file.toMessage(msg.head?.headers?.['accept-encoding'])) && (
+                (_extName = getExt(_indexpath)) && (
+                  _message.head.headers['content-type'] = matchContentType(_extName)
+                ),
+                _filepath = _indexpath
+              )
             )
           )
         )
       )
     ),
-    _message ? (
-      _message
-    ) : (
-      new Message({status: 404}, 'Not Found')
-    )
+    _message || new Message({status: 404}, 'Not Found')
   )
 )
 .branch(

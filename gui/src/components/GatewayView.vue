@@ -1,8 +1,17 @@
 <script setup>
 import {
-  CheckCircleFilled,ExclamationCircleOutlined,SafetyCertificateFilled,SettingFilled,ArrowRightOutlined
+  CheckCircleFilled,
+	ExclamationCircleOutlined,
+	SafetyCertificateFilled,
+	SettingFilled,
+	ArrowRightOutlined,
+	DownOutlined,
+	UpOutlined,
+	MedicineBoxFilled
 } from '@ant-design/icons-vue';
 import { computed, ref } from 'vue'
+
+import ServiceSvg from "../assets/service.png";
 
 const prop = defineProps({
   d: String,
@@ -34,7 +43,8 @@ const treeData = computed(() => (title, files) => {
 	});
 	return rtn;
 });
-const colorMap = {'HTTPS':'bg-green'}
+const colorMap = {'HTTPS':'bg-green'};
+const displayMap = ref({});
 </script>
 
 <template>
@@ -60,9 +70,9 @@ const colorMap = {'HTTPS':'bg-green'}
 			</section>
 			
 			<section v-if="json.Listeners">
-				<h4><SettingFilled class="gray" /> Listeners => RouteRules</h4>
+				<h4><SettingFilled class="gray" /> Listeners / RouteRules</h4>
 				<a-timeline v-if="json.Listeners.length>0">
-					<a-timeline-item v-for="(listener) in json.Listeners">
+					<a-timeline-item v-for="(listener,index) in json.Listeners">
 						<div class="listener-block" >
 							<a-space>
 								<a-button :class="colorMap[listener.Protocol]" type="primary" >{{listener.Protocol}}</a-button>
@@ -73,40 +83,49 @@ const colorMap = {'HTTPS':'bg-green'}
 								<b class="nowrap" v-if="listener.Listen">Listen:</b>
 								<a-tag v-if="listener.Listen" color="blue">{{listener.Listen}}</a-tag>
 								<b class="nowrap">Route</b>
-								<div v-if="findRouteRule(listener.Port)" class="route-block" >
-									<a-space>
-										<ol>
-											<li class="mb-10" v-for="(host) in Object.keys(findRouteRule(listener.Port))">
-												<a-space v-if="typeof(findRouteRule(listener.Port)[host]) == 'object'">
-													<a-button v-if="!!findRouteRule(listener.Port)[host].RouteType" size="small" :class="colorMap[findRouteRule(listener.Port)[host].RouteType]" type="primary" >
-														{{findRouteRule(listener.Port)[host].RouteType}}
-													</a-button>
-													<b>{{host}}</b> 
-													<span class="nowrap"><ArrowRightOutlined/></span> 
-													<ul v-if="!!findRouteRule(listener.Port)[host].Matches">
-														<li v-for="(matche) in findRouteRule(listener.Port)[host].Matches">
-																<a-tag v-if="matche.Path"> {{matche.Path?.Type}} | {{matche.Path?.Path}}</a-tag>
-																<a-tag v-if="matche.BackendService" v-for="(backend) in Object.keys(matche.BackendService)"> {{backend}}:{{matche.BackendService[backend]}}</a-tag>
-																<a-tag v-if="matche.ServerRoot">Server Root: {{matche.ServerRoot}}</a-tag>
-																<a-popover title="Header">
-																	<template #content>
-																		<p v-for="(header) in Object.keys(matche.Headers)"><b>{{header}}</b>: <a-tag>{{matche.Headers[header]}}</a-tag></p>
-																	</template>
-																	<ExclamationCircleOutlined class="font-primary"/>
-																</a-popover>
-														</li>
-													</ul>
-													<a-tag v-else v-for="(backend) in Object.keys(findRouteRule(listener.Port)[host])"> {{backend}}:{{findRouteRule(listener.Port)[host][backend]}}</a-tag>
-												</a-space>
-												<a-space v-else>
-													<b>{{host}}</b> 
-													<span class="nowrap"><ArrowRightOutlined/></span> 
-													<span class="ml-5">{{findRouteRule(listener.Port)[host]}}</span>
-												</a-space>
-											</li>
-										</ol>
-									</a-space>
-								</div>
+								<template v-if="findRouteRule(listener.Port)">
+									<span v-if="!displayMap[`listener-${index}`]" class="nowrap" >
+										<a-badge :count="Object.keys(findRouteRule(listener.Port)).length || 0" />
+										<DownOutlined class="icon-menu vm ml-10" @click="displayMap[`listener-${index}`] = true"/>
+									</span>
+									<div v-else class="route-block" >
+										<a-space>
+											<ol>
+												<li class="mb-10" v-for="(host) in Object.keys(findRouteRule(listener.Port))">
+													<a-space v-if="typeof(findRouteRule(listener.Port)[host]) == 'object'">
+														<a-button v-if="!!findRouteRule(listener.Port)[host].RouteType" size="small" :class="colorMap[findRouteRule(listener.Port)[host].RouteType]" type="primary" >
+															{{findRouteRule(listener.Port)[host].RouteType}}
+														</a-button>
+														<b>{{host}}</b> 
+														<span class="nowrap"><ArrowRightOutlined/></span> 
+														<ul v-if="!!findRouteRule(listener.Port)[host].Matches">
+															<li v-for="(matche) in findRouteRule(listener.Port)[host].Matches">
+																	<a-tag v-if="matche.Path"> {{matche.Path?.Type}} | {{matche.Path?.Path}}</a-tag>
+																	<a-tag v-if="matche.BackendService" v-for="(backend) in Object.keys(matche.BackendService)"> {{backend}}:{{matche.BackendService[backend]}}</a-tag>
+																	<a-tag v-if="matche.ServerRoot">Server Root: {{matche.ServerRoot}}</a-tag>
+																	<a-popover title="Header">
+																		<template #content>
+																			<p v-for="(header) in Object.keys(matche.Headers)"><b>{{header}}</b>: <a-tag>{{matche.Headers[header]}}</a-tag></p>
+																		</template>
+																		<ExclamationCircleOutlined class="font-primary"/>
+																	</a-popover>
+															</li>
+														</ul>
+														<a-tag v-else v-for="(backend) in Object.keys(findRouteRule(listener.Port)[host])"> {{backend}}:{{findRouteRule(listener.Port)[host][backend]}}</a-tag>
+													</a-space>
+													<a-space v-else>
+														<b>{{host}}</b> 
+														<span class="nowrap"><ArrowRightOutlined/></span> 
+														<span class="ml-5">{{findRouteRule(listener.Port)[host]}}</span>
+													</a-space>
+												</li>
+											</ol>
+										</a-space>
+										<div >
+										<UpOutlined @click="displayMap[`listener-${index}`] = false" class="icon-menu vm float-right relative" style="top: 15px;right: -20px;"/>
+										</div>
+									</div>
+								</template>
 								<div v-else>
 									<a-tag>None</a-tag>
 								</div>
@@ -119,12 +138,49 @@ const colorMap = {'HTTPS':'bg-green'}
 			<section v-if="json.Services">
 				<h4><SettingFilled class="gray" /> Services</h4>
 				<a-timeline v-if="Object.keys(json.Services).length>0">
-					<a-timeline-item v-for="(service) in Object.keys(json.Services)">
-						<div class="service-block mb-20" >
+					<a-timeline-item v-for="(service,index) in Object.keys(json.Services)">
+						<a-card class="service-block mb-20" v-if="!displayMap[`service-${index}`]" hoverable >
+							<template #actions>
+								<span>
+									Endpoint
+									<a-badge :count="Object.keys(json.Services[service].Endpoints||{}).length" />
+								</span>
+								<span v-if="json.Services[service].Filters">
+									Filters
+									<a-badge :count="json.Services[service].Filters.length || 0" />
+								</span>
+								<span v-if="Object.keys(json.Services[service].HealthCheck||{}).length>0">
+									HealthCheck
+									<MedicineBoxFilled class="font-green" />
+								</span>
+								<span>
+									More
+									<DownOutlined @click="displayMap[`service-${index}`] = true"/>
+								</span>
+							</template>
+							<a-card-meta :title="service" :description="`Cookie: ${json.Services[service].StickyCookieName || 'None'}`">
+								<template #avatar>
+									<a-avatar
+										size="small"
+										shape="square"
+										:src="ServiceSvg"
+									/>
+								</template>
+							</a-card-meta>
+						</a-card>
+						
+						<div v-else class="service-block mb-20 all">
 							<div class="flex">
 								<b class="flex-item nowrap">Service</b>
 								<div class="flex-item" style="flex: 2;">
-									<a-tag color="blue">{{service}}</a-tag>
+									<block class="block-item">
+										<a-avatar
+											size="small"
+											shape="square"
+											:src="ServiceSvg"
+										/>
+										{{service}}
+									</block>
 								</div>
 								<b class="flex-item">Sticky Cookie</b>
 								<div class="flex-item">
@@ -197,6 +253,7 @@ const colorMap = {'HTTPS':'bg-green'}
 									<a-tag v-for="(HealthCheckKey) in Object.keys(json.Services[service].HealthCheck)"> {{HealthCheckKey}}: {{json.Services[service].HealthCheck[HealthCheckKey]}}</a-tag>
 								</div>
 							</div>
+							<UpOutlined @click="displayMap[`service-${index}`] = false" class="icon-menu vm float-right"/>
 						</div>
 					</a-timeline-item>
 				</a-timeline>
@@ -261,6 +318,7 @@ const colorMap = {'HTTPS':'bg-green'}
 	margin: 15px 15px 15px 0;
 	border-radius: 10px;
 	padding:15px 15px 5px 5px;
+	margin-bottom: 50px;
 }
 .endpoint-block{
   border: 2px dashed lightseagreen;
@@ -271,5 +329,18 @@ const colorMap = {'HTTPS':'bg-green'}
 }
 section{
 	margin-bottom: 10px;
+}
+.block-item{
+	white-space: nowrap;
+	background-color: #f5f5f5;
+	line-height: 34px;
+	height: 34px;
+	display: inline-block;
+	padding: 0 10px 0 5px;
+	border-radius: 5px;
+	font-weight: bold;
+}
+.service-block.all{
+	padding-bottom: 50px !important;
 }
 </style>

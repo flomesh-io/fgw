@@ -8,8 +8,10 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AAvatar: typeof import('ant-design-vue/es')['Avatar']
+    ABadge: typeof import('ant-design-vue/es')['Badge']
     AButton: typeof import('ant-design-vue/es')['Button']
     ACard: typeof import('ant-design-vue/es')['Card']
+    ACardMeta: typeof import('ant-design-vue/es')['CardMeta']
     ACol: typeof import('ant-design-vue/es')['Col']
     ADescriptions: typeof import('ant-design-vue/es')['Descriptions']
     ADescriptionsItem: typeof import('ant-design-vue/es')['DescriptionsItem']

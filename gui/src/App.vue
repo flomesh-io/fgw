@@ -24,8 +24,8 @@ const menus = [
   {
     key: 'exsamples',
     icon: () => h(FileTextOutlined),
-    label: 'Use Exsamples',
-    title: 'Use Exsamples',
+    label: 'Exsamples',
+    title: 'Exsamples',
     children: [
       {
 				key: 'Consumer Variables',

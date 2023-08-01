@@ -7,16 +7,15 @@ import {
 	ArrowRightOutlined,
 	DownOutlined,
 	UpOutlined,
-	MedicineBoxFilled
+	MedicineBoxFilled,
+  DeleteOutlined
 } from '@ant-design/icons-vue';
 import { computed, ref } from 'vue'
 
 import ServiceSvg from "../assets/service.png";
 
-const prop = defineProps({
-  d: String,
-})
-
+const prop = defineProps(['d'])
+const emits = defineEmits(['update:d']);
 const json = computed(() => {
 	try{
 		return JSON.parse(prop.d);
@@ -24,7 +23,45 @@ const json = computed(() => {
 		return null;
 	}
 })
-
+const remove = (type,target,idx) => {
+	const _json = JSON.parse(prop.d);
+  switch (type){
+    case 'Listener':
+      const _index = _json.Listeners.findIndex((item) => item.Port == target);
+      _json.Listeners.splice(_index, 1);
+      
+      Object.keys(_json.RouteRules).forEach((portKey)=>{
+      	let portAry = portKey.split(",");
+        const _portIndex = portAry.indexOf(target)
+      	if(_portIndex > -1 ){
+          if(portAry.length == 1){
+            delete _json.RouteRules[portKey]
+          } else {
+            const _temlate = JSON.parse(JSON.stringify(_json.RouteRules[portKey]));
+            delete _json.RouteRules[portKey]
+            portAry.splice(_index, 1);
+            _json.RouteRules[portAry.join(",")] = _temlate;
+          }
+      	}
+      });
+      break;
+    case 'RouteRule':
+      Object.keys(_json.RouteRules).forEach((portKey) => {
+        let portAry = portKey.split(",");
+        const _portIndex = portAry.indexOf(target+'')
+        if(_portIndex > -1 ){
+          delete _json.RouteRules[portKey][idx];
+        }
+      });
+      break;
+    case 'Service':
+      delete _json.Services[target];
+      break;
+    default:
+      break;
+  }
+  emits('update:d',JSON.stringify(_json))
+}
 const findRouteRule = computed(() => (port) => {
 	const _json = json.value;
 	let _rtn = null
@@ -34,7 +71,7 @@ const findRouteRule = computed(() => (port) => {
 			_rtn = _json.RouteRules[portKey]
 		}
 	});
-	return _rtn;
+	return _rtn && Object.keys(_rtn).length>0?_rtn : null;
 });
 const treeData = computed(() => (title, files) => {
 	let rtn = [{title, key:title, children:[] }];
@@ -84,9 +121,9 @@ const displayMap = ref({});
 								<a-tag v-if="listener.Listen" color="blue">{{listener.Listen}}</a-tag>
 								<b class="nowrap">Route</b>
 								<template v-if="findRouteRule(listener.Port)">
-									<span v-if="!displayMap[`listener-${index}`]" class="nowrap" >
+									<span v-if="!displayMap[`listener-${listener.Port}`]" class="nowrap" >
 										<a-badge :count="Object.keys(findRouteRule(listener.Port)).length || 0" />
-										<DownOutlined class="icon-menu vm ml-10" @click="displayMap[`listener-${index}`] = true"/>
+										<DownOutlined class="icon-menu vm ml-10" @click="displayMap[`listener-${listener.Port}`] = true"/>
 									</span>
 									<div v-else class="route-block" >
 										<a-space>
@@ -99,7 +136,7 @@ const displayMap = ref({});
 														<b>{{host}}</b> 
 														<span class="nowrap"><ArrowRightOutlined/></span> 
 														<ul v-if="!!findRouteRule(listener.Port)[host].Matches">
-															<li v-for="(matche) in findRouteRule(listener.Port)[host].Matches">
+															<li v-for="(matche, matcheIndex) in findRouteRule(listener.Port)[host].Matches">
 																	<a-tag v-if="matche.Path"> {{matche.Path?.Type}} | {{matche.Path?.Path}}</a-tag>
 																	<a-tag v-if="matche.BackendService" v-for="(backend) in Object.keys(matche.BackendService)"> {{backend}}:{{matche.BackendService[backend]}}</a-tag>
 																	<a-tag v-if="matche.ServerRoot">Server Root: {{matche.ServerRoot}}</a-tag>
@@ -118,18 +155,22 @@ const displayMap = ref({});
 														<span class="nowrap"><ArrowRightOutlined/></span> 
 														<span class="ml-5">{{findRouteRule(listener.Port)[host]}}</span>
 													</a-space>
+                          <div class="font-right">
+                            <DeleteOutlined @click="remove('RouteRule',listener.Port, host)" class="icon-menu vm" />
+                          </div>
 												</li>
 											</ol>
 										</a-space>
-										<div >
-										<UpOutlined @click="displayMap[`listener-${index}`] = false" class="icon-menu vm float-right relative" style="top: 15px;right: -20px;"/>
-										</div>
 									</div>
 								</template>
 								<div v-else>
 									<a-tag>None</a-tag>
 								</div>
 							</a-space>
+              <div class="font-right" v-if="displayMap[`listener-${listener.Port}`]">
+                <DeleteOutlined @click="remove('Listener',listener.Port)" class="icon-menu vm " />
+                <UpOutlined @click="displayMap[`listener-${listener.Port}`] = false" class="icon-menu vm " />
+              </div>
 						</div>
 					</a-timeline-item>
 				</a-timeline>
@@ -139,7 +180,7 @@ const displayMap = ref({});
 				<h4><SettingFilled class="gray" /> Services</h4>
 				<a-timeline v-if="Object.keys(json.Services).length>0">
 					<a-timeline-item v-for="(service,index) in Object.keys(json.Services)">
-						<a-card class="service-block mb-20" v-if="!displayMap[`service-${index}`]" hoverable >
+						<a-card class="service-block mb-20" v-if="!displayMap[`service-${service}`]" hoverable >
 							<template #actions>
 								<span>
 									Endpoint
@@ -155,7 +196,7 @@ const displayMap = ref({});
 								</span>
 								<span>
 									More
-									<DownOutlined @click="displayMap[`service-${index}`] = true"/>
+									<DownOutlined @click="displayMap[`service-${service}`] = true"/>
 								</span>
 							</template>
 							<a-card-meta :title="service" :description="`Cookie: ${json.Services[service].StickyCookieName || 'None'}`">
@@ -253,7 +294,10 @@ const displayMap = ref({});
 									<a-tag v-for="(HealthCheckKey) in Object.keys(json.Services[service].HealthCheck)"> {{HealthCheckKey}}: {{json.Services[service].HealthCheck[HealthCheckKey]}}</a-tag>
 								</div>
 							</div>
-							<UpOutlined @click="displayMap[`service-${index}`] = false" class="icon-menu vm float-right"/>
+              <div class="float-right">
+                <DeleteOutlined @click="remove('Service',service)"  class="icon-menu vm " />
+                <UpOutlined @click="displayMap[`service-${service}`] = false" class="icon-menu vm "/>
+							</div>
 						</div>
 					</a-timeline-item>
 				</a-timeline>
@@ -318,7 +362,6 @@ const displayMap = ref({});
 	margin: 15px 15px 15px 0;
 	border-radius: 10px;
 	padding:15px 15px 5px 5px;
-	margin-bottom: 50px;
 }
 .endpoint-block{
   border: 2px dashed lightseagreen;

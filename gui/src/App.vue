@@ -71,7 +71,7 @@ const menuClick = (e) => {
 				/>
 		</a-col>
 		<a-col :span="12">
-			<GatewayView :d="config" />
+			<GatewayView v-model:d="config" />
 		</a-col>
 	</a-row>
 </template>

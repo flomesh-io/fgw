@@ -32,7 +32,7 @@ watch(configString, (n, o)=>{
   }
 });
 const useDemo = (key) => {
-	config.value = JSON.stringify(exsamples[key]);
+	config.value = exsamples[key];
 }
 const menus = [
   {

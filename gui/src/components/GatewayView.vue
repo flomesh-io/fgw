@@ -18,7 +18,7 @@ const prop = defineProps(['d'])
 const json = ref(prop.d);
 const emits = defineEmits(['update:d']);
 
-watch(prop.d, (n, o)=>{
+watch(() => prop.d, (n, o)=>{
   if(JSON.stringify(prop.d)!=JSON.stringify(json.value)){
     json.value = n;
   }

@@ -10,65 +10,73 @@ import {
 	MedicineBoxFilled,
   DeleteOutlined
 } from '@ant-design/icons-vue';
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ServiceSvg from "../assets/service.png";
 
 const prop = defineProps(['d'])
+const json = ref(prop.d);
 const emits = defineEmits(['update:d']);
-const json = computed(() => {
-	try{
-		return JSON.parse(prop.d);
-	}catch(e){
-		return null;
-	}
-})
+
+watch(prop.d, (n, o)=>{
+  if(JSON.stringify(prop.d)!=JSON.stringify(json.value)){
+    json.value = n;
+  }
+},{
+  deep: true,
+  immediate: true
+});
+watch(json, (n, o)=>{
+  if(JSON.stringify(json.value)!=JSON.stringify(prop.d)){
+    emits('update:d',json.value)
+  }
+},{
+  deep: true,
+  immediate: true
+});
 const remove = (type,target,idx) => {
-	const _json = JSON.parse(prop.d);
   switch (type){
     case 'Listener':
-      const _index = _json.Listeners.findIndex((item) => item.Port == target);
-      _json.Listeners.splice(_index, 1);
+      const _index = json.value.Listeners.findIndex((item) => item.Port == target);
+      json.value.Listeners.splice(_index, 1);
       
-      Object.keys(_json.RouteRules).forEach((portKey)=>{
+      Object.keys(json.value.RouteRules).forEach((portKey)=>{
       	let portAry = portKey.split(",");
         const _portIndex = portAry.indexOf(target)
       	if(_portIndex > -1 ){
           if(portAry.length == 1){
-            delete _json.RouteRules[portKey]
+            delete json.value.RouteRules[portKey]
           } else {
-            const _temlate = JSON.parse(JSON.stringify(_json.RouteRules[portKey]));
-            delete _json.RouteRules[portKey]
+            const _temlate = JSON.parse(JSON.stringify(json.value.RouteRules[portKey]));
+            delete json.value.RouteRules[portKey]
             portAry.splice(_index, 1);
-            _json.RouteRules[portAry.join(",")] = _temlate;
+            json.value.RouteRules[portAry.join(",")] = _temlate;
           }
       	}
       });
       break;
     case 'RouteRule':
-      Object.keys(_json.RouteRules).forEach((portKey) => {
+      Object.keys(json.value.RouteRules).forEach((portKey) => {
         let portAry = portKey.split(",");
         const _portIndex = portAry.indexOf(target+'')
         if(_portIndex > -1 ){
-          delete _json.RouteRules[portKey][idx];
+          delete json.value.RouteRules[portKey][idx];
         }
       });
       break;
     case 'Service':
-      delete _json.Services[target];
+      delete json.value.Services[target];
       break;
     default:
       break;
   }
-  emits('update:d',JSON.stringify(_json))
 }
 const findRouteRule = computed(() => (port) => {
-	const _json = json.value;
 	let _rtn = null
-	Object.keys(_json.RouteRules).forEach((portKey)=>{
+	Object.keys(json.value.RouteRules).forEach((portKey)=>{
 		const portAry = portKey.split(",");
 		if(portAry.indexOf(`${port}`) > -1 ){
-			_rtn = _json.RouteRules[portKey]
+			_rtn = json.value.RouteRules[portKey]
 		}
 	});
 	return _rtn && Object.keys(_rtn).length>0?_rtn : null;
@@ -93,15 +101,15 @@ const displayMap = ref({});
 				<div class="config-block flex mb-20" >
 					<b class="flex-item">Enable Debug</b>
 					<div class="width-60">
-						<CheckCircleFilled v-if="json.Configs.EnableDebug" class="font-green"/><b v-else>-</b>
+            <a-switch v-model:checked="json.Configs.EnableDebug" size="small" />
 					</div>
 					<b class="flex-item">Strip Any Host Port</b>
 					<div class="width-60">
-						<CheckCircleFilled v-if="json.Configs.StripAnyHostPort" class="font-green"/><b v-else>-</b>
+            <a-switch v-model:checked="json.Configs.StripAnyHostPort" size="small" />
 					</div>
 					<b class="flex-item">Default Passthrough Upstream Port</b>
-					<div class="width-60">
-						<a-tag color="blue">{{json.Configs.DefaultPassthroughUpstreamPort || 'None'}}</a-tag>
+					<div >
+            <a-input-number :min="0" v-model:value="json.Configs.DefaultPassthroughUpstreamPort" placeholder="Basic usage" />
 					</div>
 				</div>
 			</section>
@@ -119,21 +127,22 @@ const displayMap = ref({});
 								<span class="nowrap" v-if="listener.Listen"><ArrowRightOutlined/></span>
 								<b class="nowrap" v-if="listener.Listen">Listen:</b>
 								<a-tag v-if="listener.Listen" color="blue">{{listener.Listen}}</a-tag>
-								<b class="nowrap">Route</b>
+              </a-space>
+							<a-space>
+								<b class="nowrap" style="margin-left: 85px;">Route</b>
 								<template v-if="findRouteRule(listener.Port)">
 									<span v-if="!displayMap[`listener-${listener.Port}`]" class="nowrap" >
 										<a-badge :count="Object.keys(findRouteRule(listener.Port)).length || 0" />
-										<DownOutlined class="icon-menu vm ml-10" @click="displayMap[`listener-${listener.Port}`] = true"/>
 									</span>
-									<div v-else class="route-block" >
+									<div v-else class="route-block " style="padding-right: 50px;">
 										<a-space>
 											<ol>
-												<li class="mb-10" v-for="(host) in Object.keys(findRouteRule(listener.Port))">
+												<li class="relative mb-10" v-for="(host) in Object.keys(findRouteRule(listener.Port))">
 													<a-space v-if="typeof(findRouteRule(listener.Port)[host]) == 'object'">
 														<a-button v-if="!!findRouteRule(listener.Port)[host].RouteType" size="small" :class="colorMap[findRouteRule(listener.Port)[host].RouteType]" type="primary" >
 															{{findRouteRule(listener.Port)[host].RouteType}}
 														</a-button>
-														<b>{{host}}</b> 
+														<b class="nowrap">{{host}}</b> 
 														<span class="nowrap"><ArrowRightOutlined/></span> 
 														<ul v-if="!!findRouteRule(listener.Port)[host].Matches">
 															<li v-for="(matche, matcheIndex) in findRouteRule(listener.Port)[host].Matches">
@@ -149,15 +158,13 @@ const displayMap = ref({});
 															</li>
 														</ul>
 														<a-tag v-else v-for="(backend) in Object.keys(findRouteRule(listener.Port)[host])"> {{backend}}:{{findRouteRule(listener.Port)[host][backend]}}</a-tag>
-													</a-space>
+                          </a-space>
 													<a-space v-else>
 														<b>{{host}}</b> 
 														<span class="nowrap"><ArrowRightOutlined/></span> 
 														<span class="ml-5">{{findRouteRule(listener.Port)[host]}}</span>
 													</a-space>
-                          <div class="font-right">
-                            <DeleteOutlined @click="remove('RouteRule',listener.Port, host)" class="icon-menu vm" />
-                          </div>
+                          <DeleteOutlined @click="remove('RouteRule',listener.Port, host)" class="absolute icon-menu-sm vm" style="right: -40px;top: 50%;margin-top: -14px;"/>
 												</li>
 											</ol>
 										</a-space>
@@ -165,11 +172,16 @@ const displayMap = ref({});
 								</template>
 								<div v-else>
 									<a-tag>None</a-tag>
+                  
 								</div>
 							</a-space>
               <div class="font-right" v-if="displayMap[`listener-${listener.Port}`]">
                 <DeleteOutlined @click="remove('Listener',listener.Port)" class="icon-menu vm " />
                 <UpOutlined @click="displayMap[`listener-${listener.Port}`] = false" class="icon-menu vm " />
+              </div>
+              <div v-else class="absolute" style="right: 15px;margin-top: -31px;">
+                <DeleteOutlined  class="icon-menu-sm vm " @click="remove('Listener',listener.Port)"  />
+                <DownOutlined class="icon-menu-sm vm ml-10" @click="displayMap[`listener-${listener.Port}`] = true"/>
               </div>
 						</div>
 					</a-timeline-item>
@@ -361,13 +373,13 @@ const displayMap = ref({});
   border: 2px dashed #00adef;
 	margin: 15px 15px 15px 0;
 	border-radius: 10px;
-	padding:15px 15px 5px 5px;
+	padding:15px 5px 5px 5px;
 }
 .endpoint-block{
   border: 2px dashed lightseagreen;
 	border-radius: 10px;
 }
-.config-block b,.config-block div{
+.config-block b,.config-block>div{
 	padding: 10px;
 }
 section{

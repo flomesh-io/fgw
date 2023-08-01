@@ -3,13 +3,14 @@ import {
   FileTextOutlined,
 	GithubOutlined
 } from '@ant-design/icons-vue';
-import { ref, h } from 'vue';
+import { ref, h, watch } from 'vue';
 
 import consumerVariables from '../../demo/consumer-variables/config.json';
 import loadBalancer from '../../demo/load-balancer/config.json';
 import staticWeb from '../../demo/static-web/config.json';
 import fullConfig from '../../docs/flowchart/config/config.json';
-const config = ref(JSON.stringify(fullConfig));
+const config = ref(fullConfig);
+const configString = ref(JSON.stringify(fullConfig));
 const activeKey  = ref('Config');
 const exsamples = {
 	'Consumer Variables':consumerVariables,
@@ -17,6 +18,19 @@ const exsamples = {
 	'Static Web':staticWeb,
 	'Full Config':fullConfig,
 };
+watch(config, (n, o)=>{
+  if(JSON.stringify(n)!=configString.value){
+    configString.value = JSON.stringify(n);
+  }
+},{
+  deep: true,
+  immediate: true
+});
+watch(configString, (n, o)=>{
+  if(JSON.stringify(config.value)!=n){
+    config.value = JSON.parse(n);
+  }
+});
 const useDemo = (key) => {
 	config.value = JSON.stringify(exsamples[key]);
 }
@@ -67,7 +81,7 @@ const menuClick = (e) => {
 				<JsonEditor 
 					:is-json="true"
 					height="700px"
-					v-model:value="config"
+					v-model:value="configString"
 				/>
 		</a-col>
 		<a-col :span="12">

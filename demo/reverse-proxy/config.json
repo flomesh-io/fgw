@@ -1,0 +1,273 @@
+{
+  "Configs": {
+    "EnableDebug": true,
+    "StripAnyHostPort": true
+  },
+  "Listeners": [
+    {
+      "Protocol": "HTTP",
+      "Port": 80
+    },
+    {
+      "Protocol": "HTTP",
+      "Port": 8080
+    },
+    {
+      "Protocol": "HTTP",
+      "Port": 8081
+    },
+    {
+      "Protocol": "HTTP",
+      "Port": 8082
+    }
+  ],
+  "RouteRules": {
+    "80,8080": {
+      "a1.test.com,a11.test.com": {
+        "RouteType": "HTTP",
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "BackendService": {
+              "backendService_a1": 100
+            }
+          }
+        ]
+      },
+      "a2.test.com": {
+        "RouteType": "HTTP",
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "BackendService": {
+              "backendService_a2": 100
+            }
+          }
+        ]
+      },
+      "*": {
+        "RouteType": "HTTP",
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/a1"
+            },
+            "BackendService": {
+              "backendService_a1": 100
+            }
+          },
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/a2"
+            },
+            "BackendService": {
+              "backendService_a2": 100
+            }
+          },
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "BackendService": {
+              "backendService": 100
+            }
+          }
+        ]
+      }
+    },
+    "8081": {
+      "a1.test.com": {
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/a1"
+            },
+            "ServerRoot": "/tmp/www/a1",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ]
+          },
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "ServerRoot": "/tmp/www/a2",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ]
+          }
+        ]
+      },
+      "*": {
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "ServerRoot": "/tmp/www/a0",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ],
+            "TryFiles": [
+              "$uri",
+              "$uri/default/",
+              "=404"
+            ]
+          }
+        ]
+      }
+    },
+    "8082": {
+      "a2.test.com": {
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/b2"
+            },
+            "ServerRoot": "/tmp/www/b2",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ]
+          },
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "ServerRoot": "/tmp/www/b1",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ]
+          }
+        ]
+      },
+      "*": {
+        "Matches": [
+          {
+            "Path": {
+              "Type": "Prefix",
+              "Path": "/"
+            },
+            "ServerRoot": "/tmp/www/b0",
+            "Index": [
+              "index.html",
+              "index.htm"
+            ],
+            "TryFiles": [
+              "$uri",
+              "$uri/default/",
+              "=404"
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Services": {
+    "backendService_a1": {
+      "Endpoints": {
+        "127.0.0.1:8081": {
+          "Weight": 100
+        }
+      }
+    },
+    "backendService_a2": {
+      "Endpoints": {
+        "127.0.0.1:8082": {
+          "Weight": 100
+        }
+      }
+    },
+    "backendService": {
+      "StickyCookieName": "_srv_id",
+      "StickyCookieExpires": 3600,
+      "Endpoints": {
+        "127.0.0.1:8081": {
+          "Weight": 50
+        },
+        "127.0.0.1:8082": {
+          "Weight": 50
+        }
+      }
+    }
+  },
+  "Chains": {
+    "HTTPRoute": [
+      "common/access-control.js",
+      "common/ratelimit.js",
+      "common/consumer.js",
+      "http/codec.js",
+      "http/auth.js",
+      "http/route.js",
+      "http/service.js",
+      "http/metrics.js",
+      "http/tracing.js",
+      "http/logging.js",
+      "http/circuit-breaker.js",
+      "http/throttle-domain.js",
+      "http/throttle-route.js",
+      "filter/request-redirect.js",
+      "filter/header-modifier.js",
+      "filter/url-rewrite.js",
+      "http/forward.js",
+      "http/default.js"
+    ],
+    "HTTPSRoute": [
+      "common/access-control.js",
+      "common/ratelimit.js",
+      "common/tls-termination.js",
+      "common/consumer.js",
+      "http/codec.js",
+      "http/auth.js",
+      "http/route.js",
+      "http/service.js",
+      "http/metrics.js",
+      "http/tracing.js",
+      "http/logging.js",
+      "http/circuit-breaker.js",
+      "http/throttle-domain.js",
+      "http/throttle-route.js",
+      "filter/request-redirect.js",
+      "filter/header-modifier.js",
+      "filter/url-rewrite.js",
+      "http/forward.js",
+      "http/default.js"
+    ],
+    "TLSPassthrough": [
+      "common/access-control.js",
+      "common/ratelimit.js",
+      "tls/passthrough.js",
+      "common/consumer.js"
+    ],
+    "TLSTerminate": [
+      "common/access-control.js",
+      "common/ratelimit.js",
+      "common/tls-termination.js",
+      "common/consumer.js",
+      "tls/forward.js"
+    ],
+    "TCPRoute": [
+      "common/access-control.js",
+      "common/ratelimit.js",
+      "tcp/forward.js"
+    ]
+  }
+}

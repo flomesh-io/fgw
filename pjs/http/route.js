@@ -195,31 +195,34 @@
 
   routeMatchesHandlers = new algo.Cache(makeRouteMatchesHandler),
 
-  hostHandlers = new algo.Cache(
-    fullHost => (
-      (
-        host = fullHost.split('@')[0],
-        routeRules = config?.RouteRules?.[__port?.Port],
-        matchDomain = matchDomainHandlers.get(routeRules),
-        domain = matchDomain(host.toLowerCase()),
-        messageHandler = routeMatchesHandlers.get(domain),
-      ) => (
-        message => (
-          _host = host,
-          __domain = domain,
-          messageHandler && (
-            __route = messageHandler(message)
+  portCache = new algo.Cache(
+    port => config?.RouteRules?.[port] && (
+      new algo.Cache(
+        host => (
+          (
+            routeRules = config.RouteRules[port],
+            matchDomain = matchDomainHandlers.get(routeRules),
+            domain = matchDomain(host.toLowerCase()),
+            messageHandler = routeMatchesHandlers.get(domain),
+          ) => (
+            message => (
+              _host = host,
+              __domain = domain,
+              messageHandler && (
+                __route = messageHandler(message)
+              )
+            )
           )
-        )
+        )()
       )
-    )()
+    )
   ),
 
   handleMessage = (host, msg) => (
     host && (
       (
-        fullHost = host + '@' + __port?.Port,
-        handler = hostHandlers.get(fullHost),
+        hostHandlers = portCache.get(__port?.Port),
+        handler = hostHandlers && hostHandlers.get(host),
       ) => (
         handler && handler(msg)
       )

@@ -52,8 +52,12 @@
       cookies,
       jwt,
     ) => (
-      (bearer?.startsWith?.('Bearer ') || bearer?.startsWith?.('bearer ')) ? (
-        jwt = bearer.substring(7)
+      bearer ? (
+        (bearer?.startsWith?.('Bearer ') || bearer?.startsWith?.('bearer ')) ? (
+          jwt = bearer.substring(7)
+        ) : (
+          jwt = bearer
+        )
       ) : (
         (args = getArgs(head?.path?.split?.('?')?.[1])) && (
           jwt = args['jwt']

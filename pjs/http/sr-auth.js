@@ -94,9 +94,13 @@
   _response: null,
 })
 
+.import({
+  __route: 'route',
+})
+
 .pipeline()
 .branch(
-  () => (_addr = config?.Configs?.PjOpenApiAuthAddr), (
+  () => __route?.config?.EnableSubrequestAuthorization && (_addr = config?.Configs?.SubrequestAuthAddr), (
     $=>$
     .handleMessageStart(
       msg => (

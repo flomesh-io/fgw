@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	ScriptsRoot = "/pjs"
+	ScriptsRoot = "pjs"
 	RepoHost    = "localhost:6060"
 	RepoRootUrl = "http://" + RepoHost
 	HealthPath  = "/healthz"

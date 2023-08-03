@@ -52,7 +52,11 @@
 .branch(
   () => _unauthorized, (
     $=>$.replaceMessage(
-      () => new Message({status: 401})
+      () => (
+        __route?.config?.HeadersAuthorizationType === 'Basic' ? (
+          new Message({ status: 401, headers: { 'WWW-Authenticate': 'Basic realm=fgw' } })
+        ) : new Message({ status: 401 })
+      )
     )
   ),
   () => __root, (

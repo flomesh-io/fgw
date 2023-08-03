@@ -25,8 +25,8 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 # Build the final image
 FROM flomesh/pipy-repo:$PIPY_VERSION
-WORKDIR /
+WORKDIR /repo
 COPY --from=builder /workspace/bin/fgw .
 COPY pjs/ pjs/
 
-ENTRYPOINT ["/fgw"]
+ENTRYPOINT ["/repo/fgw"]

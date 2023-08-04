@@ -37,8 +37,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Sleep for a while, waiting for repo is up
-	time.Sleep(5 * time.Second)
 	if err := initRepo(); err != nil {
 		klog.Fatal(err)
 		os.Exit(1)
@@ -74,9 +72,14 @@ func initRepo() error {
 		return err
 	}
 
-	if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
-		return err
-	}
+	go func() {
+		// wait for pipy client to reconnect
+		time.Sleep(5 * time.Second)
+		// update version of config.json to trigger pipy client reloading
+		if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
+			klog.Errorf("Failed to update config version: %s", err)
+		}
+	}()
 
 	return nil
 }

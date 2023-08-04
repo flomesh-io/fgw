@@ -54,11 +54,11 @@ func initRepo() error {
 
 	if err := wait.PollImmediate(5*time.Second, 60*5*time.Second, func() (bool, error) {
 		if repoClient.IsRepoUp() {
-			klog.V(2).Info("Repo is READY!")
+			klog.Info("Repo is READY!")
 			return true, nil
 		}
 
-		klog.V(2).Info("Repo is not up, sleeping ...")
+		klog.Info("Repo is not up, sleeping ...")
 		return false, nil
 	}); err != nil {
 		klog.Errorf("Error happened while waiting for repo up, %s", err)

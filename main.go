@@ -26,7 +26,7 @@ const (
 )
 
 func main() {
-	cmd := exec.Command("pipy", "--log-level=debug")
+	cmd := exec.Command("pipy")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 

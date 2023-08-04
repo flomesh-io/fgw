@@ -18,7 +18,7 @@ spec:
       containers:
         - name: repo
           image: flomesh/fgw:0.90.2-41
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - name: repo
               containerPort: 6060

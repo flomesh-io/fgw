@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/flomesh-io/fgw/pkg/config"
 	"github.com/flomesh-io/fgw/pkg/constants"
 	"github.com/flomesh-io/fgw/pkg/repo"
 	"github.com/gin-gonic/gin"
@@ -70,6 +71,10 @@ func initRepo() error {
 	}
 
 	if err := repoClient.DeriveCodebase(constants.DefaultGatewayPath, constants.DefaultGatewayBasePath); err != nil {
+		return err
+	}
+
+	if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
 		return err
 	}
 

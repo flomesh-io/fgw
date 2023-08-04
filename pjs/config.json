@@ -151,5 +151,7 @@
       "common/ratelimit.js",
       "tcp/forward.js"
     ]
-  }
+  },
+
+  "Version": ""
 }

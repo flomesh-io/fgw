@@ -26,7 +26,7 @@ const (
 )
 
 func main() {
-	cmd := exec.Command("pipy")
+	cmd := exec.Command("pipy", "--log-level=debug")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -74,8 +74,10 @@ func initRepo() error {
 
 	go func() {
 		// wait for pipy client to reconnect
+		klog.Info("Sleep for a while ...")
 		time.Sleep(5 * time.Second)
 		// update version of config.json to trigger pipy client reloading
+		klog.Info("Updating version of config.json ...")
 		if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
 			klog.Errorf("Failed to update config version: %s", err)
 		}

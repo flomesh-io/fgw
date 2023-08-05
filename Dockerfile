@@ -18,6 +18,9 @@ RUN --mount=type=cache,target=/go/pkg go mod download
 # Copy the go source
 COPY . .
 
+# Install dependencies
+RUN apk update && apk add --no-cache make
+
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \

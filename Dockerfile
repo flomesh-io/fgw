@@ -3,7 +3,7 @@ ARG GO_VERSION
 ARG PIPY_VERSION
 
 # Build the gateway binary
-FROM --platform=$BUILDPLATFORM golang:$GO_VERSION AS builder
+FROM --platform=$BUILDPLATFORM golang:$GO_VERSION-alpine AS builder
 ARG LDFLAGS
 ARG TARGETOS
 ARG TARGETARCH

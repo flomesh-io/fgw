@@ -19,15 +19,6 @@ pipy({
       new Message({ status: 502 }, 'Proxy Error')
     )
   ),
-  () => !__route, (
-    $=>$.replaceMessage(
-      new Message({
-          status: 403
-        },
-        'Access denied'
-      )
-    )
-  ),
   (
     $=>$.replaceMessage(
       new Message({

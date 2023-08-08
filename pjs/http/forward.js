@@ -1,5 +1,5 @@
 ((
-  { isDebugEnabled } = pipy.solve('config.js'),
+  { config, isDebugEnabled } = pipy.solve('config.js'),
 
   {
     shuffle,
@@ -143,6 +143,7 @@
   __cert: 'connect-tls',
   __target: 'connect-tcp',
   __metricLabel: 'connect-tcp',
+  __upstream: 'connect-tcp',
   __healthCheckTargets: 'health-check',
   __healthCheckServices: 'health-check',
 })
@@ -262,6 +263,15 @@
     )
     .handleMessage(
       msg => (
+        config?.Configs?.ShowUpstreamStatusInResponseHeader && (
+          (msg?.head?.status > 399) && (__upstream?.error != 'ConnectionRefused') && (
+            msg.head.headers ? (
+              msg.head.headers['X-FGW-Upstream-Status'] = msg.head.status
+            ) : (
+              msg.head.headers = { 'X-FGW-Upstream-Status': msg.head.status }
+            )
+          )
+        ),
         (_healthCheckTarget = __healthCheckTargets?.[__target + '@' + __service.name]) && (
           (!msg?.head?.status || (msg?.head?.status > 499)) ? (
             _healthCheckTarget.service.fail(_healthCheckTarget)

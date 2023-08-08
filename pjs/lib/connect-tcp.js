@@ -12,6 +12,7 @@ pipy({
 .export('connect-tcp', {
   __target: null,
   __metricLabel: null,
+  __upstream: {},
 })
 
 .pipeline()
@@ -41,13 +42,9 @@ pipy({
     _metrics.sendBytesTotalCounter.increase(data.size)
   )
 )
-.branch(
-  () => __target.startsWith('127.0.0.1:'), (
-    $=>$.connect(() => __target, { bind: '127.0.0.1' })
-  ),
-  (
-    $=>$.connect(() => __target)
-  )
+.connect(() => __target)
+.handleStreamEnd(
+  e => e.error && (__upstream.error = e.error)
 )
 .handleData(
   data => (

@@ -79,7 +79,7 @@
     ) => (
       _promises = [
         new http.Agent(server, { connectTimeout: 1, idleTimeout: 5 })
-          .request('POST', access_check_uri, { 'content-type': 'application/json; charset=utf-8' }, JSON.encode(body))
+          .request('POST', access_check_uri, { 'content-type': 'application/json; charset=utf-8', 'host': server }, JSON.encode(body))
           .then(
             msg => (
               _response = msg

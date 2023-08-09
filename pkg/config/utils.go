@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"github.com/flomesh-io/fgw/pkg/repo"
+	"github.com/flomesh-io/fgw/pkg/utils"
 	"github.com/tidwall/sjson"
 	"k8s.io/klog/v2"
 	"time"
@@ -14,7 +15,7 @@ func UpdateConfigVersion(basepath string, repoClient *repo.PipyRepoClient) error
 		return err
 	}
 
-	newConfigVersion := fmt.Sprintf("%x", time.Now().UnixNano())
+	newConfigVersion := utils.SimpleHash(fmt.Sprintf("%x", time.Now().UnixMilli()))
 	klog.Infof("Updating config version to %q", newConfigVersion)
 	newJson, err := sjson.Set(json, "Version", newConfigVersion)
 	if err != nil {

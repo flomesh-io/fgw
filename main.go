@@ -30,15 +30,13 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	klog.Infof("cmd = %v", cmd)
+	klog.Infof("cmd = %q", cmd.String())
 
 	if err := cmd.Start(); err != nil {
-		klog.Fatal(err)
+		klog.Fatalf("Executing cmd %q error: %s", cmd.String(), err)
 		os.Exit(1)
 	}
 
-	// Sleep for a while, waiting for repo is up
-	time.Sleep(5 * time.Second)
 	if err := initRepo(); err != nil {
 		klog.Fatal(err)
 		os.Exit(1)
@@ -74,9 +72,16 @@ func initRepo() error {
 		return err
 	}
 
-	if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
-		return err
-	}
+	go func() {
+		// wait for pipy client to reconnect
+		klog.Info("Sleep for a while ...")
+		time.Sleep(15 * time.Second)
+		// update version of config.json to trigger pipy client reloading
+		klog.Info("Updating version of config.json ...")
+		if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {
+			klog.Errorf("Failed to update config version: %s", err)
+		}
+	}()
 
 	return nil
 }

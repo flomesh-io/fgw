@@ -3,7 +3,7 @@ ARG GO_VERSION
 ARG PIPY_VERSION
 
 # Build the gateway binary
-FROM --platform=$BUILDPLATFORM golang:$GO_VERSION AS builder
+FROM --platform=$BUILDPLATFORM golang:$GO_VERSION-alpine AS builder
 ARG LDFLAGS
 ARG TARGETOS
 ARG TARGETARCH
@@ -17,6 +17,9 @@ COPY go.sum go.sum
 RUN --mount=type=cache,target=/go/pkg go mod download
 # Copy the go source
 COPY . .
+
+# Install dependencies
+RUN apk update && apk add --no-cache make
 
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \

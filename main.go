@@ -32,7 +32,7 @@ func main() {
 
 	klog.Infof("cmd = %v", cmd)
 
-	if err := cmd.Start(); err != nil {
+	if err := cmd.Run(); err != nil {
 		klog.Fatal(err)
 		os.Exit(1)
 	}
@@ -75,7 +75,7 @@ func initRepo() error {
 	go func() {
 		// wait for pipy client to reconnect
 		klog.Info("Sleep for a while ...")
-		time.Sleep(5 * time.Second)
+		time.Sleep(15 * time.Second)
 		// update version of config.json to trigger pipy client reloading
 		klog.Info("Updating version of config.json ...")
 		if err := config.UpdateConfigVersion(constants.DefaultGatewayBasePath, repoClient); err != nil {

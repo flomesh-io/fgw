@@ -1,4 +1,4 @@
-name: build-fgw-repo-image
+name: build-fgw-image
 
 on:
   workflow_dispatch:

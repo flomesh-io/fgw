@@ -30,10 +30,10 @@ func main() {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	klog.Infof("cmd = %v", cmd)
+	klog.Infof("cmd = %q", cmd.String())
 
-	if err := cmd.Run(); err != nil {
-		klog.Fatal(err)
+	if err := cmd.Start(); err != nil {
+		klog.Fatalf("Executing cmd %q error: %s", cmd.String(), err)
 		os.Exit(1)
 	}
 

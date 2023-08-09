@@ -1,4 +1,4 @@
-name: build-fgw-repo-image
+name: build-fgw-nightly-image
 
 on:
   schedule:
@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-pipy:
-    name: Build fgw image
+    name: Build fgw nightly image
     runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU

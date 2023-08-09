@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: pipy
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: pipy
@@ -26,4 +26,4 @@ spec:
             - sh
             - -c
             - |
-              pipy --log-level=debug http://fgw-repo:6060/repo/local/fgw/
+              pipy http://fgw-repo:6060/repo/local/fgw/

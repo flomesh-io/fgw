@@ -4,19 +4,19 @@
   circuitBreakers = {},
 
   makeCircuitBreaker = (serviceConfig) => (
-      serviceConfig?.ConnectionSettings?.http?.CircuitBreaking && (circuitBreakers[serviceConfig.name] = (
+      serviceConfig?.CircuitBreaking && (circuitBreakers[serviceConfig.name] = (
         (
           serviceName = serviceConfig.name || '',
-          minRequestAmount = serviceConfig.ConnectionSettings.http.CircuitBreaking?.MinRequestAmount || 100,
-          statTimeWindow = serviceConfig.ConnectionSettings.http.CircuitBreaking?.StatTimeWindow || 30, // 30s
-          slowTimeThreshold = serviceConfig.ConnectionSettings.http.CircuitBreaking?.SlowTimeThreshold || 5, // 5s
-          slowAmountThreshold = serviceConfig.ConnectionSettings.http.CircuitBreaking?.SlowAmountThreshold || 0,
-          slowRatioThreshold = serviceConfig.ConnectionSettings.http.CircuitBreaking?.SlowRatioThreshold || 0.0,
-          errorAmountThreshold = serviceConfig.ConnectionSettings.http.CircuitBreaking?.ErrorAmountThreshold || 0,
-          errorRatioThreshold = serviceConfig.ConnectionSettings.http.CircuitBreaking?.ErrorRatioThreshold || 0.0,
-          degradedTimeWindow = serviceConfig.ConnectionSettings.http.CircuitBreaking?.DegradedTimeWindow || 30, // 30s
-          degradedStatusCode = serviceConfig.ConnectionSettings.http.CircuitBreaking?.DegradedStatusCode || 409,
-          degradedResponseContent = serviceConfig.ConnectionSettings.http.CircuitBreaking?.DegradedResponseContent || 'Coming soon ...',
+          minRequestAmount = serviceConfig.CircuitBreaking?.MinRequestAmount || 100,
+          statTimeWindow = serviceConfig.CircuitBreaking?.StatTimeWindow || 30, // 30s
+          slowTimeThreshold = serviceConfig.CircuitBreaking?.SlowTimeThreshold || 5, // 5s
+          slowAmountThreshold = serviceConfig.CircuitBreaking?.SlowAmountThreshold || 0,
+          slowRatioThreshold = serviceConfig.CircuitBreaking?.SlowRatioThreshold || 0.0,
+          errorAmountThreshold = serviceConfig.CircuitBreaking?.ErrorAmountThreshold || 0,
+          errorRatioThreshold = serviceConfig.CircuitBreaking?.ErrorRatioThreshold || 0.0,
+          degradedTimeWindow = serviceConfig.CircuitBreaking?.DegradedTimeWindow || 30, // 30s
+          degradedStatusCode = serviceConfig.CircuitBreaking?.DegradedStatusCode || 409,
+          degradedResponseContent = serviceConfig.CircuitBreaking?.DegradedResponseContent || 'Coming soon ...',
           tick = 0,
           delay = 0,
           total = 0,

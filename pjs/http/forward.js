@@ -59,7 +59,7 @@
           retryBackoffLimitCounter: retryBackoffLimitCounter.withLabels(serviceConfig.name),
           muxHttpOptions: {
             version: () => (__domain?.RouteType === 'GRPC' || __domain?.RouteType === 'HTTP2') ? 2 : 1,
-            maxMessages: serviceConfig.ConnectionSettings?.http?.MaxRequestsPerConnection
+            maxMessages: serviceConfig.MaxRequestsPerConnection
           },
         },
       ) => (

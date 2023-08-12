@@ -337,26 +337,19 @@
           }
         }
       },
-      "ConnectionSettings": {
-        "tcp": {
-          "MaxConnections": 25
-        },
-        "http": {
-          "MaxRequestsPerConnection": 1,
-          "MaxPendingRequests": 1,
-          "CircuitBreaking": {
-            "MinRequestAmount": 3,
-            "StatTimeWindow": 10,
-            "SlowTimeThreshold": 1,
-            "SlowAmountThreshold": 4,
-            "SlowRatioThreshold": 0.5,
-            "ErrorAmountThreshold": 4,
-            "ErrorRatioThreshold": 0.5,
-            "DegradedTimeWindow": 10,
-            "DegradedStatusCode": 409,
-            "DegradedResponseContent": "Coming soon .... 0"
-          }
-        }
+      "MaxRequestsPerConnection": 1,
+      "MaxPendingRequests": 1,
+      "CircuitBreaking": {
+        "MinRequestAmount": 3,
+        "StatTimeWindow": 10,
+        "SlowTimeThreshold": 1,
+        "SlowAmountThreshold": 4,
+        "SlowRatioThreshold": 0.5,
+        "ErrorAmountThreshold": 4,
+        "ErrorRatioThreshold": 0.5,
+        "DegradedTimeWindow": 10,
+        "DegradedStatusCode": 409,
+        "DegradedResponseContent": "Coming soon .... 0"
       }
     },
     "www8845": {
@@ -368,26 +361,19 @@
           }
         }
       },
-      "ConnectionSettings": {
-        "tcp": {
-          "MaxConnections": 25
-        },
-        "http": {
-          "MaxRequestsPerConnection": 1,
-          "MaxPendingRequests": 1,
-          "CircuitBreaking": {
-            "MinRequestAmount": 3,
-            "StatTimeWindow": 10,
-            "SlowTimeThreshold": 1.001,
-            "SlowAmountThreshold": 10,
-            "SlowRatioThreshold": 0.3,
-            "ErrorAmountThreshold": 4,
-            "ErrorRatioThreshold": 0.5,
-            "DegradedTimeWindow": 10,
-            "DegradedStatusCode": 409,
-            "DegradedResponseContent": "Coming soon .... 0"
-          }
-        }
+      "MaxRequestsPerConnection": 1,
+      "MaxPendingRequests": 1,
+      "CircuitBreaking": {
+        "MinRequestAmount": 3,
+        "StatTimeWindow": 10,
+        "SlowTimeThreshold": 1.001,
+        "SlowAmountThreshold": 10,
+        "SlowRatioThreshold": 0.3,
+        "ErrorAmountThreshold": 4,
+        "ErrorRatioThreshold": 0.5,
+        "DegradedTimeWindow": 10,
+        "DegradedStatusCode": 409,
+        "DegradedResponseContent": "Coming soon .... 0"
       }
     },
     "www8846": {
@@ -524,26 +510,19 @@
           }
         }
       ],
-      "ConnectionSettings": {
-        "tcp": {
-          "MaxConnections": 25
-        },
-        "http": {
-          "MaxRequestsPerConnection": 1,
-          "MaxPendingRequests": 1,
-          "CircuitBreaking": {
-            "MinRequestAmount": 10,
-            "StatTimeWindow": 60,
-            "SlowTimeThreshold": 1.001,
-            "SlowAmountThreshold": 10,
-            "SlowRatioThreshold": 0.3,
-            "ErrorAmountThreshold": 10,
-            "ErrorRatioThreshold": 0.15,
-            "DegradedTimeWindow": 60,
-            "DegradedStatusCode": 409,
-            "DegradedResponseContent": "Coming soon .... 0"
-          }
-        }
+      "MaxRequestsPerConnection": 1,
+      "MaxPendingRequests": 1,
+      "CircuitBreaking": {
+        "MinRequestAmount": 10,
+        "StatTimeWindow": 60,
+        "SlowTimeThreshold": 1.001,
+        "SlowAmountThreshold": 10,
+        "SlowRatioThreshold": 0.3,
+        "ErrorAmountThreshold": 10,
+        "ErrorRatioThreshold": 0.15,
+        "DegradedTimeWindow": 60,
+        "DegradedStatusCode": 409,
+        "DegradedResponseContent": "Coming soon .... 0"
       },
       "RetryPolicy": {
         "RetryOn": "5xx",
@@ -620,14 +599,8 @@
     ]
   },
   "Features": {
-    "Logging": {
-
-    },
-    "Tracing": {
-
-    },
-    "Metrics": {
-
-    }
+    "Logging": {},
+    "Tracing": {},
+    "Metrics": {}
   }
 }

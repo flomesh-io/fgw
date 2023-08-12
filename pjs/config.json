@@ -58,7 +58,7 @@
             "ServerRoot": "www2",
             "Index": [
               "default.html",
-              "index.html"
+              "index.htm"
             ]
           }
         ]

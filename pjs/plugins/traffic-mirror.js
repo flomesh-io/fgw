@@ -15,9 +15,8 @@
     )
   ),
 
-  hexChar = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'a': 10, 'b': 11, 'c': 12, 'd': 13, 'e': 14, 'f': 15 },
   randomInt63 = () => (
-    algo.uuid().substring(0, 18).replaceAll('-', '').split('').reduce((calc, char) => (calc * 16) + hexChar[char], 0) / 2
+    new Int("u64", new Data(algo.uuid().substring(0, 18).replaceAll('-', ''), "hex").toArray()).toString() / 2
   ),
   samplingRange = fraction => (fraction > 0 ? fraction : 0) * Math.pow(2, 63),
   configCache = new algo.Cache(

@@ -252,7 +252,7 @@
     )
   ),
   (
-    $=>$.muxHTTP(() => undefined, () => _muxHttpOptions).to(
+    $=>$.muxHTTP(() => __target, () => _muxHttpOptions).to(
       $=>$.branch(
         () => __cert, (
           $=>$.use('lib/connect-tls.js')

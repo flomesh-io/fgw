@@ -37,6 +37,7 @@ jobs:
           images: flomesh/fgw
           tags: |
             type=raw,${{ inputs.tag }}
+            type=sha,format=short
 
       - name: Build and Push
         uses: docker/build-push-action@v4.1.1

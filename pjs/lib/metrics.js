@@ -9,6 +9,10 @@
       pod,
     } = pipy.solve('lib/utils.js'),
 
+    fgwHttpStatus = new stats.Counter('fgw_http_status', [
+      'service', 'code', 'route', 'matched_uri', 'matched_host', 'consumer', 'node', 'path'
+    ]),
+
     sendBytesTotalCounter = new stats.Counter('fgw_service_upstream_cx_tx_bytes_total', [
       'fgw_service_name'
     ]),
@@ -81,6 +85,8 @@
 
     metricsCache = new algo.Cache(serviceName => (
       {
+        fgwHttpStatus: fgwHttpStatus.withLabels(serviceName),
+
         sendBytesTotalCounter: sendBytesTotalCounter.withLabels(serviceName),
         receiveBytesTotalCounter: receiveBytesTotalCounter.withLabels(serviceName),
         activeConnectionGauge: activeConnectionGauge.withLabels(serviceName),

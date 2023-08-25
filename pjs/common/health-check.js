@@ -1,6 +1,8 @@
 ((
   { config, isDebugEnabled } = pipy.solve('config.js'),
 
+  { metrics } = pipy.solve('lib/metrics.js'),
+
   healthCheckTargets = {},
 
   healthCheckServices = {},
@@ -38,7 +40,12 @@
               isDebugEnabled && (
                 console.log('[health-check] ok - service, type, target:', name, type, target.target)
               )
-            )
+            ),
+            metrics.fgwUpstreamStatus.withLabels(
+              name,
+              target.ip,
+              target.port
+            ).increase()
           ),
 
           fail: target => (
@@ -56,7 +63,12 @@
               isDebugEnabled && (
                 console.log('[health-check] fail - service, type, target:', name, type, target.target)
               )
-            )
+            ),
+            metrics.fgwUpstreamStatus.withLabels(
+              name,
+              target.ip,
+              target.port
+            ).set(0)
           ),
 
           available: target => (
@@ -113,6 +125,7 @@
   healthCheckCache = new algo.Cache(makeHealthCheck),
 
 ) => pipy({
+  _idx: 0,
   _service: null,
   _target: null,
   _resolve: null,
@@ -137,7 +150,10 @@
           (_service = healthCheckCache.get(config.Services[name])) && (
             Object.keys(config.Services[name].Endpoints || {}).forEach(
               target => (
+                _idx = target.lastIndexOf(':'),
                 healthCheckTargets[target + '@' + name] = {
+                  ip: target.substring(0, _idx),
+                  port: target.substring(_idx + 1),
                   target,
                   service: _service,
                   alive: 1,

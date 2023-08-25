@@ -9,6 +9,24 @@
       pod,
     } = pipy.solve('lib/utils.js'),
 
+    fgwHttpStatus = new stats.Counter('fgw_http_status', [
+      'service', 'code', 'route', 'matched_uri', 'matched_host', 'consumer', 'node', 'path'
+    ]),
+
+    fgwBandwidth = new stats.Counter('fgw_bandwidth', [
+      'service', 'type', 'route', 'consumer', 'node'
+    ]),
+
+    fgwHttpRequestsTotal = new stats.Gauge('fgw_http_requests_total'),
+
+    fgwHttpCurrentConnections = new stats.Gauge('fgw_http_current_connections', [
+      'state'
+    ]),
+
+    fgwUpstreamStatus = new stats.Gauge('fgw_upstream_status', [
+      'name', 'ip', 'port'
+    ]),
+
     sendBytesTotalCounter = new stats.Counter('fgw_service_upstream_cx_tx_bytes_total', [
       'fgw_service_name'
     ]),
@@ -79,8 +97,19 @@
       'fgw_service_name'
     ]),
 
+    metrics = {
+      fgwHttpRequestsTotal,
+      fgwHttpCurrentConnections,
+      fgwUpstreamStatus,
+    },
+
     metricsCache = new algo.Cache(serviceName => (
       {
+        fgwHttpStatus: fgwHttpStatus.withLabels(serviceName),
+        fgwBandwidth: fgwBandwidth.withLabels(serviceName),
+        fgwHttpRequestsTotal,
+        fgwHttpCurrentConnections,
+
         sendBytesTotalCounter: sendBytesTotalCounter.withLabels(serviceName),
         receiveBytesTotalCounter: receiveBytesTotalCounter.withLabels(serviceName),
         activeConnectionGauge: activeConnectionGauge.withLabels(serviceName),
@@ -129,6 +158,7 @@
     ),
 
     {
+      metrics,
       metricsCache,
       durationCache,
       rateLimitCounter: new stats.Counter('http_local_rate_limiter', [

@@ -1,13 +1,10 @@
 ((
-  {
-    metrics,
-    metricsCache,
-    durationCache,
-  } = pipy.solve('lib/metrics.js'),
+  { metrics } = pipy.solve('lib/metrics.js'),
 ) => pipy()
 
 .export('http', {
   __http: null,
+  __request: null,
 })
 
 .pipeline()
@@ -26,7 +23,14 @@
 .demuxHTTP().to(
   $=>$
   .handleMessageStart(
-    msg => (__http = msg?.head)
+    msg => (
+      __http = msg?.head,
+      __request = { head: msg?.head, reqTime: Date.now() },
+      metrics.fgwHttpRequestsTotal.increase()
+    )
+  )
+  .handleMessageEnd(
+    msg => __request.tail = msg.tail
   )
   .chain()
 )

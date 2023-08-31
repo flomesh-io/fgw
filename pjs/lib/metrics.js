@@ -84,6 +84,9 @@
       rateLimitCounter: new stats.Counter('http_local_rate_limiter', [
         'http_local_rate_limit'
       ]),
+      aclCounter: new stats.Counter('access_control', [
+        'type'
+      ]),
     }
   )
 

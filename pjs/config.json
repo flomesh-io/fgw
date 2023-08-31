@@ -17,14 +17,8 @@
       "Protocol": "HTTP",
       "Port": 8080,
       "AccessControlLists": {
-        "blacklist": [
-          "127.0.0.11",
-          "192.168.122.1/32"
-        ],
-        "whitelist": [
-          "192.168.122.18",
-          "127.0.0.1/32"
-        ]
+        "blacklist": [],
+        "whitelist": []
       }
     },
     {
@@ -93,7 +87,6 @@
       "HealthCheck": {
         "Interval": 10,
         "MaxFails": 3,
-        "FailTimeout": 30,
         "Uri": "/",
         "Matches": [
           {
@@ -105,7 +98,7 @@
           }
         ]
       },
-      "Algorithm": "LeastWorkLoadBalancer",
+      "Algorithm": "LeastConnectionLoadBalancer",
       "Endpoints": {
         "127.0.0.1:8081": {
           "Weight": 50
@@ -131,6 +124,8 @@
       "http/metrics.js",
       "http/tracing.js",
       "http/logging.js",
+      "http/access-control-domain.js",
+      "http/access-control-route.js",
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",
@@ -152,6 +147,8 @@
       "http/metrics.js",
       "http/tracing.js",
       "http/logging.js",
+      "http/access-control-domain.js",
+      "http/access-control-route.js",
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",

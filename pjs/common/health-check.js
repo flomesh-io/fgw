@@ -15,7 +15,7 @@
         maxFails = serviceConfig.HealthCheck?.MaxFails, // || 3, both
         failTimeout = serviceConfig.HealthCheck?.FailTimeout, // || 300, passivity
         uri = serviceConfig.HealthCheck?.Uri, // for HTTP
-        matches = serviceConfig.HealthCheck?.Matches || [{ Type: "status", Value: "200" }], // for HTTP
+        matches = serviceConfig.HealthCheck?.Matches || [{ Type: "status", Value: [ 200 ] }], // for HTTP
         type = uri ? 'HTTP' : 'TCP',
       ) => (
         {
@@ -38,7 +38,7 @@
                 healthCheckServices[name].remove(target.target)
               ),
               isDebugEnabled && (
-                console.log('[health-check] ok - service, type, target:', name, type, target.target)
+                console.log('[health-check] ok - service, type, target:', name, type, target)
               )
             ),
             metrics.fgwUpstreamStatus.withLabels(
@@ -61,7 +61,7 @@
                 )
               ),
               isDebugEnabled && (
-                console.log('[health-check] fail - service, type, target:', name, type, target.target)
+                console.log('[health-check] fail - service, type, target:', name, type, target)
               )
             ),
             metrics.fgwUpstreamStatus.withLabels(
@@ -81,7 +81,7 @@
                 m => (
                   (m?.Type === 'status') ? (
                     msg => (
-                      msg?.head?.status == m?.Value
+                      m?.Value?.includes(msg?.head?.status)
                     )
                   ) : (
                     (m?.Type === 'body') ? (
@@ -111,7 +111,8 @@
                 target.service.match(result) ? (
                   target.service.ok(target)
                 ) : (
-                  target.service.fail(target)
+                  target.service.fail(target),
+                  target.reason = "status " + result?.head?.status
                 ),
                 {}
               )

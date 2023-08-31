@@ -1,8 +1,6 @@
 ((
   { isDebugEnabled } = pipy.solve('config.js'),
-  {
-    metricsCache,
-  } = pipy.solve('lib/metrics.js'),
+  { metrics, metricsCache } = pipy.solve('lib/metrics.js'),
 ) => (
 
 pipy({
@@ -19,7 +17,8 @@ pipy({
 .onStart(
   () => void (
     _metrics = metricsCache.get(__metricLabel),
-    _metrics.activeConnectionGauge.increase()
+    _metrics.activeConnectionGauge.increase(),
+    metrics.fgwStreamConnectionTotal.withLabels(__metricLabel).increase()
   )
 )
 .onEnd(

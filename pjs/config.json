@@ -1,11 +1,31 @@
 {
   "Configs": {
-    "EnableDebug": true
+    "EnableDebug": true,
+    "ShowUpstreamStatusInResponseHeader": true
   },
+  "Consumers": [
+    {
+      "name": "test01",
+      "password": "123456",
+      "Headers-Authorization": {
+        "authorization": "Basic dGVzdDoxMjM0NTY="
+      }
+    }
+  ],
   "Listeners": [
     {
       "Protocol": "HTTP",
-      "Port": 8080
+      "Port": 8080,
+      "AccessControlLists": {
+        "blacklist": [
+          "127.0.0.11",
+          "192.168.122.1/32"
+        ],
+        "whitelist": [
+          "192.168.122.18",
+          "127.0.0.1/32"
+        ]
+      }
     },
     {
       "Protocol": "HTTP",
@@ -22,6 +42,7 @@
         "RouteType": "HTTP",
         "Matches": [
           {
+            "route": "route-id-001",
             "Path": {
               "Type": "Prefix",
               "Path": "/"
@@ -37,7 +58,7 @@
       "*": {
         "Matches": [
           {
-            "ServerRoot": "/var/www/html",
+            "ServerRoot": "www1",
             "Index": [
               "index.html",
               "index.htm"
@@ -77,15 +98,22 @@
         "Matches": [
           {
             "Type": "status",
-            "Value": "200"
+            "Value": [
+              200,
+              201
+            ]
           }
         ]
       },
+      "Algorithm": "LeastWorkLoadBalancer",
       "Endpoints": {
         "127.0.0.1:8081": {
           "Weight": 50
         },
         "127.0.0.1:8082": {
+          "Weight": 50
+        },
+        "127.0.0.1:8083": {
           "Weight": 50
         }
       }
@@ -152,6 +180,5 @@
       "tcp/forward.js"
     ]
   },
-
   "Version": "0"
 }

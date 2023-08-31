@@ -17,12 +17,20 @@
     serviceConfig && (
       (
         endpointAttributes = {},
-        obj = {
-          targetBalancer: serviceConfig.Endpoints && new algo.RoundRobinLoadBalancer(
-            shuffle(Object.fromEntries(Object.entries(serviceConfig.Endpoints)
+        endpoints = shuffle(
+          Object.fromEntries(
+            Object.entries(serviceConfig.Endpoints)
               .map(([k, v]) => (endpointAttributes[k] = v, v.hash = algo.hash(k), [k, v.Weight]))
-              .filter(([k, v]) => v > 0)
-            ))
+              .filter(([k, v]) => (serviceConfig.Algorithm !== 'RoundRobinLoadBalancer' || v > 0))
+          )
+        ),
+        obj = {
+          targetBalancer: serviceConfig.Endpoints && (
+            (serviceConfig.Algorithm === 'HashingLoadBalancer') ? (
+              new algo.HashingLoadBalancer(Object.keys(endpoints))
+            ) : (
+              new algo[serviceConfig.Algorithm || 'RoundRobinLoadBalancer'](endpoints)
+            )
           ),
           endpointAttributes,
           ...(serviceConfig.StickyCookieName && ({
@@ -135,6 +143,7 @@
   _isRetry: false,
   _unhealthCache: null,
   _healthCheckTarget: null,
+  _targetResource: null,
 })
 
 .import({
@@ -199,7 +208,9 @@
       _cookieId ? (
         __target = _cookieId
       ) : (
-        __target = _targetBalancer?.borrow?.({}, undefined, _unhealthCache)?.id
+        (_targetResource = _targetBalancer?.borrow?.(undefined, undefined, _unhealthCache)) && (
+          __target = _targetResource?.id
+        )
       ),
       __target
     ) && (
@@ -252,7 +263,7 @@
     )
   ),
   (
-    $=>$.muxHTTP(() => (__service.name + __target), () => _muxHttpOptions).to(
+    $=>$.muxHTTP(() => _targetResource, () => _muxHttpOptions).to(
       $=>$.branch(
         () => __cert, (
           $=>$.use('lib/connect-tls.js')
@@ -273,10 +284,9 @@
           )
         ),
         (_healthCheckTarget = __healthCheckTargets?.[__target + '@' + __service.name]) && (
-          (!msg?.head?.status || (msg?.head?.status > 499)) ? (
-            _healthCheckTarget.service.fail(_healthCheckTarget)
-          ) : (
-            _healthCheckTarget.service.ok(_healthCheckTarget)
+          (__upstream?.error === 'ConnectionRefused') && (
+            _healthCheckTarget.service.fail(_healthCheckTarget),
+            _healthCheckTarget.reason = 'ConnectionRefused'
           )
         )
       )

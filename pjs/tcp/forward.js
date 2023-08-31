@@ -19,12 +19,20 @@
     serviceConfig && (
       (
         endpointAttributes = {},
+        endpoints = shuffle(
+          Object.fromEntries(
+            Object.entries(serviceConfig.Endpoints)
+              .map(([k, v]) => (endpointAttributes[k] = v, v.hash = algo.hash(k), [k, v.Weight]))
+              .filter(([k, v]) => (serviceConfig.Algorithm !== 'RoundRobinLoadBalancer' || v > 0))
+          )
+        ),
         obj = {
-          targetBalancer: serviceConfig.Endpoints && new algo.RoundRobinLoadBalancer(
-            shuffle(Object.fromEntries(Object.entries(serviceConfig.Endpoints)
-              .map(([k, v]) => (endpointAttributes[k] = v, [k, v.Weight]))
-              .filter(([k, v]) => v > 0)
-            ))
+          targetBalancer: serviceConfig.Endpoints && (
+            (serviceConfig.Algorithm === 'HashingLoadBalancer') ? (
+              new algo.HashingLoadBalancer(Object.keys(endpoints))
+            ) : (
+              new algo[serviceConfig.Algorithm || 'RoundRobinLoadBalancer'](endpoints)
+            )
           ),
           endpointAttributes,
           failoverBalancer: serviceConfig.Endpoints && failover(Object.fromEntries(Object.entries(serviceConfig.Endpoints).map(([k, v]) => [k, v.Weight]))),

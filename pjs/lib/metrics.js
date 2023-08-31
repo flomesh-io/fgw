@@ -42,10 +42,15 @@
       'service'
     ]),
 
+    fgwStreamConnectionTotal = new stats.Counter('fgw_stream_connection_total', [
+      'route'
+    ]),
+
     metrics = {
       fgwHttpRequestsTotal, // codec.js
       fgwHttpCurrentConnections, // codec.js
       fgwUpstreamStatus, // health-check.js
+      fgwStreamConnectionTotal, // connect-tcp.js
     },
 
     metricsCache = new algo.Cache(serviceName => (

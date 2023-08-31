@@ -31,7 +31,11 @@
             (serviceConfig.Algorithm === 'HashingLoadBalancer') ? (
               new algo.HashingLoadBalancer(Object.keys(endpoints))
             ) : (
-              new algo[serviceConfig.Algorithm || 'RoundRobinLoadBalancer'](endpoints)
+              (serviceConfig.Algorithm === 'LeastConnectionLoadBalancer') ? (
+                new algo.LeastWorkLoadBalancer(Object.keys(endpoints))
+              ) : (
+                new algo[serviceConfig.Algorithm || 'RoundRobinLoadBalancer'](endpoints)
+              )
             )
           ),
           endpointAttributes,

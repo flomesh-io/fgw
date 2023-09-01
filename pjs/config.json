@@ -1,25 +1,11 @@
 {
   "Configs": {
-    "EnableDebug": true,
-    "ShowUpstreamStatusInResponseHeader": true
+    "EnableDebug": true
   },
-  "Consumers": [
-    {
-      "name": "test01",
-      "password": "123456",
-      "Headers-Authorization": {
-        "authorization": "Basic dGVzdDoxMjM0NTY="
-      }
-    }
-  ],
   "Listeners": [
     {
       "Protocol": "HTTP",
-      "Port": 8080,
-      "AccessControlLists": {
-        "blacklist": [],
-        "whitelist": []
-      }
+      "Port": 8080
     },
     {
       "Protocol": "HTTP",
@@ -36,7 +22,6 @@
         "RouteType": "HTTP",
         "Matches": [
           {
-            "route": "route-id-001",
             "Path": {
               "Type": "Prefix",
               "Path": "/"
@@ -52,7 +37,7 @@
       "*": {
         "Matches": [
           {
-            "ServerRoot": "www1",
+            "ServerRoot": "/var/www/html",
             "Index": [
               "index.html",
               "index.htm"
@@ -87,26 +72,20 @@
       "HealthCheck": {
         "Interval": 10,
         "MaxFails": 3,
+        "FailTimeout": 30,
         "Uri": "/",
         "Matches": [
           {
             "Type": "status",
-            "Value": [
-              200,
-              201
-            ]
+            "Value": [ 200 ]
           }
         ]
       },
-      "Algorithm": "LeastConnectionLoadBalancer",
       "Endpoints": {
         "127.0.0.1:8081": {
           "Weight": 50
         },
         "127.0.0.1:8082": {
-          "Weight": 50
-        },
-        "127.0.0.1:8083": {
           "Weight": 50
         }
       }
@@ -124,8 +103,6 @@
       "http/metrics.js",
       "http/tracing.js",
       "http/logging.js",
-      "http/access-control-domain.js",
-      "http/access-control-route.js",
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",
@@ -147,8 +124,6 @@
       "http/metrics.js",
       "http/tracing.js",
       "http/logging.js",
-      "http/access-control-domain.js",
-      "http/access-control-route.js",
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",
@@ -177,5 +152,6 @@
       "tcp/forward.js"
     ]
   },
+
   "Version": "0"
 }

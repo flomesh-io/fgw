@@ -60,7 +60,7 @@
         "Matches": [
           {
             "Type": "status",
-            "Value": "200"
+            "Value": [ 200 ]
           }
         ]
       },

@@ -1,5 +1,5 @@
 ((
-  { isDebugEnabled } = pipy.solve('config.js'),
+  { isDebugEnabled, socketTimeoutOptions } = pipy.solve('config.js'),
   { metrics, metricsCache } = pipy.solve('lib/metrics.js'),
 ) => (
 
@@ -41,7 +41,7 @@ pipy({
     _metrics.sendBytesTotalCounter.increase(data.size)
   )
 )
-.connect(() => __target)
+.connect(() => __target, socketTimeoutOptions)
 .handleStreamEnd(
   e => e.error && (__upstream = {error: e.error})
 )

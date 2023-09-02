@@ -1,5 +1,5 @@
 ((
-  { config } = pipy.solve('config.js'),
+  { config, socketTimeoutOptions } = pipy.solve('config.js'),
   listeners = {},
   listenPort = 0,
 ) => pipy()
@@ -10,9 +10,12 @@
 
 .repeat(
   (config.Listeners || []),
-  ($, l)=>$.listen(
-    (listenPort = (l.Listen || l.Port || 0), listeners[listenPort] = new ListenerArray, listeners[listenPort].add(listenPort), listeners[listenPort]),
-    { ...l, protocol: (l?.Protocol === 'UDP') ? 'udp' : 'tcp' }
+  ($, l) => $.listen(
+    (
+      listenPort = (l.Listen || l.Port || 0),
+      listeners[listenPort] = new ListenerArray([{ ...socketTimeoutOptions, ...l, port: listenPort, protocol: (l.Protocol?.toLowerCase?.() === 'udp') ? 'udp' : 'tcp' }]),
+      listeners[listenPort]
+    )
   )
   .onStart(
     () => (

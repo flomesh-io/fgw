@@ -27,5 +27,13 @@
   {
     config,
     isDebugEnabled: Boolean(config?.Configs?.EnableDebug),
+    socketTimeoutOptions: (config?.Configs?.SocketTimeout > 0) ? (
+      {
+        connectTimeout: config.Configs.SocketTimeout,
+        readTimeout: config.Configs.SocketTimeout,
+        writeTimeout: config.Configs.SocketTimeout,
+        idleTimeout: config.Configs.SocketTimeout,
+      }
+    ) : {},
   }
 ))()

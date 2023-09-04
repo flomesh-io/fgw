@@ -148,6 +148,7 @@
   _unhealthCache: null,
   _healthCheckTarget: null,
   _targetResource: null,
+  _balancerKey: undefined,
 })
 
 .import({
@@ -212,7 +213,8 @@
       _cookieId ? (
         __target = _cookieId
       ) : (
-        (_targetResource = _targetBalancer?.borrow?.(undefined, undefined, _unhealthCache)) && (
+        (__service?.Algorithm === 'HashingLoadBalancer') && (_balancerKey = __inbound.remoteAddress),
+        (_targetResource = _targetBalancer?.borrow?.(undefined, _balancerKey, _unhealthCache)) && (
           __target = _targetResource?.id
         )
       ),

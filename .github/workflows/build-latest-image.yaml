@@ -1,0 +1,51 @@
+name: build-fgw-nightly-image
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-pipy:
+    name: Build fgw nightly image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2.2.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2.9.1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v2.2.0
+        with:
+          username: ${{ secrets.FLOMESH_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.FLOMESH_DOCKERHUB_PASSWORD }}
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v4.6.0
+        with:
+          images: flomesh/fgw
+          tags: |
+            type=raw,latest
+            type=sha,format=short
+
+      - name: Build and Push
+        uses: docker/build-push-action@v4.1.1
+        with:
+          context: .
+          file: ./Dockerfile.nightly
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          build-args: |
+            GO_VERSION=1.20
+            LDFLAGS="-s -w"
+          

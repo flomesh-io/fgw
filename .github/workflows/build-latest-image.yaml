@@ -7,7 +7,7 @@ on:
 
 jobs:
   build-pipy:
-    name: Build fgw nightly image
+    name: Build fgw latest image
     runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU

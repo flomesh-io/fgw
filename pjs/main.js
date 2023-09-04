@@ -8,6 +8,24 @@
   __port: null,
 })
 
+.branch(
+  config?.Configs?.PidFile, (
+    $=>$
+    .task()
+    .onStart(
+      () => void (
+        os.writeFile(config.Configs.PidFile, '' + pipy.pid)
+      )
+    )
+    .exit()
+    .onStart(
+      () => void (
+        os.unlink(config.Configs.PidFile)
+      )
+    )
+  )
+)
+
 .repeat(
   (config.Listeners || []),
   ($, l) => $.listen(

@@ -1,4 +1,4 @@
-name: build-fgw-nightly-image
+name: build-fgw-latest-image
 
 on:
   push:

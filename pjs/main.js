@@ -1,5 +1,6 @@
 ((
   { config, socketTimeoutOptions } = pipy.solve('config.js'),
+  { metrics } = pipy.solve('lib/metrics.js'),
   listeners = {},
   listenPort = 0,
 ) => pipy()
@@ -23,6 +24,12 @@
         os.unlink(config.Configs.PidFile)
       )
     )
+  )
+)
+.task()
+.onStart(
+  () => void (
+    metrics.fgwMetaInfo.withLabels(pipy.uuid || '', pipy.name || '', pipy.source || '', os.env.PIPY_K8S_CLUSTER || '').increase()
   )
 )
 

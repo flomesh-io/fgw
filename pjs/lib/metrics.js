@@ -2,6 +2,13 @@
   (
     config = pipy.solve('config.js'),
 
+    fgwMetaInfo = new stats.Gauge('fgw_meta_info', [
+      'uuid',
+      'name',
+      'codeBase',
+      'k8sCluster'
+    ]),
+
     fgwHttpStatus = new stats.Counter('fgw_http_status', [
       'service', 'code', 'route', 'matched_uri', 'matched_host', 'consumer', 'node'
     ]),
@@ -47,6 +54,7 @@
     ]),
 
     metrics = {
+      fgwMetaInfo, // main.js
       fgwHttpRequestsTotal, // codec.js
       fgwHttpCurrentConnections, // codec.js
       fgwUpstreamStatus, // health-check.js

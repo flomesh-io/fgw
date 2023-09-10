@@ -14,6 +14,8 @@ cypress/fixtures/pipy/
 cypress/fixtures/pipy4lb/
 flomesh-testsuites/
 gui/node_modules/
+tests/shpec/pjs/
+tests/shpec/tmp/
 
 # Editor directories and files
 .idea

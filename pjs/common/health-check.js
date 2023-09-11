@@ -44,7 +44,10 @@
             metrics.fgwUpstreamStatus.withLabels(
               name,
               target.ip,
-              target.port
+              target.port,
+              'ok',
+              target.reason = '',
+              target.http_status || ''
             ).increase()
           ),
 
@@ -67,8 +70,11 @@
             metrics.fgwUpstreamStatus.withLabels(
               name,
               target.ip,
-              target.port
-            ).set(0)
+              target.port,
+              'fail',
+              target.reason || '',
+              target.http_status || ''
+            ).decrease()
           ),
 
           available: target => (
@@ -108,11 +114,12 @@
           check: target => (
             new http.Agent(target.target).request('GET', uri).then(
               result => (
+                target.http_status = result?.head?.status,
                 target.service.match(result) ? (
                   target.service.ok(target)
                 ) : (
-                  target.service.fail(target),
-                  target.reason = "status " + result?.head?.status
+                  target.reason = "BadStatus",
+                  target.service.fail(target)
                 ),
                 {}
               )
@@ -221,6 +228,7 @@
           (!e.error || e.error === "ReadTimeout" || e.error === "IdleTimeout") ? (
             _target.service.ok(_target)
           ) : (
+            _target.reason = 'ConnectionRefused',
             _target.service.fail(_target)
           ),
           _resolve(),

@@ -83,8 +83,8 @@ All FGW documentation is maintained within the [fgw-docs](https://github.com/flo
 
 ### Prerequisites
 
-- Pipy (Version >= {{< param min_pipy_version >}})
-- FGW Repo (Version >= {{< param fgw_version >}})
+- Pipy
+- FGW Repo
 - Tools for testing: netstat, cat, grep, openssl, curl, shpec
 
 ### Quick Start
@@ -100,3 +100,5 @@ Execute `main build` to compile FGW. Upon successful compilation, the fgw binary
 ### Testing
 
 Within the tests/shpec directory, initially run pre_test.sh to examine the testing environment, and thereafter execute shpec to test all cases.
+
+> The testing works on LINUX ONLY!

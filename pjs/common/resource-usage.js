@@ -1,6 +1,25 @@
 (
   (
     { config } = pipy.solve('config.js'),
+
+    ruLogging = config?.Configs?.ResourceUsage?.StorageAddress && new logging.JSONLogger('resource-usage-logger').toHTTP(config.Configs.ResourceUsage.StorageAddress, {
+      batch: {
+        timeout: 1,
+        interval: 1,
+        prefix: '[',
+        postfix: ']',
+        separator: ','
+      },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': config.Configs.ResourceUsage.Authorization || ''
+      }
+    }).log,
+
+    k8s_cluster = os.env.PIPY_K8S_CLUSTER || '',
+    code_base = pipy.source || '',
+    pipy_id = pipy.name || '',
+
     { metrics } = pipy.solve('lib/metrics.js'),
     cpuUsage = (
       (
@@ -27,14 +46,27 @@
     hostname = pipy.exec('hostname')?.toString?.()?.replaceAll?.('\n', ''),
     cpuUsageMetric = metrics.fgwResourceUsage.withLabels(pipy.uuid || '', pipy.name || '', pipy.source || '', hostname, 'cpu'),
     memUsageMetric = metrics.fgwResourceUsage.withLabels(pipy.uuid || '', pipy.name || '', pipy.source || '', hostname, 'mem'),
-  ) => pipy()
+  ) => pipy({
+    _cpu: null,
+    _mem: null,
+  })
 
 .pipeline()
 .task(config.Configs.ResourceUsage.ScrapeInterval + 's')
 .onStart(
   () => (
-    cpuUsageMetric.set(+cpuUsage()),
-    memUsageMetric.set(+memUsage()),
+    cpuUsageMetric.set(_cpu = +cpuUsage()),
+    memUsageMetric.set(_mem = +memUsage()),
+    ruLogging?.(
+      {
+        k8s_cluster,
+        code_base,
+        pipy_id,
+        host: hostname,
+        cpu: _cpu,
+        mem: _mem,
+      }
+    ),
     new StreamEnd
   )
 )

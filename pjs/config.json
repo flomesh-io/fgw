@@ -1,8 +1,6 @@
 {
   "Configs": {
-    "ResourceUsage": {
-      "ScrapeInterval": 5
-    }
+    "EnableDebug": true
   },
   "Listeners": [
     {

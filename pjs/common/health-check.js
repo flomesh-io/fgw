@@ -1,6 +1,24 @@
 ((
   { config, isDebugEnabled } = pipy.solve('config.js'),
 
+  hcLogging = config?.Configs?.HealthCheckLog?.StorageAddress && new logging.JSONLogger('health-check-logger').toHTTP(config.Configs.HealthCheckLog.StorageAddress, {
+    batch: {
+      timeout: 1,
+      interval: 1,
+      prefix: '[',
+      postfix: ']',
+      separator: ','
+    },
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': config.Configs.HealthCheckLog.Authorization || ''
+    }
+  }).log,
+
+  k8s_cluster = os.env.PIPY_K8S_CLUSTER || '',
+  code_base = pipy.source || '',
+  pipy_id = pipy.name || '',
+
   { metrics } = pipy.solve('lib/metrics.js'),
 
   healthCheckTargets = {},
@@ -15,7 +33,7 @@
         maxFails = serviceConfig.HealthCheck?.MaxFails, // || 3, both
         failTimeout = serviceConfig.HealthCheck?.FailTimeout, // || 300, passivity
         uri = serviceConfig.HealthCheck?.Uri, // for HTTP
-        matches = serviceConfig.HealthCheck?.Matches || [{ Type: "status", Value: [ 200 ] }], // for HTTP
+        matches = serviceConfig.HealthCheck?.Matches || [{ Type: "status", Value: [200] }], // for HTTP
         type = uri ? 'HTTP' : 'TCP',
       ) => (
         {
@@ -45,10 +63,18 @@
               name,
               target.ip,
               target.port,
-              'ok',
-              target.reason = '',
+              target.reason = 'ok',
               target.http_status || ''
-            ).increase()
+            ).increase(),
+            hcLogging?.({
+              k8s_cluster,
+              code_base,
+              pipy_id,
+              upstream_ip: target.ip,
+              upstream_port: target.port,
+              type: 'ok',
+              http_status: target.http_status || ''
+            })
           ),
 
           fail: target => (
@@ -71,10 +97,18 @@
               name,
               target.ip,
               target.port,
-              'fail',
-              target.reason || '',
+              target.reason || 'fail',
               target.http_status || ''
-            ).decrease()
+            ).decrease(),
+            hcLogging?.({
+              k8s_cluster,
+              code_base,
+              pipy_id,
+              upstream_ip: target.ip,
+              upstream_port: target.port,
+              type: target.reason || 'fail',
+              http_status: target.http_status || ''
+            })
           ),
 
           available: target => (
@@ -118,7 +152,7 @@
                 target.service.match(result) ? (
                   target.service.ok(target)
                 ) : (
-                  target.reason = "BadStatus",
+                  target.reason = "BadHttpStatus",
                   target.service.fail(target)
                 ),
                 {}

@@ -1,6 +1,7 @@
 {
   "Configs": {
-    "EnableDebug": true
+    "EnableDebug": true,
+    "DefaultMimeType": "application/xhtml+xml"
   },
   "Listeners": [
     {
@@ -35,8 +36,10 @@
     },
     "8081": {
       "*": {
+        "DefaultMimeType": "text/plain",
         "Matches": [
           {
+            "DefaultMimeType": "text/html",
             "ServerRoot": "/var/www/html",
             "Index": [
               "index.html",
@@ -58,7 +61,7 @@
             "ServerRoot": "www2",
             "Index": [
               "default.html",
-              "index.htm"
+              "index.html"
             ]
           }
         ]

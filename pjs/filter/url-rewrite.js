@@ -58,6 +58,10 @@
             )
           )()
         )
+      ) : cfg?.hostname ? (
+        head => head.headers && (
+          head.headers.host = cfg.hostname
+        )
       ) : null
     )
   ),

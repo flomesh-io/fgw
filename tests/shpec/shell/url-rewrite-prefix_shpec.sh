@@ -38,7 +38,7 @@ describe "SHPEC url rewrite prefix Test"
   runtime=$((end-start))
 
   it "check path"
-    assert grep "$output" '"path": "/123"'
+    assert grep "$output" '"path": "/xyz/xyz/123"'
   end
 
 end

@@ -58,6 +58,10 @@
             )
           )()
         )
+      ) : cfg?.hostname ? (
+        head => head.headers && (
+          head.headers.host = cfg.hostname
+        )
       ) : null
     )
   ),
@@ -65,9 +69,9 @@
   makeRewriteHandler = (path, cfg) => (
     (
       handlers = (cfg?.Filters || []).filter(
-        e => e?.Type === 'URLRewrite'
+        e => e?.type === 'URLRewrite'
       ).map(
-        e => makeHeadHandler(path, e)
+        e => makeHeadHandler(path, e.urlRewrite)
       ).filter(
         e => e
       )

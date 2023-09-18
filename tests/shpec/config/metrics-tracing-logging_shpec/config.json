@@ -193,49 +193,53 @@
                         },
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header1",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-headers2",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header3",
-                                    "my-header4"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header1",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-headers2",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header3",
+                                        "my-header4"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header5",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-header6",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header7",
-                                    "my-header8"
-                                ]
+                                "type": "ResponseHeaderModifier",
+                                "responseHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header5",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-header6",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header7",
+                                        "my-header8"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect0",
+                                "type": "RequestRedirect0",
                                 "scheme": "https",
                                 "hostname": "",
                                 "Path": "/abc",
@@ -243,18 +247,18 @@
                                 "statusCode": 301
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }
@@ -293,49 +297,53 @@
                         },
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header1",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-headers2",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header3",
-                                    "my-header4"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header1",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-headers2",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header3",
+                                        "my-header4"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header5",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-header6",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header7",
-                                    "my-header8"
-                                ]
+                                "type": "ResponseHeaderModifier",
+                                "responseHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header5",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-header6",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header7",
+                                        "my-header8"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect0",
+                                "type": "RequestRedirect0",
                                 "scheme": "https",
                                 "hostname": "",
                                 "Path": "/abc",
@@ -343,18 +351,18 @@
                                 "statusCode": 301
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }
@@ -372,49 +380,53 @@
                         },
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header1",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-headers2",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header3",
-                                    "my-header4"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header1",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-headers2",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header3",
+                                        "my-header4"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header5",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-header6",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header7",
-                                    "my-header8"
-                                ]
+                                "type": "ResponseHeaderModifier",
+                                "responseHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header5",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-header6",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header7",
+                                        "my-header8"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect0",
+                                "type": "RequestRedirect0",
                                 "scheme": "https",
                                 "hostname": "",
                                 "Path": "/abc",
@@ -422,18 +434,18 @@
                                 "statusCode": 301
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }
@@ -451,49 +463,53 @@
                         },
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header1",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-headers2",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header3",
-                                    "my-header4"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header1",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-headers2",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header3",
+                                        "my-header4"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "my-header5",
-                                        "value": "bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "my-header6",
-                                        "value": "bar,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "my-header7",
-                                    "my-header8"
-                                ]
+                                "type": "ResponseHeaderModifier",
+                                "responseHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "my-header5",
+                                            "value": "bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "my-header6",
+                                            "value": "bar,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "my-header7",
+                                        "my-header8"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect0",
+                                "type": "RequestRedirect0",
                                 "scheme": "https",
                                 "hostname": "",
                                 "Path": "/abc",
@@ -501,18 +517,18 @@
                                 "statusCode": 301
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }

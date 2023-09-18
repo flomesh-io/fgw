@@ -54,9 +54,9 @@
 
   makeServiceRedirectHandler = svc => (
     (svc?.Filters || []).filter(
-      e => e?.Type === 'RequestRedirect'
+      e => e?.type === 'RequestRedirect'
     ).map(
-      e => makeRedirectHandler(e)
+      e => makeRedirectHandler(e.requestRedirect)
     ).filter(
       e => e
     )?.[0]

@@ -49,34 +49,38 @@
                         },
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "X-App-Id",
-                                        "value": "$consumer_name"
-                                    },
-                                    {
-                                        "name": "test-header1",
-                                        "value": "$http_host"
-                                    },
-                                    {
-                                        "name": "test-header2",
-                                        "value": "$http_path"
-                                    },
-                                    {
-                                        "name": "test-header3",
-                                        "value": "$http_user-agent"
-                                    }
-                                ],
-                                "remove": [
-                                    "apikey"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "X-App-Id",
+                                            "value": "$consumer_name"
+                                        },
+                                        {
+                                            "name": "test-header1",
+                                            "value": "$http_host"
+                                        },
+                                        {
+                                            "name": "test-header2",
+                                            "value": "$http_path"
+                                        },
+                                        {
+                                            "name": "test-header3",
+                                            "value": "$http_user-agent"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "apikey"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "URLRewrite",
-                                "path": {
-                                    "type": "ReplaceFullPath",
-                                    "replaceFullPath": "$consumer_app/"
+                                "type": "URLRewrite",
+                                "urlRewrite": {
+                                    "path": {
+                                        "type": "ReplaceFullPath",
+                                        "replaceFullPath": "$consumer_app/"
+                                    }
                                 }
                             }
                         ]

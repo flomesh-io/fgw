@@ -46,7 +46,7 @@
                     {
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
+                                "type": "RequestHeaderModifier",
                                 "set": [
                                     {
                                         "name": "host",
@@ -65,7 +65,7 @@
                                 ]
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
+                                "type": "ResponseHeaderModifier",
                                 "set": [
                                     {
                                         "name": "dummy1",
@@ -84,30 +84,32 @@
                                 ]
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect",
-                                "scheme": "https",
-                                "hostname": "",
-                                "path": "/abc",
-                                "port": 8443,
-                                "statusCode": 301
+                                "type": "RequestRedirect",
+                                "requestRedirect": {
+                                    "scheme": "https",
+                                    "hostname": "",
+                                    "path": "/abc",
+                                    "port": 8443,
+                                    "statusCode": 301
+                                }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "URLRewrite",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }

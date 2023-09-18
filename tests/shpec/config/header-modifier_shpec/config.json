@@ -46,49 +46,53 @@
                     {
                         "Filters": [
                             {
-                                "Type": "RequestHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "host",
-                                        "value": "set-bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "accept",
-                                        "value": "xxx"
-                                    }
-                                ],
-                                "remove": [
-                                    "user-agent",
-                                    "my-header4"
-                                ]
+                                "type": "RequestHeaderModifier",
+                                "requestHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "host",
+                                            "value": "set-bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "accept",
+                                            "value": "xxx"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "user-agent",
+                                        "my-header4"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "ResponseHeaderModifier",
-                                "set": [
-                                    {
-                                        "name": "dummy1",
-                                        "value": "set-bar"
-                                    }
-                                ],
-                                "add": [
-                                    {
-                                        "name": "dummy2",
-                                        "value": "add,baz"
-                                    }
-                                ],
-                                "remove": [
-                                    "dummy3",
-                                    "my-header8"
-                                ]
+                                "type": "ResponseHeaderModifier",
+                                "responseHeaderModifier": {
+                                    "set": [
+                                        {
+                                            "name": "dummy1",
+                                            "value": "set-bar"
+                                        }
+                                    ],
+                                    "add": [
+                                        {
+                                            "name": "dummy2",
+                                            "value": "add,baz"
+                                        }
+                                    ],
+                                    "remove": [
+                                        "dummy3",
+                                        "my-header8"
+                                    ]
+                                }
                             },
                             {
-                                "Type": "RequestMirror",
+                                "type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "Type": "RequestRedirect0",
+                                "type": "RequestRedirect0",
                                 "scheme": "https",
                                 "hostname": "",
                                 "Path": "/abc",
@@ -96,18 +100,18 @@
                                 "statusCode": 301
                             },
                             {
-                                "Type": "HTTPURLRewriteFilter",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplacePrefixMatch",
+                                    "type": "ReplacePrefixMatch",
                                     "replacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "Type": "HTTPURLRewriteFilter",
+                                "type": "URLRewrite",
                                 "hostname": "",
                                 "Path": {
-                                    "Type": "ReplaceFullPath",
+                                    "type": "ReplaceFullPath",
                                     "replaceFullPath": "/repo/"
                                 }
                             }

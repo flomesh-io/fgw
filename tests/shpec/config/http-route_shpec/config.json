@@ -417,7 +417,7 @@
             },
             "Filters": [
                 {
-                    "Type": "RequestHeaderModifier",
+                    "type": "RequestHeaderModifier",
                     "set": [
                         {
                             "name": "my-header1",
@@ -436,7 +436,7 @@
                     ]
                 },
                 {
-                    "Type": "ResponseHeaderModifier",
+                    "type": "ResponseHeaderModifier",
                     "set": [
                         {
                             "name": "my-header5",
@@ -455,11 +455,11 @@
                     ]
                 },
                 {
-                    "Type": "RequestMirror",
+                    "type": "RequestMirror",
                     "backendRef": "namespace/service-name:port"
                 },
                 {
-                    "Type": "RequestRedirect0",
+                    "type": "RequestRedirect0",
                     "scheme": "https",
                     "hostname": "",
                     "Path": "/abc",
@@ -467,18 +467,18 @@
                     "statusCode": 301
                 },
                 {
-                    "Type": "HTTPURLRewriteFilter",
+                    "type": "URLRewrite",
                     "hostname": "",
                     "Path": {
-                        "Type": "ReplacePrefixMatch",
+                        "type": "ReplacePrefixMatch",
                         "replacePrefixMatch": "/repo"
                     }
                 },
                 {
-                    "Type": "HTTPURLRewriteFilter",
+                    "type": "URLRewrite",
                     "hostname": "",
                     "Path": {
-                        "Type": "ReplaceFullPath",
+                        "type": "ReplaceFullPath",
                         "replaceFullPath": "/repo/"
                     }
                 }

@@ -19,7 +19,9 @@
         "Matches": [
           {
             "BackendService": {
-              "upstream-01": 100
+              "upstream-01": {
+                "Weight": 100
+              }
             }
           }
         ]

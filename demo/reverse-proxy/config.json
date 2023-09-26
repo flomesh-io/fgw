@@ -32,7 +32,9 @@
               "Path": "/"
             },
             "BackendService": {
-              "backendService_a1": 100
+              "backendService_a1": {
+                "Weight": 100
+              }
             }
           }
         ]
@@ -46,7 +48,9 @@
               "Path": "/"
             },
             "BackendService": {
-              "backendService_a2": 100
+              "backendService_a2": {
+                "Weight": 100
+              }
             }
           }
         ]
@@ -60,7 +64,9 @@
               "Path": "/a1"
             },
             "BackendService": {
-              "backendService_a1": 100
+              "backendService_a1": {
+                "Weight": 100
+              }
             }
           },
           {
@@ -69,7 +75,9 @@
               "Path": "/a2"
             },
             "BackendService": {
-              "backendService_a2": 100
+              "backendService_a2": {
+                "Weight": 100
+              }
             }
           },
           {
@@ -78,7 +86,9 @@
               "Path": "/"
             },
             "BackendService": {
-              "backendService": 100
+              "backendService": {
+                "Weight": 100
+              }
             }
           }
         ]

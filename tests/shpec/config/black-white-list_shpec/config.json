@@ -8,22 +8,22 @@
             "Protocol": "HTTP",
             "Port": 80,
             "AccessControlLists": {
-                "blacklist": [
+                "Blacklist": [
                     "127.0.0.11",
                     "192.168.122.1/32"
                 ],
-                "whitelist": [
+                "Whitelist": [
                     "192.168.122.18",
                     "127.0.0.11/32"
                 ]
             },
-            "bpsLimit": 10000000
+            "BpsLimit": 10000000
         },
         {
             "Protocol": "HTTP",
             "Port": 81,
             "AccessControlLists": {
-                "blacklist": [
+                "Blacklist": [
                     "192.168.122.18",
                     "127.0.0.11/32"
                 ]

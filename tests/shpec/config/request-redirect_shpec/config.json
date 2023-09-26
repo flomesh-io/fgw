@@ -8,16 +8,16 @@
             "Protocol": "HTTP",
             "Port": 80,
             "AccessControlLists": {
-                "blacklist": [
+                "Blacklist": [
                     "127.0.0.1",
                     "192.168.122.1/32"
                 ],
-                "whitelist": [
+                "Whitelist": [
                     "192.168.122.18",
                     "127.0.0.11/24"
                 ]
             },
-            "bpsLimit": 10000000
+            "BpsLimit": 10000000
         }
     ],
     "Certificate": {
@@ -46,71 +46,71 @@
                     {
                         "Filters": [
                             {
-                                "type": "RequestHeaderModifier",
-                                "set": [
+                                "Type": "RequestHeaderModifier",
+                                "Set": [
                                     {
-                                        "name": "host",
-                                        "value": "set-bar"
+                                        "Name": "host",
+                                        "Value": "set-bar"
                                     }
                                 ],
-                                "add": [
+                                "Add": [
                                     {
-                                        "name": "accept",
-                                        "value": "xxx"
+                                        "Name": "accept",
+                                        "Value": "xxx"
                                     }
                                 ],
-                                "remove": [
+                                "Remove": [
                                     "user-agent",
                                     "my-header4"
                                 ]
                             },
                             {
-                                "type": "ResponseHeaderModifier",
-                                "set": [
+                                "Type": "ResponseHeaderModifier",
+                                "Set": [
                                     {
-                                        "name": "dummy1",
-                                        "value": "set-bar"
+                                        "Name": "dummy1",
+                                        "Value": "set-bar"
                                     }
                                 ],
-                                "add": [
+                                "Add": [
                                     {
-                                        "name": "dummy2",
-                                        "value": "add,baz"
+                                        "Name": "dummy2",
+                                        "Value": "add,baz"
                                     }
                                 ],
-                                "remove": [
+                                "Remove": [
                                     "dummy3",
                                     "my-header8"
                                 ]
                             },
                             {
-                                "type": "RequestMirror",
+                                "Type": "RequestMirror",
                                 "backendRef": "namespace/service-name:port"
                             },
                             {
-                                "type": "RequestRedirect",
-                                "requestRedirect": {
-                                    "scheme": "https",
-                                    "hostname": "",
-                                    "path": "/abc",
-                                    "port": 8443,
-                                    "statusCode": 301
+                                "Type": "RequestRedirect",
+                                "RequestRedirect": {
+                                    "Scheme": "https",
+                                    "Hostname": "",
+                                    "Path": "/abc",
+                                    "Port": 8443,
+                                    "StatusCode": 301
                                 }
                             },
                             {
-                                "type": "URLRewrite",
-                                "hostname": "",
+                                "Type": "URLRewrite",
+                                "Hostname": "",
                                 "Path": {
-                                    "type": "ReplacePrefixMatch",
-                                    "replacePrefixMatch": "/repo"
+                                    "Type": "ReplacePrefixMatch",
+                                    "ReplacePrefixMatch": "/repo"
                                 }
                             },
                             {
-                                "type": "URLRewrite",
-                                "hostname": "",
+                                "Type": "URLRewrite",
+                                "Hostname": "",
                                 "Path": {
-                                    "type": "ReplaceFullPath",
-                                    "replaceFullPath": "/repo/"
+                                    "Type": "ReplaceFullPath",
+                                    "ReplaceFullPath": "/repo/"
                                 }
                             }
                         ],

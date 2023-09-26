@@ -91,7 +91,7 @@
                                 "ResponseStatusCode": 430,
                                 "ResponseHeadersToAdd": [
                                     {
-                                        "Name": "path",
+                                        "Name": "Path",
                                         "Value": "111"
                                     },
                                     {
@@ -112,7 +112,7 @@
                         "ResponseStatusCode": 431,
                         "ResponseHeadersToAdd": [
                             {
-                                "Name": "path",
+                                "Name": "Path",
                                 "Value": "000"
                             },
                             {
@@ -193,69 +193,69 @@
             },
             "Filters": [
                 {
-                    "type": "RequestHeaderModifier",
-                    "set": [
+                    "Type": "RequestHeaderModifier",
+                    "Set": [
                         {
-                            "name": "my-header1",
-                            "value": "bar"
+                            "Name": "my-header1",
+                            "Value": "bar"
                         }
                     ],
-                    "add": [
+                    "Add": [
                         {
-                            "name": "my-headers2",
-                            "value": "bar,baz"
+                            "Name": "my-headers2",
+                            "Value": "bar,baz"
                         }
                     ],
-                    "remove": [
+                    "Remove": [
                         "my-header3",
                         "my-header4"
                     ]
                 },
                 {
-                    "type": "ResponseHeaderModifier",
-                    "set": [
+                    "Type": "ResponseHeaderModifier",
+                    "Set": [
                         {
-                            "name": "my-header5",
-                            "value": "bar"
+                            "Name": "my-header5",
+                            "Value": "bar"
                         }
                     ],
-                    "add": [
+                    "Add": [
                         {
-                            "name": "my-header6",
-                            "value": "bar,baz"
+                            "Name": "my-header6",
+                            "Value": "bar,baz"
                         }
                     ],
-                    "remove": [
+                    "Remove": [
                         "my-header7",
                         "my-header8"
                     ]
                 },
                 {
-                    "type": "RequestMirror",
+                    "Type": "RequestMirror",
                     "backendRef": "namespace/service-name:port"
                 },
                 {
-                    "type": "RequestRedirect0",
-                    "scheme": "https",
-                    "hostname": "",
+                    "Type": "RequestRedirect0",
+                    "Scheme": "https",
+                    "Hostname": "",
                     "Path": "/abc",
-                    "port": 8443,
-                    "statusCode": 301
+                    "Port": 8443,
+                    "StatusCode": 301
                 },
                 {
-                    "type": "URLRewrite",
-                    "hostname": "",
+                    "Type": "URLRewrite",
+                    "Hostname": "",
                     "Path": {
-                        "type": "ReplacePrefixMatch",
-                        "replacePrefixMatch": "/repo"
+                        "Type": "ReplacePrefixMatch",
+                        "ReplacePrefixMatch": "/repo"
                     }
                 },
                 {
-                    "type": "URLRewrite",
-                    "hostname": "",
+                    "Type": "URLRewrite",
+                    "Hostname": "",
                     "Path": {
-                        "type": "ReplaceFullPath",
-                        "replaceFullPath": "/repo/"
+                        "Type": "ReplaceFullPath",
+                        "ReplaceFullPath": "/repo/"
                     }
                 }
             ],

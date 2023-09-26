@@ -55,7 +55,7 @@ weight: 1
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|TLSModeType|TLS 工作模式|Terminate、Passthrough|是|
-|2|mTLS|是否启用客户端证书认证|true、false|否|
+|2|MTLS|是否启用客户端证书认证|true、false|否|
 |3| Certificates |证书、私钥、CA 证书|参考 2.2.1|否|
 
 #### 2.2.1 Certificates

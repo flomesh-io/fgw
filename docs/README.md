@@ -37,18 +37,18 @@ weight: 1
 |2|Listen|非必须配置，监听端口号，<br>如果未配置，使用 Port 为监听端口号|1~65535|否|
 |3|Protocol|端口所使用的协议|HTTP、HTTPS、TLS、TCP|是|
 |4|AccessControlLists|访问控制列表，设置访问者 IP 地址黑白名单。<br>如果设置了白名单，就以白名单为准；<br>如果未设置白名单，就以黑名单为准。|参考 2.1|否|
-|5|bpsLimit|网络限速（单位：字节/秒）|"bpsLimit": 10000000|否|
+|5|BpsLimit|网络限速（单位：字节/秒）|"BpsLimit": 10000000|否|
 |6|TLS|配置 TLS 相关的证书信息| 参考 2.2 |否|
 
 ### 2.1 AccessControlLists
 
 | 编号 | 配置项名称 | 用途描述                                                | 参考值                    | 是否必须 |
 |:----:|:---------- |:------------------------------------------------------- |:------------------------- |:--------:|
-|  1   | blacklist  | 黑名单列表                                              | ["1.1.1.1", "2.2.2.0/24"] |    否    |
-|  2   | whitelist  | 白名单列表                                              | ["1.1.1.1", "2.2.2.0/24"] |    否    |
-|  3   | enableXFF  | 是否检查请求头 x-forwarded-for 中的 IP 地址，默认不检查 | true                      |    否    |
-|  4   | status     | 拒绝访问后返回的响应状态码，不指定时默认为 403          | 403                       |    否    |
-|  5   | message    | 拒绝访问后返回的响应内容，不指定时默认为空字符          | Forbidden                 | 否         |
+|  1   | Blacklist  | 黑名单列表                                              | ["1.1.1.1", "2.2.2.0/24"] |    否    |
+|  2   | Whitelist  | 白名单列表                                              | ["1.1.1.1", "2.2.2.0/24"] |    否    |
+|  3   | EnableXFF  | 是否检查请求头 x-forwarded-for 中的 IP 地址，默认不检查 | true                      |    否    |
+|  4   | Status     | 拒绝访问后返回的响应状态码，不指定时默认为 403          | 403                       |    否    |
+|  5   | Message    | 拒绝访问后返回的响应内容，不指定时默认为空字符          | Forbidden                 | 否         |
 
 ### 2.2 TLS
 
@@ -184,42 +184,42 @@ weight: 1
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
-|1|set|设置 HTTP header|[<br>{<br>"name": "my-header1",<br>"value": "foo"<br>}<br>]|否|
-|2|add|增加 HTTP header|[<br>{<br>"name": "my-header2",<br>"value": "bar"<br>}<br>]|否|
-|3|remove|删除 HTTP header|[<br>"my-header3",<br>"my-header4"<br>]|否|
+|1|Set|设置 HTTP header|[<br>{<br>"name": "my-header1",<br>"value": "foo"<br>}<br>]|否|
+|2|Add|增加 HTTP header|[<br>{<br>"name": "my-header2",<br>"value": "bar"<br>}<br>]|否|
+|3|Remove|删除 HTTP header|[<br>"my-header3",<br>"my-header4"<br>]|否|
 
 ###### 3.1.1.1.6.2 ResponseHeaderModifier
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
-|1|set|设置 HTTP header|[<br>{<br>"name": "my-header1",<br>"value": "foo"<br>}<br>]|否|
-|2|add|增加 HTTP header|[<br>{<br>"name": "my-header2",<br>"value": "bar"<br>}<br>]|否|
-|3|remove|删除 HTTP header|[<br>"my-header3",<br>"my-header4"<br>]|否|
+|1|Set|设置 HTTP header|[<br>{<br>"name": "my-header1",<br>"value": "foo"<br>}<br>]|否|
+|2|Add|增加 HTTP header|[<br>{<br>"name": "my-header2",<br>"value": "bar"<br>}<br>]|否|
+|3|Remove|删除 HTTP header|[<br>"my-header3",<br>"my-header4"<br>]|否|
 
 ###### 3.1.1.1.6.3 RequestRedirect
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
-|1|scheme|协议描述|http、https|否|
-|2|hostname|重定向到的域名||否|
-|3|path|重定向到的路径||是|
-|4|port|重定向到的端口||否|
-|5|statusCode|重定向返回的状态码|301、302|是|
+|1|Scheme|协议描述|http、https|否|
+|2|Hostname|重定向到的域名||否|
+|3|Path|重定向到的路径||是|
+|4|Port|重定向到的端口||否|
+|5|StatusCode|重定向返回的状态码|301、302|是|
 
 ###### 3.1.1.1.6.4 URLRewrite
 
 | 编号 | 配置项名称 | 用途描述        | 参考值          | 是否必须 |
 |:----:|:---------- |:--------------- |:--------------- |:--------:|
-|  1   | hostname   | 主机名/域名重写 | sub.example.com |    否    |
-|  2   | path           |  路径重写规则               |       参考 3.1.1.1.6.4.1          |      是     |
+|  1   | Hostname   | 主机名/域名重写 | sub.example.com |    否    |
+|  2   | Path           |  路径重写规则               |       参考 3.1.1.1.6.4.1          |      是     |
 
 ###### 3.1.1.1.6.4.1 URLRewrite Path 规则
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
-|1|type|Url 重写匹配规则|ReplacePrefixMatch：前缀匹配<br>ReplaceFullPath：全路径匹配|是|
-|2|replacePrefixMatch|前缀匹配时替换 path||type 为 ReplacePrefixMatch 时，必须配置|
-|3|replaceFullPath|全路径匹配时替换 path||type 位 ReplaceFullPath 时，必须配置|
+|1|Type|Url 重写匹配规则|ReplacePrefixMatch：前缀匹配<br>ReplaceFullPath：全路径匹配|是|
+|2|ReplacePrefixMatch|前缀匹配时替换 path||type 为 ReplacePrefixMatch 时，必须配置|
+|3|ReplaceFullPath|全路径匹配时替换 path||type 位 ReplaceFullPath 时，必须配置|
 
 ## 4. 服务配置（Services）
 

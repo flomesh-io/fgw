@@ -1,6 +1,22 @@
 {
   "Configs": {
-    "EnableDebug": true
+    "EnableDebug": true,
+    "ErrorPage": [
+      {
+        "Error": [
+          404
+        ],
+        "Page": "404.html",
+        "Directory": "pages/"
+      },
+      {
+        "Error": [
+          502
+        ],
+        "Page": "502.html",
+        "Directory": "pages/"
+      }
+    ]
   },
   "Listeners": [
     {
@@ -113,6 +129,7 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
+      "http/error-page.js",
       "http/forward.js",
       "http/default.js"
     ],
@@ -134,6 +151,7 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
+      "http/error-page.js",
       "http/forward.js",
       "http/default.js"
     ],

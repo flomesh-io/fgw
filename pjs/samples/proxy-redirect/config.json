@@ -1,22 +1,6 @@
 {
   "Configs": {
-    "EnableDebug": true,
-    "ErrorPage": [
-      {
-        "Error": [
-          404
-        ],
-        "Page": "404.html",
-        "Directory": "pages/"
-      },
-      {
-        "Error": [
-          502
-        ],
-        "Page": "502.html",
-        "Directory": "pages/"
-      }
-    ]
+    "EnableDebug": true
   },
   "Listeners": [
     {
@@ -41,6 +25,10 @@
             "Path": {
               "Type": "Prefix",
               "Path": "/"
+            },
+            "ProxyRedirect": {
+              "http://www.flomesh.com/aa": "http://$http_host/ab",
+              "http://www.flomesh.com/a0": "/a1"
             },
             "BackendService": {
               "backendService1": {
@@ -129,7 +117,6 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
-      "http/error-page.js",
       "http/proxy-redirect.js",
       "http/forward.js",
       "http/default.js"
@@ -152,7 +139,6 @@
       "filter/request-redirect.js",
       "filter/header-modifier.js",
       "filter/url-rewrite.js",
-      "http/error-page.js",
       "http/proxy-redirect.js",
       "http/forward.js",
       "http/default.js"

@@ -60,7 +60,10 @@
     )
   ),
   () => __root, (
-    $=>$.use('server/web-server.js')
+    $=>$
+    .use('http/error-page.js', 'request')
+    .use('server/web-server.js')
+    .use('http/error-page.js', 'response')
   ),
   () => __service, (
     $=>$.chain()

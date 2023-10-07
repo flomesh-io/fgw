@@ -26,6 +26,10 @@
               "Type": "Prefix",
               "Path": "/"
             },
+            "ProxyRedirect": {
+              "http://www.flomesh.com/aa": "http://$http_host/ab",
+              "http://www.flomesh.com/a0": "/a1"
+            },
             "BackendService": {
               "backendService1": {
                 "Weight": 100

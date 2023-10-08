@@ -89,7 +89,7 @@
 .branch(
   isDebugEnabled, (
     $=>$.handleStreamStart(
-      msg => (
+      msg => _proxyRedirect && (
         console.log('[proxy-redirect] location, refresh, response:', _location, _refresh, msg)
       )
     )

@@ -16,7 +16,18 @@
         "Page": "502.html",
         "Directory": "pages/"
       }
-    ]
+    ],
+    "Gzip": {
+      "GzipMinLength": 1024,
+      "GzipTypes": [
+        "text/css",
+        "text/xml",
+        "text/html",
+        "text/plain",
+        "application/xhtml+xml",
+        "application/javascript"
+      ]
+    }
   },
   "Listeners": [
     {

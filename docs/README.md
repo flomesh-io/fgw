@@ -9,12 +9,15 @@ weight: 1
 |编号|配置项名称|用途描述|可选值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|EnableDebug|是否输出调试日志信息|true，false|否|
-|2|StripAnyHostPort|是否忽略 HTTP 请求头中 Host 的端口号，<br>比如：将 Host: [www.aaa.com:8080](http://www.aaa.com:8080) <br>视为 Host: [www.aaa.com](http://www.aaa.com) |true，false|否|
+|2|StripAnyHostPort|是否忽略 HTTP 请求头中 Host 的端口号，<br>比如：将 Host: [www.aaa.com:8080](http://www.aaa.com:8080) <br>视为 Host: [www.aaa.com](http://www.aaa.com) |true，false|否|
 |3|DefaultPassthroughUpstreamPort|TLS Passthrough 场景，<br>如果没有配置上游端口，则使用此端口号|1~65535，通常设置为 443|否|
 |4|SocketTimeout|配置socket网络超时时间（单位：秒）|大于0，默认是60|否|
 |5|PidFile|将pipy进程id写入到文件|例子：/var/log/pipy.pid|否|
 |6|ResourceUsage|配置采集pipy cpu、mem使用率|参考 1.1|否|
-|7|HealthCheckLog|配置健康检查日志用的存储服务器信息|参考1.2|否|
+|7|HealthCheckLog|配置健康检查日志用的存储服务器信息|参考 1.2|否|
+|8|Gzip|配置静态文本文件压缩相关参数|参考 1.3|否|
+|9|ProxyRedirect|对上游返回的HTTP应答中的Location、Refresh等URL进行重写|比如："ProxyRedirect": {"http://www.flomesh.com/aa": "http://$http_host/ab", "http://www.flomesh.com/a0": "/a1"}|否|
+|10|ErrorPage|对HTTP错误码返回自定义网页或链接，类型为列表 []|参考 1.4|否|
 
 ### 1.1 ResourceUsage
 |编号|配置项名称|用途描述|可选值|是否必须|
@@ -29,16 +32,32 @@ weight: 1
 |1|StorageAddress|存储健康检查日志的REST url|如果没有配置就不存储健康检查日志|否|
 |2|Authorization|访问REST url用的 Basic认证信息|如果没有启用认证就不需要配置|否|
 
+### 1.3 Gzip
+|编号|配置项名称|用途描述|可选值|是否必须|
+|:----:|:---------|:-----|:------|:-------:|
+|1|DisableGzip|禁用静态文本文件压缩功能，默认为false|true、false|否|
+|2|GzipMinLength|文本文件压缩的最小字节数，小于此值时不压缩，默认为1024|大于等于0|否|
+|3|GzipHttpVersion|文本文件压缩最低HTTP版本|1.0，1.1 等|否|
+|4|GzipTypes|只对这些content-type启用压缩|["text/css", "text/html"] 等|是|
+|5|GzipDisable|针对user-agent来设置禁用压缩|比如："MSIE [1-6]\."|否|
+
+### 1.4 ErrorPage
+|编号|配置项名称|用途描述|可选值|是否必须|
+|:----:|:---------|:-----|:------|:-------:|
+|1|Error|错误码列表|比如：[404] |是|
+|2|Page|自定义网页名称或者URL地址|比如：404.html 或 http://www.flomesh.cn/404.html |是|
+|3|Directory|自定义网页所在目录，如果Page是URL则忽略此参数|比如：/var/www/html/error|是|
+
 ## 2. 监听端口配置（Listeners）
 
 |编号|配置项名称|用途描述|可选值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|Port|应用使用的端口号|1~65535|是|
-|2|Listen|非必须配置，监听端口号，<br>如果未配置，使用 Port 为监听端口号|1~65535|否|
+|2|Listen|非必须配置，监听端口号，<br>如果未配置，使用 Port 为监听端口号|1~65535|否|
 |3|Protocol|端口所使用的协议|HTTP、HTTPS、TLS、TCP|是|
 |4|AccessControlLists|访问控制列表，设置访问者 IP 地址黑白名单。<br>如果设置了白名单，就以白名单为准；<br>如果未设置白名单，就以黑名单为准。|参考 2.1|否|
 |5|BpsLimit|网络限速（单位：字节/秒）|"BpsLimit": 10000000|否|
-|6|TLS|配置 TLS 相关的证书信息| 参考 2.2 |否|
+|6|TLS|配置 TLS 相关的证书信息| 参考 2.2 |否|
 
 ### 2.1 AccessControlLists
 
@@ -55,7 +74,7 @@ weight: 1
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|TLSModeType|TLS 工作模式|Terminate、Passthrough|是|
-|2|MTLS|是否启用客户端证书认证|true、false|否|
+|2|mTLS|是否启用客户端证书认证|true、false|否|
 |3| Certificates |证书、私钥、CA 证书|参考 2.2.1|否|
 
 #### 2.2.1 Certificates
@@ -66,7 +85,7 @@ weight: 1
 |2|PrivateKey|私钥|"-----BEGIN RSA PRIVATE KEY-----\n"|是|
 |3|IssuingCA|签名证书|"-----BEGIN CERTIFICATE-----\n"|是|
 
-## 3. 路由规则（RouteRules）
+## 3. 路由规则（RouteRules）
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
@@ -86,6 +105,10 @@ weight: 1
 |  2   | Matches            | 匹配规则                                                                                                       | 参考 3.1.1.1 |    是    |
 |  3   | RateLimit          | 域名限流配置                                                                                                   | 参考 3.1.1.2 |    否    |
 |  4   | AccessControlLists | 访问控制列表，设置访问者 IP 地址黑白名单。如果设置了白名单，就以白名单为准；如果未设置白名单，就以黑名单为准。 |     参考 2.1    | 否         |
+|  5  |Gzip|配置静态文本文件压缩相关参数|参考 1.3|否|
+|  6  |ProxyRedirect|参考 1. 全局配置（Configs）说明||否|
+|  7  | ErrorPage |参考 1. 全局配置（Configs）说明||否|
+
 
 ##### 3.1.1.1 Matches
 
@@ -101,6 +124,10 @@ weight: 1
 |  8   | RateLimit      | 路由限流配置                   | 参考 3.1.1.2                     |                     否                      |
 |  9   | AccessControlLists | 访问控制列表，设置访问者 IP 地址黑白名单。如果设置了白名单，就以白名单为准；如果未设置白名单，就以黑名单为准。 |     参考 2.1     | 否         |
 |  10  |	Filters       |	过滤器配置                     |	参考 3.1.1.1.6	                 | 否                                         |
+|  11  |Gzip|配置静态文本文件压缩相关参数|参考 1.3|否|
+|  12  |ProxyRedirect|参考 1. 全局配置（Configs）说明||否|
+|  13  | ErrorPage |参考 1. 全局配置（Configs）说明||否|
+
 
 ###### 3.1.1.1.1 Path
 
@@ -221,7 +248,7 @@ weight: 1
 |2|ReplacePrefixMatch|前缀匹配时替换 path||type 为 ReplacePrefixMatch 时，必须配置|
 |3|ReplaceFullPath|全路径匹配时替换 path||type 位 ReplaceFullPath 时，必须配置|
 
-## 4. 服务配置（Services）
+## 4. 服务配置（Services）
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|

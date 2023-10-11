@@ -129,7 +129,7 @@
 .branch(
   isDebugEnabled, (
     $=>$.handleStreamStart(
-      msg => (
+      msg => _rewriteHandlers && (
         console.log('[url-rewrite] message:', msg)
       )
     )

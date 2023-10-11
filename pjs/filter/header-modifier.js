@@ -153,7 +153,7 @@
 .branch(
   isDebugEnabled, (
     $=>$.handleStreamStart(
-      msg => (
+      msg => _requestHandlers && (
         console.log('[header-modifier] request message:', msg)
       )
     )
@@ -176,7 +176,7 @@
 .branch(
   isDebugEnabled, (
     $=>$.handleStreamStart(
-      msg => (
+      msg => _responseHandlers && (
         console.log('[header-modifier] response message:', msg)
       )
     )

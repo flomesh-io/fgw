@@ -95,7 +95,7 @@ Before commencing, ensure that Pipy is installed. Refer to the [installation doc
 
 ### Build
 
-Execute `main build` to compile FGW. Upon successful compilation, the fgw binary file can be located in the `bin` directory.
+Execute `make build` to compile FGW. Upon successful compilation, the fgw binary file can be located in the `bin` directory.
 
 ### Testing
 

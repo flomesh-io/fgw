@@ -47,6 +47,7 @@
     "8080": {
       "*": {
         "RouteType": "HTTP",
+        "AccessLog": "/var/log/fgw-access.log",
         "Matches": [
           {
             "Path": {
@@ -128,6 +129,7 @@
       "common/ratelimit.js",
       "common/consumer.js",
       "http/codec.js",
+      "http/access-log.js",
       "http/auth.js",
       "http/route.js",
       "http/service.js",
@@ -151,6 +153,7 @@
       "common/tls-termination.js",
       "common/consumer.js",
       "http/codec.js",
+      "http/access-log.js",
       "http/auth.js",
       "http/route.js",
       "http/service.js",

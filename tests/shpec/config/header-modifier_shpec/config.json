@@ -1,7 +1,8 @@
 {
     "Configs": {
         "DefaultPassthroughUpstreamPort": 443,
-        "EnableDebug": true
+        "EnableDebug": true,
+        "ProxyPreserveHost": true
     },
     "Listeners": [
         {

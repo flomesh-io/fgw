@@ -25,20 +25,13 @@
                   "StatusCode": 301
                 }
               }
-            ],
-            "BackendService": {
-              "emptyService": {
-                "Weight": 100
-              }
-            }
+            ]
           }
         ]
       }
     }
   },
-  "Services": {
-    "emptyService": {}
-  },
+  "Services": {},
   "Chains": {
     "HTTPRoute": [
       "common/access-control.js",
@@ -48,6 +41,9 @@
       "http/access-log.js",
       "http/auth.js",
       "http/route.js",
+      "filter/request-redirect.js",
+      "filter/header-modifier.js",
+      "filter/url-rewrite.js",
       "http/service.js",
       "http/metrics.js",
       "http/tracing.js",
@@ -55,9 +51,6 @@
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",
-      "filter/request-redirect.js",
-      "filter/header-modifier.js",
-      "filter/url-rewrite.js",
       "http/error-page.js",
       "http/proxy-redirect.js",
       "http/forward.js",
@@ -72,6 +65,9 @@
       "http/access-log.js",
       "http/auth.js",
       "http/route.js",
+      "filter/request-redirect.js",
+      "filter/header-modifier.js",
+      "filter/url-rewrite.js",
       "http/service.js",
       "http/metrics.js",
       "http/tracing.js",
@@ -79,9 +75,6 @@
       "http/circuit-breaker.js",
       "http/throttle-domain.js",
       "http/throttle-route.js",
-      "filter/request-redirect.js",
-      "filter/header-modifier.js",
-      "filter/url-rewrite.js",
       "http/error-page.js",
       "http/proxy-redirect.js",
       "http/forward.js",

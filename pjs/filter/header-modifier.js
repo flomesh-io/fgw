@@ -16,6 +16,8 @@
             content = _http?.headers?.[member] || _http?.[member] || val
           ) || (name === 'consumer') && (
             content = __consumer?.[member] || val
+          ) || (name === 'inbound') && (
+            content = __inbound?.[member] || val
           )
         ),
         content

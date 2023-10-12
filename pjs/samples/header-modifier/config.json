@@ -1,33 +1,6 @@
 {
   "Configs": {
-    "EnableDebug": true,
-    "ErrorPage": [
-      {
-        "Error": [
-          404
-        ],
-        "Page": "404.html",
-        "Directory": "pages/"
-      },
-      {
-        "Error": [
-          502
-        ],
-        "Page": "502.html",
-        "Directory": "pages/"
-      }
-    ],
-    "Gzip": {
-      "GzipMinLength": 1024,
-      "GzipTypes": [
-        "text/css",
-        "text/xml",
-        "text/html",
-        "text/plain",
-        "application/xhtml+xml",
-        "application/javascript"
-      ]
-    }
+    "EnableDebug": true
   },
   "Listeners": [
     {
@@ -47,13 +20,45 @@
     "8080": {
       "*": {
         "RouteType": "HTTP",
-        "AccessLog": "/var/log/fgw-access.log",
         "Matches": [
           {
             "Path": {
               "Type": "Prefix",
               "Path": "/"
             },
+            "Filters": [
+              {
+                "Type": "RequestHeaderModifier",
+                "RequestHeaderModifier": {
+                  "Set": [
+                    {
+                      "Name": "Proxy",
+                      "Value": "fgw"
+                    }
+                  ],
+                  "Add": [
+                    {
+                      "Name": "user-agent",
+                      "Value": "$inbound_localAddress"
+                    }
+                  ],
+                  "Remove": [
+                    "accept"
+                  ]
+                }
+              },
+              {
+                "Type": "ResponseHeaderModifier",
+                "ResponseHeaderModifier": {
+                  "Set": [
+                    {
+                      "Name": "Server",
+                      "Value": "fgw"
+                    }
+                  ]
+                }
+              }
+            ],
             "BackendService": {
               "backendService1": {
                 "Weight": 100
@@ -97,22 +102,6 @@
   },
   "Services": {
     "backendService1": {
-      "StickyCookieName": "_srv_id",
-      "StickyCookieExpires": 3600,
-      "HealthCheck": {
-        "Interval": 10,
-        "MaxFails": 3,
-        "FailTimeout": 30,
-        "Uri": "/",
-        "Matches": [
-          {
-            "Type": "status",
-            "Value": [
-              200
-            ]
-          }
-        ]
-      },
       "Endpoints": {
         "127.0.0.1:8081": {
           "Weight": 50

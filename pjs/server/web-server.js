@@ -186,9 +186,7 @@
 .replaceMessage(
   msg => (
     (_path = msg?.head?.path) && (
-      _uri = _path.split('?')[0]
-    ),
-    _uri && (_uri.indexOf('/../') < 0) && (
+      _uri = _path.split('?')[0],
       _tryFiles = tryFilesCache.get(__route)?.(_uri),
       (_tryFiles || [_uri]).find(
         tf => (

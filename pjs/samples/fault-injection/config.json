@@ -41,6 +41,10 @@
     {
       "Protocol": "HTTP",
       "Port": 8082
+    },
+    {
+      "Protocol": "HTTP",
+      "Port": 50052
     }
   ],
   "RouteRules": {
@@ -48,6 +52,18 @@
       "*": {
         "RouteType": "HTTP",
         "AccessLog": "/var/log/fgw-access.log",
+        "Fault": {
+          "Delay": {
+            "Percent": 50,
+            "Fixed": 300,
+            "Unit": "ms"
+          },
+          "Abort": {
+            "Percent": 50,
+            "Status": 503,
+            "Message": "fault-injection-message"
+          }
+        },
         "Matches": [
           {
             "Path": {
@@ -93,13 +109,43 @@
           }
         ]
       }
+    },
+    "50052": {
+      "*": {
+        "RouteType": "GRPC",
+        "Matches": [
+          {
+            "Fault": {
+              "Delay": {
+                "Percent": 50,
+                "Fixed": 300
+              },
+              "Abort": {
+                "Percent": 50,
+                "Status": 14,
+                "Message": "fault-injection-message"
+              }
+            },
+            "Method": {
+              "Type": "Exact",
+              "Service": "helloworld.Greeter",
+              "Method": "SayHello"
+            },
+            "BackendService": {
+              "backendService2": {
+                "Weight": 100
+              }
+            }
+          }
+        ]
+      }
     }
   },
   "Services": {
     "backendService1": {
       "StickyCookieName": "_srv_id",
       "StickyCookieExpires": 3600,
-      "HealthCheck": {
+      "HealthCheck0": {
         "Interval": 10,
         "MaxFails": 3,
         "FailTimeout": 30,
@@ -118,6 +164,13 @@
           "Weight": 50
         },
         "127.0.0.1:8082": {
+          "Weight": 50
+        }
+      }
+    },
+    "backendService2": {
+      "Endpoints": {
+        "127.0.0.1:50051": {
           "Weight": 50
         }
       }

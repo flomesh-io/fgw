@@ -150,22 +150,14 @@
                     }
                 ],
                 "RateLimit": {
-                    "Local": {
-                        "Backlog": 1,
-                        "Requests": 1,
-                        "Burst": 2,
-                        "StatTimeWindow": 10,
-                        "ResponseStatusCode": 431,
-                        "ResponseHeadersToAdd": [
-                            {
-                                "Name": "Path",
-                                "Value": "000"
-                            },
-                            {
-                                "Name": "test",
-                                "Value": "aaa"
-                            }
-                        ]
+                    "Backlog": 1,
+                    "Requests": 1,
+                    "Burst": 2,
+                    "StatTimeWindow": 10,
+                    "ResponseStatusCode": 431,
+                    "ResponseHeadersToAdd": {
+                        "Path": "000",
+                        "test": "aaa"
                     }
                 }
             },
@@ -251,43 +243,27 @@
                             }
                         },
                         "RateLimit": {
-                            "Local": {
-                                "Backlog0": 1,
-                                "Requests": 1,
-                                "Burst": 10,
-                                "StatTimeWindow": 10,
-                                "ResponseStatusCode": 430,
-                                "ResponseHeadersToAdd": [
-                                    {
-                                        "Name": "Path",
-                                        "Value": "111"
-                                    },
-                                    {
-                                        "Name": "test",
-                                        "Value": "bbb"
-                                    }
-                                ]
+                            "Backlog0": 1,
+                            "Requests": 1,
+                            "Burst": 10,
+                            "StatTimeWindow": 10,
+                            "ResponseStatusCode": 430,
+                            "ResponseHeadersToAdd": {
+                                "Path": "111",
+                                "test": "bbb"
                             }
                         }
                     }
                 ],
                 "RateLimit": {
-                    "Local": {
-                        "Backlog": 1,
-                        "Requests": 1,
-                        "Burst": 10,
-                        "StatTimeWindow": 10,
-                        "ResponseStatusCode": 431,
-                        "ResponseHeadersToAdd": [
-                            {
-                                "Name": "Path",
-                                "Value": "000"
-                            },
-                            {
-                                "Name": "test",
-                                "Value": "aaa"
-                            }
-                        ]
+                    "Backlog": 1,
+                    "Requests": 1,
+                    "Burst": 10,
+                    "StatTimeWindow": 10,
+                    "ResponseStatusCode": 431,
+                    "ResponseHeadersToAdd": {
+                        "Path": "000",
+                        "test": "aaa"
                     }
                 }
             },

@@ -1,6 +1,8 @@
 ((
   { config, isDebugEnabled } = pipy.solve('config.js'),
 
+  { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
+
   {
     shuffle,
     failover,
@@ -164,8 +166,6 @@
   __metricLabel: 'connect-tcp',
   __upstream: 'connect-tcp',
   __response: 'http',
-  __healthCheckTargets: 'health-check',
-  __healthCheckServices: 'health-check',
 })
 
 .pipeline()
@@ -178,7 +178,7 @@
       _serviceConfig.failoverBalancer && (
         _failoverBalancer = _serviceConfig.failoverBalancer
       ),
-      _unhealthCache = __healthCheckServices?.[__service.name]
+      _unhealthCache = healthCheckServices?.[__service.name]
     )
   )
 )
@@ -298,7 +298,7 @@
             )
           )
         ),
-        (_healthCheckTarget = __healthCheckTargets?.[__target + '@' + __service.name]) && (
+        (_healthCheckTarget = healthCheckTargets?.[__target + '@' + __service.name]) && (
           (__upstream?.error === 'ConnectionRefused') && (
             _healthCheckTarget.service.fail(_healthCheckTarget),
             _healthCheckTarget.reason = 'ConnectionRefused'

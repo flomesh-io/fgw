@@ -8,6 +8,9 @@
     failover,
   } = pipy.solve('lib/utils.js'),
 
+  http1PerRequestLoadBalancing = Boolean(config?.Configs?.HTTP1PerRequestLoadBalancing),
+  http2PerRequestLoadBalancing = (config?.Configs?.HTTP2PerRequestLoadBalancing === undefined) || Boolean(config?.Configs?.HTTP2PerRequestLoadBalancing),
+
   retryCounter = new stats.Counter('fgw_upstream_rq_retry', ['service_name']),
   retrySuccessCounter = new stats.Counter('fgw_upstream_rq_retry_success', ['service_name']),
   retryLimitCounter = new stats.Counter('fgw_upstream_rq_retry_limit_exceeded', ['service_name']),
@@ -148,6 +151,8 @@
   _targetBalancer: null,
   _failoverBalancer: null,
   _muxHttpOptions: null,
+  _version: null,
+  _session: null,
   _cookies: null,
   _cookieId: null,
   _isRetry: false,
@@ -177,6 +182,8 @@
     (_serviceConfig = serviceConfigs.get(__service)) && (
       __metricLabel = __service.name,
       _muxHttpOptions = _serviceConfig.muxHttpOptions,
+      _version = _muxHttpOptions.version(),
+      _session = {},
       _targetBalancer = _serviceConfig.targetBalancer,
       _serviceConfig.failoverBalancer && (
         _failoverBalancer = _serviceConfig.failoverBalancer
@@ -185,6 +192,7 @@
     )
   )
 )
+.onEnd(() => void (_session = null))
 .branch(
   () => _serviceConfig?.needRetry || _failoverBalancer, (
     $=>$
@@ -223,7 +231,18 @@
         __target = _cookieId
       ) : (
         (__service?.Algorithm === 'HashingLoadBalancer') && (_balancerKey = __inbound.remoteAddress),
-        (_targetResource = _targetBalancer?.borrow?.(undefined, _balancerKey, _unhealthCache)) && (
+        (_version === 2) ? (
+          http2PerRequestLoadBalancing ? (
+            _targetResource = _targetBalancer?.borrow?.({}, _balancerKey, _unhealthCache)
+          ) : (
+            _targetResource = _targetBalancer?.borrow?.(__inbound, _balancerKey, _unhealthCache)
+          )
+        ) : http1PerRequestLoadBalancing ? (
+          _targetResource = _targetBalancer?.borrow?.(_session, _balancerKey, _unhealthCache)
+        ) : (
+          _targetResource = _targetBalancer?.borrow?.(__inbound, _balancerKey, _unhealthCache)
+        ),
+        _targetResource && (
           __target = _targetResource?.id
         )
       ),

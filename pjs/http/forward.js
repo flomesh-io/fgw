@@ -162,6 +162,8 @@
   __route: 'route',
   __service: 'service',
   __cert: 'connect-tls',
+  __host: 'connect-tls',
+  __useSSL: 'connect-tls',
   __target: 'connect-tcp',
   __metricLabel: 'connect-tcp',
   __upstreamError: 'connect-tcp',
@@ -227,12 +229,15 @@
       ),
       __target
     ) && (
-      !proxyPreserveHostCache.get(__route) && msg?.head?.headers?.host && (
-        msg.head.headers.host = __target
-      ),
       (
         attrs = _serviceConfig?.endpointAttributes?.[__target]
       ) => (
+        (__host = attrs?.Host) ? (
+          msg.head.headers.host = __host
+        ) : !proxyPreserveHostCache.get(__route) && (
+          msg.head.headers.host = __target
+        ),
+        __useSSL = Boolean(attrs?.UseSSL),
         attrs?.UpstreamCert ? (
           __cert = attrs?.UpstreamCert
         ) : (
@@ -255,7 +260,7 @@
   isDebugEnabled, (
     $=>$.handleStreamStart(
       () => (
-        console.log('[forward] target, cert:', __target, Boolean(__cert))
+        console.log('[forward] target, cert, host/sni, useSSL:', __target, Boolean(__cert), __host, __useSSL)
       )
     )
   )
@@ -281,7 +286,7 @@
   (
     $=>$.muxHTTP(() => _targetResource, () => _muxHttpOptions).to(
       $=>$.branch(
-        () => __cert, (
+        () => __cert || __useSSL, (
           $=>$.use('lib/connect-tls.js')
         ), (
           $=>$.use('lib/connect-tcp.js')

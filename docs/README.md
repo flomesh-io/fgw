@@ -18,6 +18,8 @@ weight: 1
 |8|Gzip|配置静态文本文件压缩相关参数|参考 1.3|否|
 |9|ProxyRedirect|对上游返回的HTTP应答中的Location、Refresh等URL进行重写|比如："ProxyRedirect": {"http://www.flomesh.com/aa": "http://$http_host/ab", "http://www.flomesh.com/a0": "/a1"}|否|
 |10|ErrorPage|对HTTP错误码返回自定义网页或链接，类型为列表 []|参考 1.4|否|
+|11|HTTP1PerRequestLoadBalancing|HTTP1.1请求时，是否启用基于请求的负载均衡策略，默认为false|true、false|否|
+|12|HTTP2PerRequestLoadBalancing|HTTP2请求时，是否启用基于请求的负载均衡策略，默认为true|true、false|否|
 
 ### 1.1 ResourceUsage
 |编号|配置项名称|用途描述|可选值|是否必须|
@@ -323,8 +325,10 @@ weight: 1
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|Weight|权重|整数|是|
-|2|Tags|标记||是|
+|2|Tags|标记||否|
 |3|UpstreamCert|访问上游用的 TLS 证书||否|
+|4|UseSSL|不需要客户端SSL证书的场景，是否使用SSL连接访问上游服务|true、false|否|
+|5|Host|重写HTTP请求头中的Host，默认使用上游target（ip:端口）||否|
 
 #### 4.1.4 CircuitBreaking
 

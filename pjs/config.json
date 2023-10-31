@@ -1,33 +1,6 @@
 {
   "Configs": {
-    "EnableDebug": true,
-    "ErrorPage": [
-      {
-        "Error": [
-          404
-        ],
-        "Page": "404.html",
-        "Directory": "pages/"
-      },
-      {
-        "Error": [
-          502
-        ],
-        "Page": "502.html",
-        "Directory": "pages/"
-      }
-    ],
-    "Gzip": {
-      "GzipMinLength": 1024,
-      "GzipTypes": [
-        "text/css",
-        "text/xml",
-        "text/html",
-        "text/plain",
-        "application/xhtml+xml",
-        "application/javascript"
-      ]
-    }
+    "EnableDebug": false
   },
   "Listeners": [
     {
@@ -47,7 +20,6 @@
     "8080": {
       "*": {
         "RouteType": "HTTP",
-        "AccessLog": "/var/log/fgw-access.log",
         "Matches": [
           {
             "Path": {
@@ -71,11 +43,6 @@
             "Index": [
               "index.html",
               "index.htm"
-            ],
-            "TryFiles": [
-              "$uri",
-              "$uri/default/",
-              "=404"
             ]
           }
         ]

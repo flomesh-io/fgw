@@ -30,15 +30,15 @@ done
 
 ### shell ###
 
-describe "SHPEC TLS upstream (UseSSL) Test"
+describe "SHPEC request mirror Test"
   start="$(date +%s%3N)"
-  curl -s -i http://127.0.0.1:8080/ > tmp/1.log
-  output_1="$(cat tmp/1.log)"
+  output_1="$(curl -v http://127.0.0.1:8080/ >/dev/null 2>&1)"
+  pipylog="$(cat tmp/pipy.log | grep 127.0.0.1:8082)"
   end="$(date +%s%3N)"
   runtime=$((end-start))
 
-  it "Status: 200 OK"
-    assert grep "$output_1" "200 OK"
+  it "check logs"
+    assert grep "$pipylog" '"host:" "127.0.0.1:8082"'
   end
 
 end

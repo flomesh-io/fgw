@@ -1,0 +1,159 @@
+{
+    "Configs": {
+        "EnableDebug": true
+    },
+    "Listeners": [
+        {
+            "Protocol": "HTTP",
+            "Port": 8080
+        },
+        {
+            "Protocol": "HTTP",
+            "Port": 8081
+        },
+        {
+            "Protocol": "HTTP",
+            "Port": 8082
+        }
+    ],
+    "RouteRules": {
+        "8080": {
+            "*": {
+                "RouteType": "HTTP",
+                "Matches": [
+                    {
+                        "Path": {
+                            "Type": "Prefix",
+                            "Path": "/"
+                        },
+                        "BackendService": {
+                            "backendService1": {
+                                "Weight": 100
+                            }
+                        },
+                        "Filters": [
+                            {
+                                "Type": "RequestMirror",
+                                "BackendService": "backendService2"
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        "8081": {
+            "*": {
+                "Matches": [
+                    {
+                        "ServerRoot": "/var/www/html",
+                        "Index": [
+                            "index.html",
+                            "index.htm"
+                        ]
+                    }
+                ]
+            }
+        },
+        "8082": {
+            "*": {
+                "Matches": [
+                    {
+                        "ServerRoot": "www2",
+                        "Index": [
+                            "default.html",
+                            "index.html"
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "Services": {
+        "backendService1": {
+            "Endpoints": {
+                "127.0.0.1:8081": {
+                    "Weight": 100
+                }
+            }
+        },
+        "backendService2": {
+            "Endpoints": {
+                "127.0.0.1:8082": {
+                    "Weight": 100
+                }
+            }
+        }
+    },
+    "Chains": {
+        "HTTPRoute": [
+            "common/access-control.js",
+            "common/ratelimit.js",
+            "common/consumer.js",
+            "http/codec.js",
+            "http/access-log.js",
+            "http/auth.js",
+            "http/route.js",
+            "http/fault-injection.js",
+            "http/service.js",
+            "http/metrics.js",
+            "http/tracing.js",
+            "http/logging.js",
+            "http/circuit-breaker.js",
+            "http/throttle-domain.js",
+            "http/throttle-route.js",
+            "http/error-page.js",
+            "http/proxy-redirect.js",
+            "filter/request-redirect.js",
+            "filter/header-modifier.js",
+            "filter/url-rewrite.js",
+            "filter/request-mirror.js",
+            "http/forward.js",
+            "http/default.js"
+        ],
+        "HTTPSRoute": [
+            "common/access-control.js",
+            "common/ratelimit.js",
+            "common/tls-termination.js",
+            "common/consumer.js",
+            "http/codec.js",
+            "http/access-log.js",
+            "http/auth.js",
+            "http/route.js",
+            "http/fault-injection.js",
+            "http/service.js",
+            "http/metrics.js",
+            "http/tracing.js",
+            "http/logging.js",
+            "http/circuit-breaker.js",
+            "http/throttle-domain.js",
+            "http/throttle-route.js",
+            "http/error-page.js",
+            "http/proxy-redirect.js",
+            "filter/request-redirect.js",
+            "filter/header-modifier.js",
+            "filter/url-rewrite.js",
+            "filter/request-mirror.js",
+            "http/forward.js",
+            "http/default.js"
+        ],
+        "TLSPassthrough": [
+            "common/access-control.js",
+            "common/ratelimit.js",
+            "tls/passthrough.js",
+            "common/consumer.js"
+        ],
+        "TLSTerminate": [
+            "common/access-control.js",
+            "common/ratelimit.js",
+            "common/tls-termination.js",
+            "common/consumer.js",
+            "tls/forward.js"
+        ],
+        "TCPRoute": [
+            "common/access-control.js",
+            "common/ratelimit.js",
+            "tcp/forward.js"
+        ]
+    },
+    "Version": "0"
+}

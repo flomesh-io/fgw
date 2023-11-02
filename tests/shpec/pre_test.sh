@@ -68,7 +68,7 @@ for port in 80 81 443 2000 3000 4000 8080 8081 8082 8443 8844 8845 8846 8847 884
     echo "awk: command not found"
     exit 1
  fi
- 
+
  shpec -v > /dev/null 2>&1
  if ! [ $? -eq 0 ]; then
     echo "shpec: command not found"

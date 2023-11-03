@@ -235,6 +235,7 @@ weight: 1
 |2|ResponseHeaderModifier|修改 HTTP 应答头|参考 3.1.1.1.6.2|否|
 |3|RequestRedirect|请求重定向|参考 3.1.1.1.6.3|否|
 |4|URLRewrite|请求的 URL 重写|参考 3.1.1.1.6.4|否|
+|5|RequestMirror|将请求镜像到其他服务|参考 3.1.1.1.6.5|否|
 
 ###### 3.1.1.1.6.1 RequestHeaderModifier
 
@@ -277,6 +278,12 @@ weight: 1
 |2|ReplacePrefixMatch|前缀匹配时替换 path||type 为 ReplacePrefixMatch 时，必须配置|
 |3|ReplaceFullPath|全路径匹配时替换 path||type 位 ReplaceFullPath 时，必须配置|
 
+###### 3.1.1.1.6.5 RequestMirror
+
+| 编号 | 配置项名称 | 用途描述        | 参考值          | 是否必须 |
+|:----:|:---------- |:--------------- |:--------------- |:--------:|
+|  1   | BackendService | 接收请求的服务名 | 比如："backendService2" |    是    |
+
 ## 4. 服务配置（Services）
 
 |编号|配置项名称|用途描述|参考值|是否必须|
@@ -303,16 +310,16 @@ weight: 1
 |1|Interval|主动检测的时间间隔，<br>如果不设置，不会进行主动健康检测<br>单位：秒|10|否|
 |2|MaxFails|连续失败次数后，将上游设置为不可用|3|是|
 |3|FailTimeout|	被动检测时，服务不可用时间间隔。<br>当连续失败次数达到 MaxFails 后，该上游将暂时禁用。<br>如果设置了主动检查，该参数被忽略。单位：秒|30|否|
-|4|Uri|使用 HTTP 方式进行健康检查，为 HTTP path<br>如果未设置 Uri，表示用 TCP 方式进行端口健康检查||否|
+|4|Path|使用 HTTP 方式进行健康检查，为 HTTP path<br>如果未设置 Path，表示用 TCP 方式进行端口健康检查||否|
 |5|Matches|HTTP 健康检查时的判定条件| 参考 4.1.1.1 |否|
 
 ##### 4.1.1.1 Matches
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
-|1|Type|匹配类型|status、body、headers|是|
-|2|Value|期望的数据|Type 为 status 时配置HTTP状态码数组，比如： [ 200 ] |是|
-|3|Name|type 为 headers 时，http 头字段名||否|
+|1|StatusCodes|期望的HTTP状态码数组|比如： [ 200 ] |否|
+|2|Body|期望返回Body中包含的内容|比如：OK|否|
+|3|Headers|期望包含的HTTP头|比如：{"content-type": "text/html"}|否|
 
 #### 4.1.2 Endpoints
 

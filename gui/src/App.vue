@@ -9,16 +9,13 @@ import consumerVariables from '../../demo/consumer-variables/config.json';
 import loadBalancer from '../../demo/load-balancer/config.json';
 import staticWeb from '../../demo/static-web/config.json';
 import reverseProxy from '../../demo/reverse-proxy/config.json';
-import fullConfig from '../../docs/flowchart/config/config.json';
-const config = ref(fullConfig);
-const configString = ref(JSON.stringify(fullConfig));
-const activeKey  = ref('Config');
+const config = ref(staticWeb);
+const configString = ref(JSON.stringify(staticWeb));
 const exsamples = {
 	'Consumer Variables':consumerVariables,
 	'Load Balancer':loadBalancer,
 	'Static Web':staticWeb,
 	'Reverse Proxy':reverseProxy,
-	'Full Config':fullConfig,
 };
 watch(config, (n, o)=>{
   if(JSON.stringify(n)!=configString.value){
@@ -58,10 +55,6 @@ const menus = [
       {
         key: 'Reverse Proxy',
         label: 'Reverse Proxy',
-      },
-      {
-				key: 'Full Config',
-        label: 'Full Config',
       },
     ],
   },

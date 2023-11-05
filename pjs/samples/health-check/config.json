@@ -45,20 +45,17 @@
         "Interval": 10,
         "MaxFails": 3,
         "FailTimeout": 30,
-        "Uri": "/",
+        "Path": "/",
         "Matches": [
           {
-            "Type": "status",
-            "Value": "200"
-          },
-          {
-            "Type": "body",
-            "Value": "apache2.conf"
-          },
-          {
-            "Type": "headers",
-            "Name": "Server",
-            "Value": "Apache/2.4.41 (Ubuntu)"
+            "StatusCodes": [
+              200,
+              201
+            ],
+            "Body": "OK",
+            "Headers": {
+              "Server": "pipy"
+            }
           }
         ]
       },

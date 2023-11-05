@@ -9,16 +9,13 @@ import consumerVariables from '../../demo/consumer-variables/config.json';
 import loadBalancer from '../../demo/load-balancer/config.json';
 import staticWeb from '../../demo/static-web/config.json';
 import reverseProxy from '../../demo/reverse-proxy/config.json';
-import fullConfig from '../../docs/flowchart/config/config.json';
-const config = ref(fullConfig);
-const configString = ref(JSON.stringify(fullConfig));
-const activeKey  = ref('Config');
+const config = ref(loadBalancer);
+const configString = ref(JSON.stringify(loadBalancer));
 const exsamples = {
 	'Consumer Variables':consumerVariables,
 	'Load Balancer':loadBalancer,
 	'Static Web':staticWeb,
 	'Reverse Proxy':reverseProxy,
-	'Full Config':fullConfig,
 };
 watch(config, (n, o)=>{
   if(JSON.stringify(n)!=configString.value){
@@ -36,6 +33,9 @@ watch(configString, (n, o)=>{
 const useDemo = (key) => {
 	config.value = exsamples[key];
 }
+
+const docHeight = ref(document.documentElement.clientHeight - 46);
+
 const menus = [
   {
     key: 'exsamples',
@@ -58,10 +58,6 @@ const menus = [
       {
         key: 'Reverse Proxy',
         label: 'Reverse Proxy',
-      },
-      {
-				key: 'Full Config',
-        label: 'Full Config',
       },
     ],
   },
@@ -86,7 +82,7 @@ const menuClick = (e) => {
 		<a-col :span="12">
 				<JsonEditor 
 					:is-json="true"
-					height="700px"
+					:height="docHeight+'px'"
 					v-model:value="configString"
 				/>
 		</a-col>

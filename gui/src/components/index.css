@@ -1,0 +1,42 @@
+.listener-block,.config-block {
+  border: 2px solid #00adef;
+	border-radius: 10px;
+	padding:5px;
+}
+.service-block{
+  border: 2px solid lightseagreen;
+	border-radius: 10px;
+	padding: 10px;
+}
+.service-block b,.service-block div{
+	padding: 5px;
+}
+.route-block {
+  border: 2px dashed #00adef;
+	margin: 15px 15px 15px 0;
+	border-radius: 10px;
+	padding:15px 5px 5px 5px;
+}
+.endpoint-block{
+  border: 2px dashed lightseagreen;
+	border-radius: 10px;
+}
+.config-block b,.config-block>div{
+	padding: 10px;
+}
+section{
+	margin-bottom: 10px;
+}
+.block-item{
+	white-space: nowrap;
+	background-color: #f5f5f5;
+	line-height: 34px;
+	height: 34px;
+	display: inline-block;
+	padding: 0 10px 0 5px;
+	border-radius: 5px;
+	font-weight: bold;
+}
+.service-block.all{
+	padding-bottom: 50px !important;
+}

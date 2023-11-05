@@ -206,9 +206,9 @@ const displayMap = ref({});
 									HealthCheck
 									<MedicineBoxFilled class="font-green" />
 								</span>
-								<span>
+								<span @click="displayMap[`service-${service}`] = true">
 									More
-									<DownOutlined @click="displayMap[`service-${service}`] = true"/>
+									<DownOutlined/>
 								</span>
 							</template>
 							<a-card-meta :title="service" :description="`Cookie: ${json.Services[service].StickyCookieName || 'None'}`">
@@ -221,7 +221,6 @@ const displayMap = ref({});
 								</template>
 							</a-card-meta>
 						</a-card>
-						
 						<div v-else class="service-block mb-20 all">
 							<div class="flex">
 								<b class="flex-item nowrap">Service</b>
@@ -248,15 +247,15 @@ const displayMap = ref({});
 								<b class="flex-item nowrap">Endpoints</b>
 								<div class="flex-item" style="flex: 5;">
 									<div class="endpoint-block" >
-										<ol>
-											<li v-for="(endpoint) in Object.keys(json.Services[service].Endpoints)">
+										<ol v-if="json.Services[service].Endpoints">
+											<li v-for="(endpoint,ei) in Object.keys(json.Services[service].Endpoints)" :key="ei">
 												<a-space>
 													<b class="nowrap">{{endpoint}}</b>
 													<span><ArrowRightOutlined/></span> 
-													<div class="inline-block">
+													<div class="inline-block" v-if="!!json.Services[service].Endpoints[endpoint]">
 														<div>
 															<a-tag>Weight:{{json.Services[service].Endpoints[endpoint].Weight}}</a-tag>
-															<a-tag v-for="(tag) in Object.keys(json.Services[service].Endpoints[endpoint].Tags)">{{tag}}:{{json.Services[service].Endpoints[endpoint].Tags[tag]}}</a-tag>
+															<a-tag v-for="(tag) in Object.keys(json.Services[service].Endpoints[endpoint].Tags|| [])">{{tag}}:{{json.Services[service].Endpoints[endpoint].Tags[tag]}}</a-tag>
 														</div>
 														<div class="flex" v-if="json.Services[service].Endpoints[endpoint].UpstreamCert">
 															<div class="flex-item nowrap" v-if="!!json.Services[service].Endpoints[endpoint].UpstreamCert.CertChain">Cert Chain
@@ -356,46 +355,5 @@ const displayMap = ref({});
 </template>
 
 <style scoped>
-.listener-block,.config-block {
-  border: 2px solid #00adef;
-	border-radius: 10px;
-	padding:5px 5px;
-}
-.service-block{
-  border: 2px solid lightseagreen;
-	border-radius: 10px;
-	padding: 10px;
-}
-.service-block b,.service-block div{
-	padding: 5px;
-}
-.route-block {
-  border: 2px dashed #00adef;
-	margin: 15px 15px 15px 0;
-	border-radius: 10px;
-	padding:15px 5px 5px 5px;
-}
-.endpoint-block{
-  border: 2px dashed lightseagreen;
-	border-radius: 10px;
-}
-.config-block b,.config-block>div{
-	padding: 10px;
-}
-section{
-	margin-bottom: 10px;
-}
-.block-item{
-	white-space: nowrap;
-	background-color: #f5f5f5;
-	line-height: 34px;
-	height: 34px;
-	display: inline-block;
-	padding: 0 10px 0 5px;
-	border-radius: 5px;
-	font-weight: bold;
-}
-.service-block.all{
-	padding-bottom: 50px !important;
-}
+  @import "index";
 </style>

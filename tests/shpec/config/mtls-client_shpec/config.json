@@ -406,6 +406,7 @@
       }
     },
     "www8846": {
+      "MTLS": true,
       "Endpoints": {
         "127.0.0.1:8850": {
           "Weight": 100,
@@ -421,6 +422,7 @@
       }
     },
     "www8847": {
+      "MTLS": true,
       "Endpoints": {
         "127.0.0.1:8850": {
           "Weight": 100,
@@ -456,6 +458,7 @@
       }
     },
     "bookstore/bookstore-v1|14001|local": {
+      "MTLS": true,
       "Endpoints": {
         "127.0.0.3:8850": {
           "Weight": 100,

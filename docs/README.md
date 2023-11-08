@@ -302,6 +302,7 @@ weight: 1
 |  6   | RetryPolicy         | 重试配置，用于 Protocol 为 HTTP、HTTPS 的场景                                                             | 参考 4.1.5  |    否    |
 |  7   | UpstreamCert        | 访问上游使用 默认使用的 TLS 证书                                                                          | 参考 4.1.6  |    否    |
 |  8   | Algorithm           | 负载均衡算法，支持 RoundRobinLoadBalancer（未指定时默认使用）、HashingLoadBalancer、LeastConnectionLoadBalancer | "RoundRobinLoadBalancer"            |    否    |
+|  9   | MTLS                |是否使用mTLS方式访问上游服务，不设置时默认为 false |true，false| 否 |
 
 #### 4.1.1 HealthCheck
 

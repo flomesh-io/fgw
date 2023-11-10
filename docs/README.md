@@ -299,7 +299,7 @@ weight: 1
 |  3   | HealthCheck         | 对上游服务的健康检查配置                                                                                  | 参考 4.1.1  |    否    |
 |  4   | Endpoints           | 上游服务信息                                                                                           | 参考 4.1.2  |    是  |
 |  5   | CircuitBreaking     | 熔断配置，用于 Protocol 为 HTTP、HTTPS 的场景                                                             | 参考 4.1.4  |    否    |
-|  6   | RetryPolicy         | 重试配置，用于 Protocol 为 HTTP、HTTPS 的场景                                                             | 参考 4.1.5  |    否    |
+|  6   | Retry         | 重试配置，用于 Protocol 为 HTTP、HTTPS 的场景                                                             | 参考 4.1.5  |    否    |
 |  7   | UpstreamCert        | 访问上游使用 默认使用的 TLS 证书                                                                          | 参考 4.1.6  |    否    |
 |  8   | Algorithm           | 负载均衡算法，支持 RoundRobinLoadBalancer（未指定时默认使用）、HashingLoadBalancer、LeastConnectionLoadBalancer | "RoundRobinLoadBalancer"            |    否    |
 |  9   | MTLS                |是否使用mTLS方式访问上游服务，不设置时默认为 false |true，false| 否 |
@@ -353,13 +353,13 @@ weight: 1
 |9|DegradedStatusCode|熔断时返回的 HTTP 状态码|100~599|是|
 |10|DegradedResponseContent|熔断时返回的提示信息||否|
 
-#### 4.1.5 RetryPolicy
+#### 4.1.5 Retry
 
 |编号|配置项名称|用途描述|参考值|是否必须|
 |:----:|:---------|:-----|:------|:-------:|
 |1|RetryOn|重试条件: 设置为 HTTP 状态码|"5xx" 等|是|
 |2|NumRetries|重试次数||否|
-|3|RetryBackoffBaseInterval|重试间隔（单位：秒）||否|
+|3|BackoffBaseInterval|重试间隔（单位：秒）||否|
 
 #### 4.1.6 UpstreamCert
 

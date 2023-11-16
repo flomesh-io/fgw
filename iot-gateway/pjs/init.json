@@ -1,0 +1,15 @@
+{
+  "uuid": "kb-virt01",
+  "strapiHost": "bastion.flomesh.cn:36040",
+  "enableSSL": false,
+  "loginUri": "/api/auth/local",
+  "loginUser": "admin",
+  "loginPassword": "",
+  "queryUri": "/api/devices?populate[0]=drive&filters[uuid][$eq]=",
+  "queryInterval": "300s",
+  "postUri": "/api/datas",
+  "postInterval": "5s",
+  "workDir": "/root/pipy-modbus",
+  "dataDir": "/root/pipy-modbus/data",
+  "collectInterval": "60s"
+}

@@ -56,7 +56,7 @@ pipy({
 .replaceMessage(
   msg => (
     msg?.body && (
-      _dataJson = JSON.decode(msg?.body),
+      _dataJson = (msg?.body?.toString?.().charAt(0) === '{') && JSON.decode(msg?.body),
       (_dataJson?.ts > 0) && (
         delete _dataJson.id,
         _dataJson.created_at = new Date(_dataJson.ts * 1000).toISOString(),

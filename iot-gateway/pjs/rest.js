@@ -201,7 +201,7 @@ pipy()
     msg => (
       (
         /// debug = console.log('query config:', msg?.body?.toString?.()),
-        resp = JSON.decode(msg?.body),
+        resp = (msg?.body?.toString?.().charAt(0) === '{') && JSON.decode(msg?.body),
       ) => (
         (msg?.head?.status === 401) ? (
           deviceConfig.strapiJwt = null,
@@ -240,7 +240,7 @@ pipy()
     .replaceMessage(
       msg => (
         (
-          resp = JSON.decode(msg?.body),
+          resp = (msg?.body?.toString?.().charAt(0) === '{') && JSON.decode(msg?.body),
         ) => (
           (msg?.head?.status === 200 && resp?.data?.id > 0) ? (
             [new Message('OK'), new StreamEnd]

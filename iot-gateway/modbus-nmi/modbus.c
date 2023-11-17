@@ -4,9 +4,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/time.h>
+#include <fcntl.h>
 #include <time.h>
 #include <math.h>
+#include <sys/time.h>
+#include <sys/file.h>
 #include <pipy/nmi.h>
 
 #include "modbus.h"
@@ -191,6 +193,22 @@ static void buffer_append(char **err_msg, char **buffer, int *space, const char 
   }
 }
 
+static int lock_file(int lock_flag) {
+  static int fd = -1;
+
+  if (fd == -1) {
+    fd = open("/tmp/pipy-modbus.lockfile", O_WRONLY | O_CREAT);
+  }
+  if (fd == -1) {
+    return -1;
+  }
+  if (lock_flag) {
+    return flock(fd, LOCK_EX);
+  } else {
+    return flock(fd, LOCK_UN);
+  }
+}
+
 static void pipeline_process(pipy_pipeline ppl, void *user_ptr, pjs_value evt) {
   struct pipeline_state *state = (struct pipeline_state *)user_ptr;
   if (pipy_is_MessageStart(evt)) {
@@ -221,6 +239,8 @@ static void pipeline_process(pipy_pipeline ppl, void *user_ptr, pjs_value evt) {
       } else if (slave == -1) {
         err_msg = "__modbusSlaveID is undefined";
       }
+
+      lock_file(1);
 
       if (err_msg == NULL) {
         modbus_t *ctx = init_modbus(device, slave, baud, records, &err_msg);
@@ -277,6 +297,8 @@ static void pipeline_process(pipy_pipeline ppl, void *user_ptr, pjs_value evt) {
           modbus_free(ctx);
         }
       }
+
+      lock_file(0);
 
       if (err_msg != NULL) {
         printf("========= modbus error message: %s\n", (const char *)err_msg);

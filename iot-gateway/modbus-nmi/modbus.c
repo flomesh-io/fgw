@@ -197,10 +197,9 @@ static int lock_file(int lock_flag) {
   static int fd = -1;
 
   if (fd == -1) {
-    fd = open("/tmp/pipy-modbus.lockfile", O_WRONLY | O_CREAT);
-  }
-  if (fd == -1) {
-    return -1;
+    if ((fd = open("/tmp/pipy-modbus.lockfile", O_WRONLY | O_CREAT)) == -1) {
+      return -1;
+    }
   }
   if (lock_flag) {
     return flock(fd, LOCK_EX);

@@ -78,6 +78,7 @@ weight: 1
 |1|TLSModeType|TLS 工作模式|Terminate、Passthrough|是|
 |2|mTLS|是否启用客户端证书认证|true、false|否|
 |3| Certificates |证书、私钥、CA 证书|参考 2.2.1|否|
+|4| ALPN | TLS在Terminate工作模式时，ALPN使用的协议；默认为 "http/1.1" | "http/1.1"、"h2" |否|  
 
 #### 2.2.1 Certificates
 

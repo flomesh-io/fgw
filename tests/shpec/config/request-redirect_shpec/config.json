@@ -92,7 +92,10 @@
                 "RequestRedirect": {
                   "Scheme": "https",
                   "Hostname": "",
-                  "Path": "/abc",
+                  "Path": {
+                    "Type": "ReplacePrefixMatch",
+                    "ReplacePrefixMatch": "/abc"
+                  },
                   "Port": 8443,
                   "StatusCode": 301
                 }

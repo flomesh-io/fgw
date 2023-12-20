@@ -34,7 +34,9 @@
             "Filters": [
               {
                 "Type": "RequestMirror",
-                "BackendService": "backendService2"
+                "RequestMirror": {
+                  "BackendService": "backendService2"
+                }
               }
             ]
           }

@@ -5,6 +5,12 @@
     makeZipKinData,
     saveTracing,
   } = pipy.solve('lib/tracing.js'),
+
+  {
+    webgateEnabled,
+    initWebGateHeaders,
+  } = pipy.solve('lib/webgate.js'),
+
   sampledCounter0 = new stats.Counter('fgw_tracing_sampled_0'),
   sampledCounter1 = new stats.Counter('fgw_tracing_sampled_1'),
 ) => (
@@ -31,7 +37,8 @@ pipy({
         _zipkinData = makeZipKinData(msg, msg.head.headers, __service?.name)
       ),
       _sampled ? sampledCounter1.increase() : sampledCounter0.increase()
-    )
+    ),
+    webgateEnabled && initWebGateHeaders(msg.head.headers, __port?.Protocol)
   )
 )
 .chain()

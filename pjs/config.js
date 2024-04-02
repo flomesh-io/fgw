@@ -27,6 +27,7 @@
   {
     config,
     isDebugEnabled: Boolean(config?.Configs?.EnableDebug),
+    isWebGateEnabled: Boolean(config?.Configs?.EnableWebGate),
     socketTimeoutOptions: (config?.Configs?.SocketTimeout > 0) ? (
       {
         connectTimeout: config.Configs.SocketTimeout,

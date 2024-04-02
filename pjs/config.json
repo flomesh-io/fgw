@@ -1,23 +1,24 @@
 {
   "Configs": {
-    "EnableDebug": false
+    "EnableDebug": false,
+    "EnableWebGate": true
   },
   "Listeners": [
     {
       "Protocol": "HTTP",
-      "Port": 8080
+      "Port": 9090
     },
     {
       "Protocol": "HTTP",
-      "Port": 8081
+      "Port": 9091
     },
     {
       "Protocol": "HTTP",
-      "Port": 8082
+      "Port": 9092
     }
   ],
   "RouteRules": {
-    "8080": {
+    "9090": {
       "*": {
         "RouteType": "HTTP",
         "Matches": [
@@ -35,7 +36,7 @@
         ]
       }
     },
-    "8081": {
+    "9091": {
       "*": {
         "Matches": [
           {
@@ -48,7 +49,7 @@
         ]
       }
     },
-    "8082": {
+    "9092": {
       "*": {
         "Matches": [
           {
@@ -80,10 +81,10 @@
         ]
       },
       "Endpoints": {
-        "127.0.0.1:8081": {
+        "127.0.0.1:9091": {
           "Weight": 50
         },
-        "127.0.0.1:8082": {
+        "127.0.0.1:9092": {
           "Weight": 50
         }
       }

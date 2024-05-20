@@ -1,5 +1,7 @@
+import { config, isDebugEnabled } from '../config.js'
+
 ((
-  { config, isDebugEnabled } = pipy.solve('config.js'),
+  // { config, isDebugEnabled } = pipy.solve('config.js'),
 
   uniqueCA = {},
   unionCA = (config?.Listeners || []).filter(

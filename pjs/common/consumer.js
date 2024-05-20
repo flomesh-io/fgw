@@ -1,6 +1,8 @@
-((
-  { isDebugEnabled } = pipy.solve('config.js'),
-) => (
+import { isDebugEnabled } from "../config.js";
+
+// ((
+//   { isDebugEnabled } = pipy.solve('config.js'),
+// ) => (
 
 pipy()
 
@@ -20,4 +22,4 @@ pipy()
 )
 .chain()
 
-))()
+// ))()

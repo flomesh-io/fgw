@@ -1,12 +1,16 @@
+import { config, isDebugEnabled } from '../config.js'
+import { healthCheckTargets, healthCheckServices } from '../common/variables.js'
+import { shuffle, failover } from '../lib/utils.js'
+
 ((
-  { config, isDebugEnabled } = pipy.solve('config.js'),
+  // { config, isDebugEnabled } = pipy.solve('config.js'),
 
-  { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
+  // { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
 
-  {
-    shuffle,
-    failover,
-  } = pipy.solve('lib/utils.js'),
+  // {
+  //   shuffle,
+  //   failover,
+  // } = pipy.solve('lib/utils.js'),
 
   http1PerRequestLoadBalancing = Boolean(config?.Configs?.HTTP1PerRequestLoadBalancing),
   http2PerRequestLoadBalancing = (config?.Configs?.HTTP2PerRequestLoadBalancing === undefined) || Boolean(config?.Configs?.HTTP2PerRequestLoadBalancing),

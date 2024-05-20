@@ -1,5 +1,7 @@
+import { isDebugEnabled } from '../config.js'
+
 ((
-  { isDebugEnabled } = pipy.solve('config.js'),
+  // { isDebugEnabled } = pipy.solve('config.js'),
 
   parseIpList = ipList => (
     (ips, ipRanges) => (

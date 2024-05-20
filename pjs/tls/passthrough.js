@@ -1,5 +1,7 @@
+import { config, isDebugEnabled } from '../config.js'
+
 ((
-  { config, isDebugEnabled } = pipy.solve('config.js'),
+  // { config, isDebugEnabled } = pipy.solve('config.js'),
 
   matchHost = (routeRules, host) => (
     routeRules && host && (

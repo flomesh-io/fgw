@@ -1,5 +1,7 @@
+import { config, isDebugEnabled } from '../config.js'
+
 ((
-  { config, isDebugEnabled } = pipy.solve('config.js'),
+  // { config, isDebugEnabled } = pipy.solve('config.js'),
 
   makeServiceHandler = serviceName => (
     config?.Services?.[serviceName] ? (
@@ -22,7 +24,7 @@
 
 .import({
   __route: 'route',
-  __root: 'web-server',
+  // __root: 'web-server',
   __consumer: 'consumer',
 })
 
@@ -32,9 +34,9 @@
     __route?.config?.EnableHeadersAuthorization && (
       (!__consumer || !__consumer?.['Headers-Authorization']) ? (_unauthorized = true) : (_unauthorized = false)
     ),
-    __route?.serverRoot ? (
-      __root = __route.serverRoot
-    ) : (
+    // __route?.serverRoot ? (
+    //   __root = __route.serverRoot
+    // ) : (
       (_serviceName = __route?.backendServiceBalancer?.borrow?.({})?.id) && (
         (__service = serviceHandlers.get(_serviceName)) && msg?.head?.headers && (
           (_xff = msg.head.headers['x-forwarded-for']) ? (
@@ -44,18 +46,18 @@
           )
         )
       )
-    )
+    // )
   )
 )
-.branch(
-  isDebugEnabled, (
-    $=>$.handleStreamStart(
-      () => (
-        console.log('[service] name, root, endpoints, unauthorized:', _serviceName, __root, Object.keys(__service?.Endpoints || {}), _unauthorized)
-      )
-    )
-  )
-)
+// .branch(
+//   isDebugEnabled, (
+//     $=>$.handleStreamStart(
+//       () => (
+//         console.log('[service] name, root, endpoints, unauthorized:', _serviceName, __root, Object.keys(__service?.Endpoints || {}), _unauthorized)
+//       )
+//     )
+//   )
+// )
 .branch(
   () => _unauthorized, (
     $=>$.replaceMessage(
@@ -66,12 +68,12 @@
       )
     )
   ),
-  () => __root, (
-    $=>$
-    .use('http/error-page.js', 'request')
-    .use('server/web-server.js')
-    .use('http/error-page.js', 'response')
-  ),
+  // () => __root, (
+  //   $=>$
+  //   .use('http/error-page.js', 'request')
+  //   .use('server/web-server.js')
+  //   .use('http/error-page.js', 'response')
+  // ),
   () => __service, (
     $=>$.chain()
   ), (

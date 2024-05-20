@@ -1,5 +1,7 @@
+import { metrics } from '../lib/metrics.js'
+
 ((
-  { metrics } = pipy.solve('lib/metrics.js'),
+  // { metrics } = pipy.solve('lib/metrics.js'),
   acceptedMetric = metrics.fgwHttpCurrentConnections.withLabels('accepted'),
   activeMetric = metrics.fgwHttpCurrentConnections.withLabels('active'),
   handledMetric = metrics.fgwHttpCurrentConnections.withLabels('handled'),

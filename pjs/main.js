@@ -1,6 +1,9 @@
-((
-  { config, socketTimeoutOptions } = pipy.solve('config.js'),
-  { metrics } = pipy.solve('lib/metrics.js'),
+import { config, socketTimeoutOptions } from './config.js'
+import { metrics } from './lib/metrics.js'
+
+;((
+  // { config, socketTimeoutOptions } = pipy.solve('config.js'),
+  // { metrics } = pipy.solve('lib/metrics.js'),
   listeners = {},
   listenPort = 0,
 ) => pipy()

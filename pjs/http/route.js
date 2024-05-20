@@ -1,7 +1,10 @@
-((
-  { config, isDebugEnabled } = pipy.solve('config.js'),
+import { config, isDebugEnabled } from '../config.js'
+import { getNonNegativeNumber } from '../lib/utils.js'
 
-  { getNonNegativeNumber } = pipy.solve('lib/utils.js'),
+((
+  // { config, isDebugEnabled } = pipy.solve('config.js'),
+
+  // { getNonNegativeNumber } = pipy.solve('lib/utils.js'),
 
   clientMaxBodySizeCache = new algo.Cache(
     route => (

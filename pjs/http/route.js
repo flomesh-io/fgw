@@ -1,331 +1,110 @@
-import { config, isDebugEnabled } from '../config.js'
-import { getNonNegativeNumber } from '../lib/utils.js'
+var $ctx
 
-((
-  // { config, isDebugEnabled } = pipy.solve('config.js'),
-
-  // { getNonNegativeNumber } = pipy.solve('lib/utils.js'),
-
-  clientMaxBodySizeCache = new algo.Cache(
-    route => (
-      typeof (route?.config?.ClientMaxBodySize) !== 'undefined' ? (
-        getNonNegativeNumber(route.config.ClientMaxBodySize)
-      ) : (
-        typeof (__domain?.ClientMaxBodySize) !== 'undefined' ? (
-          getNonNegativeNumber(__domain.ClientMaxBodySize)
-        ) : (
-          typeof (config?.Configs?.ClientMaxBodySize) !== 'undefined' ? (
-            getNonNegativeNumber(config.Configs.ClientMaxBodySize)
-          ) : 1000000 // 1m
-        )
-      )
-    )
-  ),
-
-  makeMatchDomainHandler = portRouteRules => (
-    (
-      domains = {},
-      starDomains = [],
-      lowercaseDomain,
-    ) => (
-      Object.keys(portRouteRules || {}).forEach(
-        domain => (
-          portRouteRules[domain].name = domain,
-          lowercaseDomain = domain.toLowerCase(),
-          domain.startsWith('*') ? (
-            portRouteRules[domain].starName = lowercaseDomain.substring(1),
-            starDomains.push(portRouteRules[domain])
-          ) : (
-            domains[lowercaseDomain] = portRouteRules[domain]
-          )
-        )
-      ),
-      domain => (
-        domains[domain] ? (
-          domains[domain]
-        ) : (
-          starDomains.find(
-            d => (
-              domain.endsWith(d.starName) ? d : null
-            )
-          )
-        )
-      )
-    )
-  )(),
-
-  matchDomainHandlers = new algo.Cache(makeMatchDomainHandler),
-
-  getParameters = path => (
-    (
-      params = {},
-      qsa,
-      qs,
-      arr,
-      kv,
-    ) => (
-      path && (
-        (qsa = path.split('?')[1]) && (
-          (qs = qsa.split('#')[0]) && (
-            (arr = qs.split('&')) && (
-              arr.forEach(
-                p => (
-                  kv = p.split('='),
-                  params[kv[0]] = kv[1]
-                )
-              )
-            )
-          )
-        )
-      ),
-      params
-    )
-  )(),
-
-  makeDictionaryMatches = dictionary => (
-    (
-      tests = Object.entries(dictionary || {}).map(
-        ([type, dict]) => (
-          (type === 'Exact') ? (
-            Object.keys(dict || {}).map(
-              k => (obj => obj?.[k] === dict[k])
-            )
-          ) : (
-            (type === 'Regex') ? (
-              Object.keys(dict || {}).map(
-                k => (
-                  (
-                    regex = new RegExp(dict[k])
-                  ) => (
-                    obj => regex.test(obj?.[k] || '')
-                  )
-                )()
-              )
-            ) : [() => false]
-          )
-        )
-      )
-    ) => (
-      (tests.length > 0) && (
-        obj => tests.every(a => a.every(f => f(obj)))
-      )
-    )
-  )(),
-
-  pathPrefix = (path, prefix) => (
-    path.startsWith(prefix) && (
-      prefix.endsWith('/') || (
-        (
-          lastChar = path.charAt(prefix.length),
-        ) => (
-          lastChar === '' || lastChar === '/'
-        )
-      )()
-    )
-  ),
-
-  makeHttpMatches = rule => (
-    (
-      matchPath = (
-        (rule?.Path?.Type === 'Regex') && (
-          ((match = null) => (
-            match = new RegExp(rule?.Path?.Path),
-            (path) => match.test(path)
-          ))()
-        ) || (rule?.Path?.Type === 'Exact') && (
-          (path) => path === rule?.Path?.Path
-        ) || (rule?.Path?.Type === 'Prefix') && (
-          (path) => pathPrefix(path, rule?.Path?.Path)
-        ) || rule?.Path?.Type && (
-          () => false
-        )
-      ),
-      matchHeaders = makeDictionaryMatches(rule?.Headers),
-      matchMethod = (
-        rule?.Methods && Object.fromEntries((rule.Methods).map(m => [m, true]))
-      ),
-      matchParams = makeDictionaryMatches(rule?.QueryParams),
-    ) => (
-      {
-        config: rule,
-        match: message => (
-          (!matchMethod || matchMethod[message?.head?.method]) && (
-            (!matchPath || matchPath(message?.head?.path?.split('?')[0])) && (
-              (!matchHeaders || matchHeaders(message?.head?.headers)) && (
-                (!matchParams || matchParams(getParameters(message?.head?.path)))
-              )
-            )
-          )
-        ),
-        backendServiceBalancer: new algo.RoundRobinLoadBalancer(Object.fromEntries(Object.entries(rule?.BackendService || {})
-          .map(([k, v]) => [k, v.Weight])
-          .filter(([k, v]) => v > 0)
-        )),
-        ...(rule?.ServerRoot && { serverRoot: rule.ServerRoot })
-      }
-    )
-  )(),
-
-  makeGrpcMatches = rule => (
-    (
-      matchHeaders = makeDictionaryMatches(rule?.Headers),
-      matchMethod = (
-        rule?.Method?.Type === 'Exact' && (
-          path => (
-            (
-              grpc = (path || '').split('/'),
-            ) => (
-              path?.startsWith('/grpc.reflection.') || (
-                (!rule?.Method?.Service || rule?.Method?.Service === grpc[1]) && (!rule?.Method?.Method || rule?.Method?.Method === grpc[2])
-              )
-            )
-          )()
-        )
-      ),
-    ) => (
-      {
-        config: rule,
-        match: message => (
-          (!matchHeaders || matchHeaders(message?.head?.headers)) && (
-            (!matchMethod || matchMethod(message?.head?.path))
-          )
-        ),
-        backendServiceBalancer: new algo.RoundRobinLoadBalancer(Object.fromEntries(Object.entries(rule?.BackendService || {})
-          .map(([k, v]) => [k, v.Weight])
-          .filter(([k, v]) => v > 0)
-        )),
-      }
-    )
-  )(),
-
-  makeRouteMatchesHandler = routeTypeMatches => (
-    (
-      matches = [],
-    ) => (
-      (!routeTypeMatches?.RouteType || routeTypeMatches?.RouteType === 'HTTP' || routeTypeMatches?.RouteType === 'HTTP2') && (
-        matches = (routeTypeMatches?.Matches || []).map(
-          m => makeHttpMatches(m)
-        )
-      ),
-      (routeTypeMatches?.RouteType === 'GRPC') && (
-        matches = (routeTypeMatches?.Matches || []).map(
-          m => makeGrpcMatches(m)
-        )
-      ),
-      message => (
-        matches.find(
-          m => m.match(message)
-        )
-      )
-    )
-  )(),
-
-  routeMatchesHandlers = new algo.Cache(makeRouteMatchesHandler),
-
-  portCache = new algo.Cache(
-    port => config?.RouteRules?.[port] && (
-      new algo.Cache(
-        host => (
-          (
-            routeRules = config.RouteRules[port],
-            matchDomain = matchDomainHandlers.get(routeRules),
-            domain = matchDomain(host.toLowerCase()),
-            messageHandler = routeMatchesHandlers.get(domain),
-          ) => (
-            message => (
-              _host = host,
-              __domain = domain,
-              messageHandler && (
-                __route = messageHandler(message)
-              )
-            )
-          )
-        )()
-      )
-    )
-  ),
-
-  handleMessage = (host, msg) => (
-    host && (
-      (
-        hostHandlers = portCache.get(__port?.Port),
-        handler = hostHandlers && hostHandlers.get(host),
-      ) => (
-        handler && handler(msg)
-      )
-    )()
-  ),
-
-) => pipy({
-  _host: undefined,
-  _continue: true,
-  _clientBodySize: 0,
-  _clientMaxBodySize: 0,
-})
-
-.export('route', {
-  __domain: null,
-  __route: null,
-})
-
-.import({
-  __port: 'listener',
-  __consumer: 'consumer',
-})
-
-.pipeline()
-.handleMessageStart(
-  msg => (
-    handleMessage(msg?.head?.headers?.host, msg),
-    !__domain && __consumer?.sni && (
-      handleMessage(__consumer.sni, msg)
-    ),
-    !__domain && config?.Configs?.StripAnyHostPort && (
-      handleMessage(msg?.head?.headers?.host?.split(':')?.[0], msg)
-    ),
-    __route && (__domain.RouteType === 'HTTP') && (
-      _clientMaxBodySize = clientMaxBodySizeCache.get(__route)
-    )
-  )
-)
-.branch(
-  isDebugEnabled, (
-    $=>$.handleStreamStart(
-      () => (
-        console.log('[route] port, host, __domain.name, __route.path:', __port?.Port, _host, __domain?.name, __route?.config?.Path?.Path || __route?.config?.Method)
-      )
-    )
-  )
-)
-.branch(
-  () => (_clientMaxBodySize > 0), (
-    $=>$
-    .replaceData(
-      dat => (
-        _clientBodySize += dat.size,
-        _clientBodySize > _clientMaxBodySize ? (
-          _continue = false,
-          null
-        ) : dat
-      )
-    )
-    .replaceMessage(
-      msg => (
-        !_continue ? (
-          new Message({ status: 413 }, 'Request Entity Too Large')
-        ) : msg
-      )
-    )
-  ), (
-    $=>$
-  )
-)
-.branch(
-  () => _continue, (
-    $=>$.chain()
-  ), (
-    $=>$
-  )
+export default pipeline($=>$
+  .onStart(c => void ($ctx = c))
+  .handleMessageStart(route)
+  .pipeNext()
 )
 
-)()
+function route(msg) {
+  var head = msg.head
+  var host = head.headers.host
+  var hostRules = hostRouters.get($ctx.parent.rules)(host)
+  $ctx.route = httpRouters.get(hostRules)(head)
+}
+
+var hostRouters = new algo.Cache(
+  function (rules) {
+    var fullnames = {}
+    var postfixes = []
+    Object.entries(rules).forEach(
+      ([names, rules]) => (
+        names.split(',').forEach(
+          name => {
+            name = name.trim().toLowerCase()
+            if (name.startsWith('*')) {
+              postfixes.push([name.substring(1), rules])
+            } else {
+              fullnames[name] = rules
+            }
+          }
+        )
+      )
+    )
+    return function (name) {
+      name = name.toLowerCase()
+      var rules = fullnames[name]
+      if (rules) return rules
+      return postfixes.find(
+        ([postfix]) => name.endsWith(postfix)
+      )?.[1]
+    }
+  }
+)
+
+var httpRouters = new algo.Cache(
+  function (rules) {
+    var routes = rules.Matches || []
+    switch (rules.RouteType) {
+      case 'GRPC':
+        routes = routes.map(
+          function (match) {
+          }
+        )
+        break
+      case 'HTTP':
+      case 'HTTP2':
+      default:
+        routes = routes.map(
+          function (route) {
+            var matchMethod = route.Methods && makeMethodMatcher(route.Methods)
+            var matchPath = route.Path && makePathMatcher(route.Path)
+            var matchHeaders = route.Headers && makeObjectMatcher(route.Headers)
+            var matchParams = route.QueryParams && makeObjectMatcher(route.QueryParams)
+            var check = function (head) {
+              if (matchMethod && !matchMethod(head.method)) return false
+              if (matchPath && !matchPath(head.path)) return false
+              if (matchHeaders && !matchHeaders(head.headers)) return false
+              if (matchParams && !matchParams(new URL(head.path).searchParams.toObject())) return false
+              return true
+            }
+            return { check, route }
+          }
+        )
+        break
+    }
+    return function (head) {
+      return routes.find(({ check }) => check(head))?.route
+    }
+  }
+)
+
+function makeMethodMatcher(methods) {
+  var set = Object.fromEntries(methods.map(m => [m, true]))
+  return method => method in set
+}
+
+function makePathMatcher(rule) {
+  switch (rule.Type) {
+    case 'Exact':
+      var patterns = new algo.URLRouter({ [rule.Path]: true, '/*': false })
+      return path => patterns.find(path)
+    case 'Prefix':
+      var patterns = new algo.URLRouter({ [rule.Path + '/*']: true, '/*': false })
+      return path => patterns.find(path)
+    case 'Regex':
+      var re = new RegExp(rule.Path)
+      return path => re.test(path)
+    default: return () => false
+  }
+}
+
+function makeObjectMatcher(rule) {
+  var exact = rule.Exact && Object.entries(rule.Exact)
+  var regex = rule.Regex && Object.entries(rule.Regex).map(([k, v]) => [k, new RegExp(v)])
+  return function (obj) {
+    if (exact && exact.some(([k, v]) => (v !== (obj[k] || '')))) return false
+    if (regex && regex.some(([k, v]) => !v.test(obj[k] || ''))) return false
+    return true
+  }
+}

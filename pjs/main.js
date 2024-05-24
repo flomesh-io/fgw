@@ -1,93 +1,95 @@
-import { config, socketTimeoutOptions } from './config.js'
-import { metrics } from './lib/metrics.js'
+import options from './options.js'
 
-;((
-  // { config, socketTimeoutOptions } = pipy.solve('config.js'),
-  // { metrics } = pipy.solve('lib/metrics.js'),
-  listeners = {},
-  listenPort = 0,
-) => pipy()
-
-.export('listener', {
-  __port: null,
+var opts = options(pipy.argv, {
+  defaults: {
+    '--config': '',
+  },
+  shorthands: {
+    '-c': '--config',
+  },
 })
 
-.branch(
-  config?.Configs?.PidFile, (
-    $=>$
-    .task()
-    .onStart(
-      () => void (
-        os.writeFile(config.Configs.PidFile, '' + pipy.pid)
-      )
-    )
-    .exit()
-    .onStart(
-      () => void (
-        os.unlink(config.Configs.PidFile)
-      )
-    )
-  )
-)
-.task()
-.onStart(
-  () => void (
-    metrics.fgwMetaInfo.withLabels(pipy.uuid || '', pipy.name || '', pipy.source || '', os.env.PIPY_K8S_CLUSTER || '').increase()
-  )
-)
-.branch(
-  (config?.Configs?.ResourceUsage?.ScrapeInterval > 0), (
-    $=>$
-    .task()
-    .use('common/resource-usage.js')
-  )
+var configFilename = opts['--config']
+var config = JSON.decode(
+  configFilename
+    ? os.read(configFilename)
+    : pipy.load('config.json')
 )
 
-.repeat(
-  (config.Listeners || []),
-  ($, l) => $.listen(
-    (
-      listenPort = (l.Listen || l.Port || 0),
-      listeners[listenPort] = new ListenerArray([{ ...socketTimeoutOptions, ...l, port: listenPort, protocol: (l.Protocol?.toLowerCase?.() === 'udp') ? 'udp' : 'tcp' }]),
-      listeners[listenPort]
+var portRules = {}
+
+Object.entries(config.RouteRules).forEach(
+  ([ports, rules]) => {
+    ports.split(',').forEach(
+      port => portRules[port.trim()] = rules
     )
-  )
-  .onStart(
-    () => (
-      __port = l,
-      new Data
-    )
-  )
-  .link('launch')
+  }
 )
 
-.pipeline('launch')
-.branch(
-  () => (__port?.Protocol === 'HTTP'), (
-    $=>$.chain(config?.Chains?.HTTPRoute || [])
-  ),
-  () => (__port?.Protocol === 'HTTPS'), (
-    $=>$.chain(config?.Chains?.HTTPSRoute || [])
-  ),
-  () => (__port?.Protocol === 'TLS' && __port?.TLS?.TLSModeType === 'Passthrough'), (
-    $=>$.chain(config?.Chains?.TLSPassthrough || [])
-  ),
-  () => (__port?.Protocol === 'TLS' && __port?.TLS?.TLSModeType === 'Terminate'), (
-    $=>$.chain(config?.Chains?.TLSTerminate || [])
-  ),
-  () => (__port?.Protocol === 'TCP'), (
-    $=>$.chain(config?.Chains?.TCPRoute || [])
-  ),
-  () => (__port?.Protocol === 'UDP'), (
-    $=>$.chain(config?.Chains?.UDPRoute || [])
-  ),
-  (
-    $=>$.replaceStreamStart(new StreamEnd)
+var pidFilename = config.Configs?.PidFile
+if (pidFilename) {
+  os.write(pidFilename, pipy.pid.toString())
+
+  pipy.exit(
+    function () {
+      os.unlink(pidFilename)
+    }
   )
+}
+
+var $ctx
+
+config.Listeners?.forEach?.(
+  function (l) {
+    var port = l.Listen || l.Port
+    if (!port) return
+
+    var proto = l.Protocol
+    var wireProto = 'tcp'
+    var chains = config.Chains
+    var chain
+
+    switch (proto) {
+      case 'TCP':
+        chain = chains?.TCPRoute
+        break
+      case 'UDP':
+        chain = chains?.UDPRoute
+        wireProto = 'udp'
+        break
+      case 'TLS':
+        chain = chains?.[l.TLS?.TLSModeType === 'Terminate' ?  'TLSTerminate' : 'TLSPassthrough']
+        break
+      case 'HTTP':
+        chain = chains?.HTTPRoute
+        break
+      case 'HTTPS':
+        chain = chains?.HTTPSRoute
+        break
+      default: throw `Unknown protocol '${proto}'`
+    }
+
+    chain = chain || []
+    chain = chain.map(filename => pipy.import('./' + filename).default)
+
+    var timeout = config.Configs?.SocketTimeout
+    var options = timeout <= 0 ? {} : {
+      connectTimeout: timeout,
+      readTimeout: timeout,
+      writeTimeout: timeout,
+      idleTimeout: timeout,
+    }
+
+    pipy.listen(port, wireProto, options, $=>$
+      .onStart(i => {
+        $ctx = {
+          config,
+          listener: l,
+          rules: portRules[i.localPort],
+        }
+        return new Data
+      })
+      .pipe(chain, () => $ctx)
+    )
+  }
 )
-
-.task()
-.onStart(new Data)
-.use('common/health-check.js')
-
-)()

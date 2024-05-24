@@ -519,33 +519,22 @@
   },
   "Chains": {
     "HTTPRoute": [
-      "common/consumer.js",
       "http/codec.js",
       "http/route.js",
-      "http/service.js",
       "http/forward.js",
       "http/default.js"
     ],
     "HTTPSRoute": [
-      "common/tls-termination.js",
-      "common/consumer.js",
       "http/codec.js",
       "http/route.js",
-      "http/service.js",
       "http/forward.js",
       "http/default.js"
     ],
     "TLSPassthrough": [
-      "tls/passthrough.js",
-      "common/consumer.js"
     ],
     "TLSTerminate": [
-      "common/tls-termination.js",
-      "common/consumer.js",
-      "tls/forward.js"
     ],
     "TCPRoute": [
-      "tcp/forward.js"
     ]
   },
   "Features": {

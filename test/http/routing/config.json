@@ -1,12 +1,12 @@
 {
   "Configs": {
-    "DefaultPassthroughUpstreamPort": 443,
+    "DefaultPassthroughUpstreamPort": 8443,
     "EnableDebug": true
   },
   "Listeners": [
     {
       "Protocol": "HTTP",
-      "Port": 80,
+      "Port": 8080,
       "AccessControlLists": {
         "Blacklist": [
           "127.0.0.1",
@@ -21,7 +21,7 @@
     },
     {
       "Protocol": "HTTP",
-      "Port": 81,
+      "Port": 8081,
       "AccessControlLists": {
         "Blacklist": [
           "192.168.122.18",
@@ -31,7 +31,7 @@
     },
     {
       "Protocol": "HTTPS",
-      "Port": 443,
+      "Port": 8443,
       "TLS": {
         "TLSModeType": "Terminate",
         "MTLS": false,
@@ -83,17 +83,34 @@
     "IssuingCA": "-----BEGIN CERTIFICATE-----\nMIIFWTCCA0GgAwIBAgIUNKjLHxL3+ClJqkQ4vPWng9eF+i4wDQYJKoZIhvcNAQEL\nBQAwPDEUMBIGA1UECwwLTXlSb290Q0EgUjIxETAPBgNVBAoMCE15Um9vdENBMREw\nDwYDVQQDDAhNeVJvb3RDQTAeFw0yMjA4MDIwNjUyMDlaFw0zMjA3MzAwNjUyMDla\nMDwxFDASBgNVBAsMC015Um9vdENBIFIyMREwDwYDVQQKDAhNeVJvb3RDQTERMA8G\nA1UEAwwITXlSb290Q0EwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoICAQDl\nijHtCgkNwWdX/QBVcBJK/6frXbMjY5tUMaT+kpCjYraKtY53xX5DcwOOtzlmLufp\nlBsYwtgCbgV3zU87mrnyd+NkGg+bbY3YP0xMF3RTfzRixkZbGuQDo8VRHeWsnxqg\nbHQ1CPfHAvj7uND9tlwMEpowdhQJM7GMItleaLWMtkuuime1EQug4cY+NEoG5o6u\nyyfIyL6BqaMrhSMvIysCIbx/uhp8/wYDikcbglatLULxqgGu2fRjrIt6HTgz0MR5\nAvQeykHrU8sH4VL2wHnUEARJBrovoiZ8ncGUjjpalktU7/CG9jr11jNVRSJSZvFt\nd71FFuyyxfM5F/J4shleR0cVEyUtA8Wh+N0dWrI9yRgKcSGF87T1fPGsmLEu8qFq\nAzGM7ahmbCD6JshJICqKCWAuSTsM8ixHBc0kkC4hHMwBOlthzltrmBcTPY6f/V8a\nFR2d3DC9FODWqkb5S34ppqO2854TfQ++NJaHYFqkvotkze68dO39vyQrggPDheEk\nDQHx2lFNND6DX/5jUXjVjH7msgGw4kwA7qfZOaeitkFZPuLQapNetPyUffHwicFa\nPF2evvkoHNNrPkAvm5Wdr4AhBhdLrhfq7jQeBNARJtH2hcXTTSBzzXp55PMjWKTh\niYyTzXlJeQqLgcUSzYZE+f1Az96i+jWCxAj2pIUaEwIDAQABo1MwUTAdBgNVHQ4E\nFgQUquU1wQ7pcpsqdGb5v5eBkVmXlQAwHwYDVR0jBBgwFoAUquU1wQ7pcpsqdGb5\nv5eBkVmXlQAwDwYDVR0TAQH/BAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAcqpE\n4p6+Xwgy3pIVDabZBvzvtbC505oaOs8gp0tzCPIMn1pg6ZMYziTdYKI2UfGNedFO\nd9WAxinwzDlyBDz876crxua3MKVxTBQLQtC7SPS5Jwv53HA7lGqK6MHfmdMbxo13\nM/J5SPM1kQFXjiWaW+pMQCQ6kbVe9cjo/8QXsnjbxngOpYLNnhpnoYq6Vjh9ZRl0\n8hMkt2A7ruaYl+kEH0ORpBGovsLz9QeLBQw2ZksBUACO25lZOYWVilrpd6OR27zv\nojhaNanlfTr81wZiXT5SMxA8cV1GEJHlxKVg5v291oENSHuOOIMVi7mo4ZjfVRmr\n1vckRHOFRIcYwA2lqaEmtxYyhwne1HktnTQCpw5sTpPM8ibOZyMDJ46jvsUQdvI2\nsVjG4aaEkcM1yVzX8jkZly4rGw7GPpY1hs/2X8ZMcJJ5t5t81kzfb9N/Roh6Ax33\n/yALEwCQ7WBnLLBdAp5uigwjR1e/eg2WxKtE8eTIkThaeWIHRpjngryDCKNctONZ\nL93ARMxpenag2r4uD4fZahpspf8LhwExOpcG0HjNb74YVXuylS2IJ6tENsmOPQu/\n2gyYEXhEeHBbc7M5GPv765Xctg/EWPoygl5+MwAhDgsCubwB8Dap5ciuh0fK03fs\nIhRvf3KD2ng8o/ZTJQ51jSvuuzP0oHHp/DYIadg=\n-----END CERTIFICATE-----\n"
   },
   "RouteRules": {
-    "80": {
+    "8080": {
       "127.0.0.1": {
         "RouteType": "HTTP",
         "Matches": [
           {
             "Path": {
               "Type": "Prefix",
-              "Path": "/slow"
+              "Path": "/path"
+            },
+            "Headers": {
+              "Exact": {
+                "a": "1",
+                "b": "2",
+                "c": "3"
+              }
+            },
+            "Methods": [
+              "GET",
+              "POST"
+            ],
+            "QueryParams": {
+              "Exact": {
+                "abc": "1",
+                "def": "2"
+              }
             },
             "BackendService": {
-              "www8844": {
+              "www8888": {
                 "Weight": 100
               }
             }
@@ -107,7 +124,7 @@
               "GET"
             ],
             "BackendService": {
-              "www8846": {
+              "www8886": {
                 "Weight": 100
               }
             }
@@ -121,7 +138,7 @@
               "GET"
             ],
             "BackendService": {
-              "www8846": {
+              "www8886": {
                 "Weight": 100
               }
             }
@@ -136,14 +153,14 @@
               "POST"
             ],
             "BackendService": {
-              "www8847": {
+              "www8887": {
                 "Weight": 100
               }
             }
           },
           {
             "BackendService": {
-              "www8845": {
+              "www8889": {
                 "Weight": 100
               }
             }
@@ -181,7 +198,7 @@
         ]
       }
     },
-    "443": {
+    "8443": {
       "*.test.com": {
         "RouteType": "HTTP",
         "Matches": [
@@ -278,9 +295,7 @@
           {
             "Headers": {
               "Exact": {
-                "canary": "true",
-                "version": "2",
-                "region": "gz"
+                "canary": "true"
               }
             },
             "Method": {
@@ -289,32 +304,14 @@
               "Method": "Hello"
             },
             "BackendService": {
-              "www8846": {
-                "Weight": 100
-              }
-            }
-          },
-          {
-            "Headers": {
-              "Exact": {
-                "canary": "true",
-                "version": "2"
-              }
-            },
-            "Method": {
-              "Type": "Exact",
-              "Service": "com.example.secure",
-              "Method": "login"
-            },
-            "BackendService": {
-              "www8847": {
+              "bookstore/bookstore-v1|14001|local": {
                 "Weight": 100
               }
             }
           },
           {
             "BackendService": {
-              "www8849": {
+              "bookstore/bookstore-v2|14001|local": {
                 "Weight": 100
               }
             }
@@ -335,8 +332,8 @@
       "bookstore/bookstore-v2|14001|local": 100
     },
     "8443": {
-      "abc.com": "xyz.com:443",
-      "www.test.com": "test.com:443",
+      "abc.com": "xyz.com:8443",
+      "www.test.com": "test.com:8443",
       "demo.com": "sample.com"
     },
     "9443": {
@@ -352,55 +349,9 @@
     }
   },
   "Services": {
-    "www8844": {
+    "www8886": {
       "Endpoints": {
-        "127.0.0.1:8844": {
-          "Weight": 100,
-          "Tags": {
-            "Cluster": "cluster1"
-          }
-        }
-      },
-      "ConnectionSettings": {
-        "tcp": {
-          "MaxConnections": 25
-        },
-        "http": {
-          "MaxRequestsPerConnection": 1,
-          "MaxPendingRequests": 1,
-          "CircuitBreaking": {
-            "MinRequestAmount": 3,
-            "StatTimeWindow": 10,
-            "SlowTimeThreshold": 1,
-            "SlowAmountThreshold": 4,
-            "SlowRatioThreshold": 0.5,
-            "ErrorAmountThreshold": 4,
-            "ErrorRatioThreshold": 0.5,
-            "DegradedTimeWindow": 10,
-            "DegradedStatusCode": 409,
-            "DegradedResponseContent": "Coming soon .... 0"
-          }
-        }
-      }
-    },
-    "www8845": {
-      "Endpoints": {
-        "127.0.0.1:8845": {
-          "Weight": 100,
-          "Tags": {
-            "Cluster": "cluster1"
-          }
-        }
-      },
-      "Retry": {
-        "RetryOn": "5xx,403",
-        "NumRetries": 4,
-        "BackoffBaseInterval": 0.1
-      }
-    },
-    "www8846": {
-      "Endpoints": {
-        "127.0.0.1:8846": {
+        "127.0.0.1:8886": {
           "Weight": 100,
           "Tags": {
             "Cluster": "cluster1"
@@ -408,9 +359,9 @@
         }
       }
     },
-    "www8847": {
+    "www8887": {
       "Endpoints": {
-        "127.0.0.1:8847": {
+        "127.0.0.1:8887": {
           "Weight": 100,
           "Tags": {
             "Cluster": "cluster1"
@@ -418,9 +369,9 @@
         }
       }
     },
-    "www8848": {
+    "www8888": {
       "Endpoints": {
-        "127.0.0.1:8848": {
+        "127.0.0.1:8888": {
           "Weight": 100,
           "Tags": {
             "Cluster": "cluster1"
@@ -428,9 +379,9 @@
         }
       }
     },
-    "www8849": {
+    "www8889": {
       "Endpoints": {
-        "127.0.0.1:8849": {
+        "127.0.0.1:8889": {
           "Weight": 100,
           "Tags": {
             "Cluster": "cluster1"
@@ -568,63 +519,22 @@
   },
   "Chains": {
     "HTTPRoute": [
-      "common/access-control.js",
-      "common/ratelimit.js",
-      "common/consumer.js",
       "http/codec.js",
-      "http/auth.js",
       "http/route.js",
-      "http/service.js",
-      "http/metrics.js",
-      "http/tracing.js",
-      "http/logging.js",
-      "http/circuit-breaker.js",
-      "http/throttle-domain.js",
-      "http/throttle-route.js",
-      "filter/request-redirect.js",
-      "filter/header-modifier.js",
-      "filter/url-rewrite.js",
       "http/forward.js",
       "http/default.js"
     ],
     "HTTPSRoute": [
-      "common/access-control.js",
-      "common/ratelimit.js",
-      "common/tls-termination.js",
-      "common/consumer.js",
       "http/codec.js",
-      "http/auth.js",
       "http/route.js",
-      "http/service.js",
-      "http/metrics.js",
-      "http/tracing.js",
-      "http/logging.js",
-      "http/circuit-breaker.js",
-      "http/throttle-domain.js",
-      "http/throttle-route.js",
-      "filter/request-redirect.js",
-      "filter/header-modifier.js",
-      "filter/url-rewrite.js",
       "http/forward.js",
       "http/default.js"
     ],
     "TLSPassthrough": [
-      "common/access-control.js",
-      "common/ratelimit.js",
-      "tls/passthrough.js",
-      "common/consumer.js"
     ],
     "TLSTerminate": [
-      "common/access-control.js",
-      "common/ratelimit.js",
-      "common/tls-termination.js",
-      "common/consumer.js",
-      "tls/forward.js"
     ],
     "TCPRoute": [
-      "common/access-control.js",
-      "common/ratelimit.js",
-      "tcp/forward.js"
     ]
   },
   "Features": {

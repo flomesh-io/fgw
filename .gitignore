@@ -16,7 +16,7 @@ flomesh-testsuites/
 gui/node_modules/
 tests/shpec/pjs/
 tests/shpec/tmp/
-test/shpec/tmp/
+test/logs/
 
 # Editor directories and files
 .idea

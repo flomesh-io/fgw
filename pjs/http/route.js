@@ -8,8 +8,14 @@ export default pipeline($=>$
 
 function route(msg) {
   var head = msg.head
-  var host = head.headers.host
-  var hostRules = hostRouters.get($ctx.parent.rules)(host)
+  var host = head.headers.host || ''
+  var hostRouter = hostRouters.get($ctx.parent.rules)
+  var hostRules = hostRouter(host)
+  if (!hostRules) {
+    var i = host.lastIndexOf(':')
+    if (i >= 0) hostRules = hostRouter(host.substring(0, i))
+  }
+  if (!hostRules) return
   $ctx.route = httpRouters.get(hostRules)(head)
 }
 

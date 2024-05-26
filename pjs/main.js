@@ -29,7 +29,6 @@ Object.entries(config.RouteRules).forEach(
 var pidFilename = config.Configs?.PidFile
 if (pidFilename) {
   os.write(pidFilename, pipy.pid.toString())
-
   pipy.exit(
     function () {
       os.unlink(pidFilename)
@@ -46,25 +45,47 @@ config.Listeners?.forEach?.(
 
     var proto = l.Protocol
     var wireProto = 'tcp'
-    var chains = config.Chains
     var chain
 
     switch (proto) {
       case 'TCP':
-        chain = chains?.TCPRoute
+        chain = [
+          'http/codec.js',
+          'http/route.js',
+          'http/forward.js',
+          'http/default.js',
+        ]
         break
       case 'UDP':
-        chain = chains?.UDPRoute
+        chain = []
         wireProto = 'udp'
         break
       case 'TLS':
-        chain = chains?.[l.TLS?.TLSModeType === 'Terminate' ?  'TLSTerminate' : 'TLSPassthrough']
+        chain = l.TLS?.TLSModeType === 'Terminate' ?  [
+          'common/tls-termination.js',
+          'http/codec.js',
+          'http/route.js',
+          'http/forward.js',
+          'http/default.js',
+        ] : [
+        ]
         break
       case 'HTTP':
-        chain = chains?.HTTPRoute
+        chain = [
+          'http/codec.js',
+          'http/route.js',
+          'http/forward.js',
+          'http/default.js',
+        ]
         break
       case 'HTTPS':
-        chain = chains?.HTTPSRoute
+        chain = [
+          'common/tls-termination.js',
+          'http/codec.js',
+          'http/route.js',
+          'http/forward.js',
+          'http/default.js',
+        ]
         break
       default: throw `Unknown protocol '${proto}'`
     }
@@ -86,6 +107,9 @@ config.Listeners?.forEach?.(
           config,
           listener: l,
           rules: portRules[i.localPort],
+          serverName: '',
+          serverCert: null,
+          clientCert: null,
         }
         return new Data
       })

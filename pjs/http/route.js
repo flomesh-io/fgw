@@ -7,16 +7,29 @@ export default pipeline($=>$
 )
 
 function route(msg) {
-  var head = msg.head
-  var host = head.headers.host || ''
   var hostRouter = hostRouters.get($ctx.parent.rules)
-  var hostRules = hostRouter(host)
+  var hostRules
+  var head = msg.head
+  var host = head.headers.host
+  if (host) {
+    hostRules = hostRouter(host)
+    if (!hostRules) {
+      var i = host.lastIndexOf(':')
+      if (i >= 0) hostRules = hostRouter(host.substring(0, i))
+    }
+  }
   if (!hostRules) {
-    var i = host.lastIndexOf(':')
-    if (i >= 0) hostRules = hostRouter(host.substring(0, i))
+    var sni = $ctx.parent.serverName
+    if (sni) {
+      hostRules = hostRouter(sni)
+    }
   }
   if (!hostRules) return
-  $ctx.route = httpRouters.get(hostRules)(head)
+  if (!hostRules.Matches) {
+    $ctx.route = { BackendService: hostRules }
+  } else {
+    $ctx.route = httpRouters.get(hostRules)(head)
+  }
 }
 
 var hostRouters = new algo.Cache(

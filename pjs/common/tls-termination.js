@@ -1,83 +1,161 @@
-var $ctx
-var $hello = false
+((
+  { config, isDebugEnabled } = pipy.solve('config.js'),
 
-export default pipeline($=>$
-  .onStart(c => void ($ctx = c))
-  .handleTLSClientHello(findCertificate)
-  .pipe(
-    () => {
-      if ($hello) {
-        return $ctx.serverCert ? 'pass' : 'deny'
-      }
-    }, {
-      'pass': ($=>$
-        .acceptTLS({
-          certificate: () => $ctx.serverCert,
-          onState: session => {
-            if (session.state === 'connected') {
-              $ctx.clientCert = session.peer
-            }
-          }
-        }).to($=>$.pipeNext())
-      ),
-      'deny': $=>$.replaceStreamStart(new StreamEnd)
-    }
-  )
-)
-
-var defaultCertificates = new algo.Cache(
-  function (config) {
-    var crt = config.Certificate?.CertChain
-    var key = config.Certificate?.PrivateKey
-    if (crt && key) {
-      return {
-        cert: new crypto.Certificate(crt),
-        key: new crypto.PrivateKey(key),
-      }
-    }
-    return null
-  }
-)
-
-var certificateFinders = new algo.Cache(
-  function (listener) {
-    var fullnames = {}
-    var postfixed = []
-    if (listener.TLS?.Certificates) {
-      listener.TLS.Certificates.forEach(
-        c => {
-          var cert = new crypto.Certificate(c.CertChain)
-          var key = new crypto.PrivateKey(c.PrivateKey)
-          var tls = { cert, key }
-          ;[cert.subject.commonName, ...cert.subjectAltNames].forEach(
-            n => {
-              if (n.startsWith('*')) {
-                postfixed.push([n.substring(1), tls])
-              } else {
-                fullnames[n] = tls
-              }
-            }
+  uniqueCA = {},
+  unionCA = (config?.Listeners || []).filter(
+    o => o?.TLS?.CACerts
+  ).map(
+    o => o.TLS.CACerts.map(
+      c => c && (
+        (
+          md5 = algo.hash(c)
+        ) => (
+          !uniqueCA[md5] && (
+            uniqueCA[md5] = true,
+            new crypto.Certificate(c)
           )
+        )
+      )()
+    ).filter(
+      c => c
+    )
+  ).flat(),
+
+  globalTls = (config?.Certificate?.CertChain && config?.Certificate?.PrivateKey) ? (
+    {
+      cert: new crypto.Certificate(config.Certificate.CertChain),
+      key: new crypto.PrivateKey(config.Certificate.PrivateKey),
+      ca: config?.Certificate?.IssuingCA && unionCA.push(new crypto.Certificate(config.Certificate.IssuingCA)),
+    }
+  ) : null,
+
+  tlsCache = new algo.Cache(
+    portCfg => (
+      (
+        exactNames = {},
+        starNames = {},
+      ) => (
+        (portCfg?.TLS?.Certificates || []).forEach(
+          o => (
+            (
+              tls = {
+                cert: new crypto.Certificate(o.CertChain),
+                key: new crypto.PrivateKey(o.PrivateKey),
+                ca: o.IssuingCA && (new crypto.Certificate(o.IssuingCA)),
+              },
+              commonName = tls.cert.subject.commonName.toLowerCase(),
+            ) => (
+              commonName.startsWith('*') ? (
+                starNames[commonName.substring(1)] = tls
+              ) : (
+                exactNames[commonName] = tls
+              ),
+              tls.cert.subjectAltNames.forEach(
+                o => o.startsWith('*') ? (
+                  starNames[o.substring(1).toLowerCase()] = tls
+                ) : (
+                  exactNames[o.toLowerCase()] = tls
+                )
+              )
+            )
+          )()
+        ),
+        {
+          exactNames,
+          starNames,
         }
       )
-    }
-    return function (sni) {
-      sni = sni.toLowerCase()
-      return (
-        fullnames[sni] ||
-        postfixed.find(([postfix]) => sni.endsWith(postfix))?.[1]
+    )()
+  ),
+
+  matchDomainName = (portCfg, name) => (
+    (
+      portTls = tlsCache.get(portCfg),
+      domainName = name.toLowerCase(),
+      starName,
+    ) => (
+      portTls.exactNames[domainName] ? portTls.exactNames[domainName] : (
+        starName = domainName.substring(domainName.indexOf('.')),
+        portTls.starNames[starName] ? portTls.starNames[starName] : globalTls
       )
-    }
-  }
+    )
+  )(),
+
+  alpnPolicy = names => (
+    __port?.Protocol === 'TLS' && __port.TLS?.TLSModeType === 'Terminate' ? (
+      __port.TLS.ALPN ? (
+        names.indexOf(__port.TLS.ALPN.toLowerCase())
+      ) : (
+        ((names.indexOf('http/1.1') + 1) || (names.indexOf('h2') + 1)) - 1
+      )
+    ) : (
+      ((names.indexOf('h2') + 1) || (names.indexOf('http/1.1') + 1)) - 1
+    )
+  ),
+
+) => pipy({
+  _tls: undefined,
+  _domainName: undefined,
+})
+
+.import({
+  __port: 'listener',
+  __consumer: 'consumer',
+})
+
+.pipeline()
+.handleTLSClientHello(
+  hello => (
+    _domainName = hello?.serverNames?.[0] || '',
+    _tls = matchDomainName(__port, _domainName),
+    isDebugEnabled && (
+      console.log('[tls-termination] port, domainName, CN, Alts:', __port?.Port, _domainName, _tls?.cert?.subject?.commonName, _tls?.cert?.subjectAltNames)
+    )
+  )
+)
+.branch(
+  () => Boolean(_tls), (
+    $=>$.branch(
+      () => __port?.TLS?.MTLS, (
+        $=>$.acceptTLS({
+          certificate: (sni, cert) => (
+            __consumer = { sni, cert, mtls: true, type: 'terminate' },
+            {
+              cert: _tls.cert,
+              key: _tls.key,
+            }
+          ),
+          verify: (ok, cert) => (
+            __consumer && (__consumer.cert = cert),
+            ok
+          ),
+          trusted: unionCA,
+          alpn: alpnPolicy,
+        }).to($=>$.chain())
+      ), (
+        $=>$.acceptTLS({
+          certificate: (sni, cert) => (
+            __consumer = { sni, cert, type: 'terminate' },
+            {
+              cert: _tls.cert,
+              key: _tls.key,
+            }
+          ),
+          alpn: alpnPolicy,
+        }).to($=>$.chain())
+      )
+    )
+  ),
+  () => _tls === null, (
+    $=>$.replaceStreamStart(
+      () => (
+        isDebugEnabled && (
+          console.log('[tls-termination] Not match TLS cert, _domainName:', _domainName)
+        ),
+        new StreamEnd
+      )
+    )
+  )
 )
 
-function findCertificate(hello) {
-  var sni = hello.serverNames[0] || ''
-  var cert = (
-    certificateFinders.get($ctx.listener)(sni) ||
-    defaultCertificates.get($ctx.config)
-  )
-  $ctx.serverName = sni
-  $ctx.serverCert = cert || null
-  $hello = true
-}
+)()

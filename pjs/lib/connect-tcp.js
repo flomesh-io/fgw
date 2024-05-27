@@ -1,9 +1,6 @@
-import { isDebugEnabled, socketTimeoutOptions } from '../config.js'
-import { metrics, metricsCache } from '../lib/metrics.js'
-
 ((
-  // { isDebugEnabled, socketTimeoutOptions } = pipy.solve('config.js'),
-  // { metrics, metricsCache } = pipy.solve('lib/metrics.js'),
+  { isDebugEnabled, socketTimeoutOptions } = pipy.solve('config.js'),
+  { metrics, metricsCache } = pipy.solve('lib/metrics.js'),
 ) => (
 
 pipy({

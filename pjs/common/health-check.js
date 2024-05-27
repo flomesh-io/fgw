@@ -1,11 +1,7 @@
-import { config, isDebugEnabled } from '../config.js'
-import { healthCheckTargets, healthCheckServices } from '../common/variables.js'
-import { metrics } from '../lib/metrics.js'
-
 ((
-  // { config, isDebugEnabled } = pipy.solve('config.js'),
+  { config, isDebugEnabled } = pipy.solve('config.js'),
 
-  // { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
+  { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
 
   hcLogging = config?.Configs?.HealthCheckLog?.StorageAddress && new logging.JSONLogger('health-check-logger').toHTTP(config.Configs.HealthCheckLog.StorageAddress, {
     batch: {
@@ -25,7 +21,7 @@ import { metrics } from '../lib/metrics.js'
   code_base = pipy.source || '',
   pipy_id = pipy.name || '',
 
-  // { metrics } = pipy.solve('lib/metrics.js'),
+  { metrics } = pipy.solve('lib/metrics.js'),
 
   makeHealthCheck = (serviceConfig) => (
     serviceConfig?.HealthCheck && (

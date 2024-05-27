@@ -1,7 +1,5 @@
-import { config } from '../config.js'
-
 ((
-  // { config } = pipy.solve('config.js'),
+  { config } = pipy.solve('config.js'),
 
   uniqueCA = {},
 

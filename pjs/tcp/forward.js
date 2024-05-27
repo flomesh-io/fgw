@@ -1,16 +1,12 @@
-import { config, isDebugEnabled } from '../config.js'
-import { healthCheckTargets, healthCheckServices } from '../common/variables.js'
-import { shuffle, failover } from '../lib/utils.js'
-
 ((
-  // { config, isDebugEnabled } = pipy.solve('config.js'),
+  { config, isDebugEnabled } = pipy.solve('config.js'),
 
-  // { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
+  { healthCheckTargets, healthCheckServices } = pipy.solve('common/variables.js'),
 
-  // {
-  //   shuffle,
-  //   failover,
-  // } = pipy.solve('lib/utils.js'),
+  {
+    shuffle,
+    failover,
+  } = pipy.solve('lib/utils.js'),
 
   makeServiceHandler = serviceName => (
     config?.Services?.[serviceName] ? (

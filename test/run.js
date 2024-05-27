@@ -51,7 +51,7 @@ function startFGW(path) {
   var logFilename = os.path.join(logDirname, 'out.log')
 
   var cmdline = [
-    pipyFilename, '../pjs/main.js',
+    pipyFilename, '../src/main.js',
     '--log-level=debug:thread',
     '--args',
     '--config', os.path.resolve(configFilename),

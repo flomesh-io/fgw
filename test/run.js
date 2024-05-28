@@ -5,6 +5,7 @@ var basepath = pipy.argv[1] || ''
 var testcases = pipy.list(basepath)
   .filter(path => path === 'test.js' || path.endsWith('/test.js'))
   .map(path => os.path.join(basepath, os.path.dirname(path)))
+  .sort()
 
 var results = {}
 

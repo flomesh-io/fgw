@@ -1,5 +1,6 @@
 var $ctx
 var $resource
+var $target
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
@@ -8,7 +9,7 @@ export default pipeline($=>$
     {
       'forward': ($=>$
         .muxHTTP(() => $resource).to($=>$
-          .connect(() => $resource.target.address)
+          .pipe(() => $target.connect)
         )
         .onEnd(() => $resource.free())
       ),
@@ -19,15 +20,35 @@ export default pipeline($=>$
 
 function selectTarget() {
   $resource = loadBalancers.get($ctx.serviceConfig.Endpoints).allocate()
-  return Boolean($resource)
+  if ($resource) {
+    $target = $resource.target
+    return true
+  } else {
+    return false
+  }
 }
 
 var loadBalancers = new algo.Cache(
   endpoints => new algo.LoadBalancer(
     Object.entries(endpoints).map(
-      ([k, v]) => ({ address: k, weight: v.Weight, tags: v.Tags })
+      ([k, v]) => ({
+        address: k,
+        weight: v.Weight,
+        tags: v.Tags,
+        connect: v.UseSSL ? connectTLS : connectTCP,
+      })
     ), {
       weight: t => t.weight,
     }
+  )
+)
+
+var connectTCP = pipeline($=>$
+  .connect(() => $target.address)
+)
+
+var connectTLS = pipeline($=>$
+  .connectTLS({}).to($=>$
+    .connect(() => $target.address)
   )
 )

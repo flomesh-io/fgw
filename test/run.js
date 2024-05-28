@@ -58,6 +58,7 @@ function startFGW(path) {
   var cmdline = [
     pipyFilename, '../src/main.js',
     '--log-level=debug:thread',
+    '--log-local-only',
     '--args',
     '--config', os.path.resolve(configFilename),
   ]

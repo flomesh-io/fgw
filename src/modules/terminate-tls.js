@@ -4,26 +4,36 @@ var $hello = false
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
   .handleTLSClientHello(findCertificate)
-  .pipe(
-    () => {
-      if ($hello) {
-        return $ctx.serverCert ? 'pass' : 'deny'
+  .pipe(() => {
+    if ($hello) {
+      if ($ctx.serverCert) {
+        return tlsServerPipelines.get($ctx.listenerConfig)
+      } else {
+        return shutdown
       }
-    }, {
-      'pass': ($=>$
-        .acceptTLS({
-          certificate: () => $ctx.serverCert,
-          onState: session => {
-            if (session.state === 'connected') {
-              $ctx.clientCert = session.peer
-            }
-          }
-        }).to($=>$.pipeNext())
-      ),
-      'deny': $=>$.replaceStreamStart(new StreamEnd)
     }
+  })
+)
+
+var tlsServerPipelines = new algo.Cache(
+  listenerConfig => pipeline($=>$
+    .acceptTLS({
+      certificate: () => $ctx.serverCert,
+      onState: session => {
+        if (session.state === 'connected') {
+          $ctx.clientCert = session.peer
+        }
+      },
+      trusted: listenerConfig.TLS?.MTLS ? (
+        listenerConfig.TLS.CACerts?.map?.(
+          pem => new crypto.Certificate(pem)
+        )
+      ) : null,
+    }).to($=>$.pipeNext())
   )
 )
+
+var shutdown = pipeline($=>$.replaceStreamStart(new StreamEnd))
 
 var defaultCertificates = new algo.Cache(
   function (config) {
@@ -72,7 +82,7 @@ var certificateFinders = new algo.Cache(
 )
 
 function findCertificate(hello) {
-  var sni = hello.serverNames[0] || ''
+  var sni = hello.serverNames?.[0] || ''
   var cert = (
     certificateFinders.get($ctx.listenerConfig)(sni) ||
     defaultCertificates.get($ctx.config)

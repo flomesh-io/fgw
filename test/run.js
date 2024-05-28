@@ -1,5 +1,6 @@
 #!/usr/bin/env -S pipy --log-local=null --args
 
+var rootpath = os.path.resolve('.')
 var basepath = pipy.argv[1] || ''
 var testcases = pipy.list(basepath)
   .filter(path => path === 'test.js' || path.endsWith('/test.js'))
@@ -8,6 +9,8 @@ var testcases = pipy.list(basepath)
 var results = {}
 
 function runOneTest() {
+  os.chdir(rootpath)
+
   if (testcases.length === 0) {
     println('Summary:')
     Object.entries(results).forEach(
@@ -31,6 +34,7 @@ function runOneTest() {
   startFGW(os.path.join(path)).then(f => {
     kill = f
     println('  Running test...')
+    os.chdir(os.path.join(rootpath, path))
     return pipy.import(os.path.join('.', path, 'test.js')).default()
   }).then(ok => {
     kill()

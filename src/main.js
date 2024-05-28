@@ -44,6 +44,8 @@ config.Listeners?.forEach?.(
           'modules/route-http.js',
           'modules/forward-http.js',
         ] : [
+          'modules/route-tls.js',
+          'modules/forward-tcp.js',
         ]
         break
       case 'HTTP':
@@ -81,6 +83,7 @@ config.Listeners?.forEach?.(
           listenerConfig: l,
           portConfig,
           hostRouter: hostRouters.get(portConfig),
+          hostConfig: null,
           serverName: '',
           serverCert: null,
           clientCert: null,

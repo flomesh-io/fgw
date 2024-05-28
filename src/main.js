@@ -32,7 +32,10 @@ config.Listeners?.forEach?.(
 
     switch (proto) {
       case 'TCP':
-        chain = []
+        chain = [
+          'modules/route-tcp.js',
+          'modules/forward-tcp.js',
+        ]
         break
       case 'UDP':
         chain = []
@@ -87,6 +90,8 @@ config.Listeners?.forEach?.(
           serverName: '',
           serverCert: null,
           clientCert: null,
+          serviceName: '',
+          serviceConfig: null,
         }
         return new Data
       })

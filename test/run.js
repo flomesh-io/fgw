@@ -52,7 +52,7 @@ function startFGW(path) {
   if (!pipyFilename) return Promise.reject('pipy not found')
 
   var configFilename = os.path.join('.', path, 'config.json')
-  var logDirname = os.path.join('logs', path)
+  var logDirname = os.path.join('.logs', path)
   var logFilename = os.path.join(logDirname, 'out.log')
 
   var cmdline = [

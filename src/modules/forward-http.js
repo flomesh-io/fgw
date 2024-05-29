@@ -31,12 +31,31 @@ function selectTarget() {
 var loadBalancers = new algo.Cache(
   endpoints => new algo.LoadBalancer(
     Object.entries(endpoints).map(
-      ([k, v]) => ({
-        address: k,
-        weight: v.Weight,
-        tags: v.Tags,
-        connect: v.UseSSL ? connectTLS : connectTCP,
-      })
+      ([k, v]) => {
+        var connect
+        if ($ctx.serviceConfig.MTLS) {
+          connect = pipeline($=>$
+            .dump(() => $ctx.serviceName)
+            .connectTLS({
+              certificate: {
+                cert: new crypto.CertificateChain(v.UpstreamCert.CertChain),
+                key: new crypto.PrivateKey(v.UpstreamCert.PrivateKey),
+              },
+              trusted: [new crypto.Certificate(v.UpstreamCert.IssuingCA)],
+            }).to($=>$
+              .connect(() => $target.address)
+            )
+          )
+        } else {
+          connect = v.UseSSL ? connectTLS : connectTCP
+        }
+        return {
+          address: k,
+          weight: v.Weight,
+          tags: v.Tags,
+          connect,
+        }
+      }
     ), {
       weight: t => t.weight,
     }

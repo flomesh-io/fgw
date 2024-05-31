@@ -12,7 +12,6 @@
 
     address = os.env.REMOTE_LOGGING_ADDRESS,
     tracingLimitedID = os.env.REMOTE_LOGGING_SAMPLED_FRACTION && (os.env.REMOTE_LOGGING_SAMPLED_FRACTION * Math.pow(2, 63)),
-    accessLog = new logging.JSONLogger('console-access-logger').toStdout().log,
     logLogging = address && new logging.JSONLogger('access-logger').toHTTP('http://' + address +
       (os.env.REMOTE_LOGGING_ENDPOINT || '/?query=insert%20into%20log(message)%20format%20JSONAsString'), {
       batch: {
@@ -138,7 +137,7 @@
       )(),
 
       printAccessLog: (accessLogData, msg, service, target) => (
-        accessLog({
+        console.log({
           start_time: accessLogData.start_time,
           trace_id: accessLogData.trace_id,
           apikey: accessLogData.apikey,

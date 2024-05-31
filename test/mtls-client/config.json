@@ -456,7 +456,7 @@
       }
     },
     "bookstore/bookstore-v1|14001|local": {
-      "MTLS": true,
+      "MTLS": false,
       "Endpoints": {
         "127.0.0.3:8850": {
           "Weight": 100,

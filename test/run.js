@@ -38,6 +38,8 @@ function runOneTest() {
     os.chdir(os.path.join(rootpath, path))
     return pipy.import(os.path.join('.', path, 'test.js')).default()
   }).then(ok => {
+    return new Timeout(1).wait().then(ok)
+  }).then(ok => {
     kill()
     results[path] = ok
     println(ok ? '  Passed.' : '  Failed.')

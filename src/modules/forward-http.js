@@ -3,9 +3,12 @@ import config from '../config.js'
 var $ctx
 var $resource
 var $target
+var $stickyCookie
+var $stickyAddress
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
+  .handleMessageStart(handleStickyCookie)
   .pipe(
     () => selectTarget() ? 'forward' : 'bypass',
     {
@@ -13,6 +16,7 @@ export default pipeline($=>$
         .muxHTTP(() => $resource).to($=>$
           .pipe(() => $target.connect) // TODO: Passive health check
         )
+        .handleMessageStart(insertStickyCookie)
         .onEnd(() => $resource.free())
       ),
       'bypass': $=>$.pipeNext(),
@@ -20,11 +24,58 @@ export default pipeline($=>$
   )
 )
 
+// TODO: Make the cache shared across threads
+// TODO: Handle cache TTL
+var stickyCookieCache = new algo.Cache()
+
+function handleStickyCookie(msg) {
+  var serviceConfig = $ctx.serviceConfig
+  var name = serviceConfig.StickyCookieName
+  if (!name) return
+
+  var prefix = name + '='
+  var cookie
+  var cookies = msg.head.headers.cookie
+  if (cookies) {
+    cookie = cookies.split(';').find(c => c.trim().startsWith(prefix))
+    if (cookie) cookie = cookie.substring(prefix.length).trim()
+  }
+
+  if (cookie) {
+    $stickyCookie = cookie
+    $stickyAddress = stickyCookieCache.get(cookie)
+    if ($stickyAddress) return
+  }
+
+  $stickyCookie = algo.uuid()
+}
+
+function insertStickyCookie(msg) {
+  if ($stickyCookie) {
+    var serviceConfig = $ctx.serviceConfig
+    var name = serviceConfig.StickyCookieName
+    var expires = serviceConfig.StickyCookieExpires
+    var cookie = `${name}=${$stickyCookie}; max-age=${expires}`
+    var headers = msg.head.headers
+    var cookies = headers['set-cookie']
+    if (cookies) {
+      if (typeof cookies === 'string') {
+        headers['set-cookie'] = [cookies, cookie]
+      } else {
+        headers.push(cookie)
+      }
+    } else {
+      headers['set-cookie'] = cookie
+    }
+  }
+}
+
 function selectTarget() {
   var lb = loadBalancers.get($ctx.serviceConfig.Endpoints)
-  $resource = lb.allocate(null, target => !unhealthyCache.has(target.address))
+  $resource = lb.allocate($stickyAddress, target => !unhealthyCache.has(target.address))
   if ($resource) {
     $target = $resource.target
+    if ($stickyCookie) stickyCookieCache.set($stickyCookie, $target.address)
     return true
   } else {
     return false
@@ -59,6 +110,7 @@ var loadBalancers = new algo.Cache(
         }
       }
     ), {
+      key: t => t.address,
       weight: t => t.weight,
     }
   )

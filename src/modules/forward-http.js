@@ -5,35 +5,89 @@ var $resource
 var $target
 var $stickyCookie
 var $stickyAddress
+var $retryWait
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
-  .handleMessageStart(handleStickyCookie)
-  .pipe(
-    () => selectTarget() ? 'forward' : 'bypass',
-    {
-      'forward': ($=>$
-        .muxHTTP(() => $resource).to($=>$
-          .pipe(() => $target.connect) // TODO: Passive health check
+  .pipe(() => servicePipelines.get($ctx.serviceConfig))
+)
+
+var servicePipelines = new algo.Cache(
+  serviceConfig => pipeline($ => {
+    var stickyCookie = serviceConfig.StickyCookieName
+    var retry = serviceConfig.Retry
+
+    var bypass = pipeline($=>$.pipeNext())
+
+    var forward = pipeline($ => {
+      $.muxHTTP(() => $resource).to($=>$
+        .pipe(() => $target.connect)
+      )
+
+      // TODO: Passive health check
+
+      if (stickyCookie) {
+        $.handleMessageStart(insertStickyCookie)
+      }
+
+      if (retry) {
+        var retryCodes = Object.fromEntries(
+          (retry.RetryOn || '5xx').split(',').flatMap(
+            code => {
+              code = code.trim()
+              if (code.endsWith('xx')) {
+                var hundreds = Number.parseInt(code.charAt(0)) * 100
+                return new Array(100).fill().map((_, i) => [hundreds + i, true])
+              } else {
+                return [code, true]
+              }
+            }
+          )
         )
-        .handleMessageStart(insertStickyCookie)
-        .onEnd(() => $resource.free())
-      ),
-      'bypass': $=>$.pipeNext(),
+
+        $.replaceMessageStart(res => {
+          if (res.head.status in retryCodes) {
+            if ($retryWait === undefined) {
+              $retryWait = retry.BackoffBaseInterval
+            } else {
+              $retryWait *= 2
+            }
+          } else {
+            $retryWait = undefined
+            return res
+          }
+        })
+
+        $.replaceData(data => $retryWait === undefined ? data : null)
+        $.replaceMessageEnd(end => $retryWait === undefined ? end : new StreamEnd)
+      }
+    })
+
+    if (retry) {
+      forward = pipeline($=>$
+        .repeat(() => {
+          if ($retryWait === undefined) return false
+          return new Timeout($retryWait).wait().then(true)
+        }).to($=>$
+          .pipe(forward)
+        )
+      )
     }
-  )
+
+    if (stickyCookie) {
+      var stickyCookiePrefix = stickyCookie + '='
+      $.handleMessageStart(msg => handleStickyCookie(msg, stickyCookiePrefix))
+    }
+
+    $.pipe(() => selectTarget() ? forward : bypass)
+  })
 )
 
 // TODO: Make the cache shared across threads
 // TODO: Handle cache TTL
 var stickyCookieCache = new algo.Cache()
 
-function handleStickyCookie(msg) {
-  var serviceConfig = $ctx.serviceConfig
-  var name = serviceConfig.StickyCookieName
-  if (!name) return
-
-  var prefix = name + '='
+function handleStickyCookie(msg, prefix) {
   var cookie
   var cookies = msg.head.headers.cookie
   if (cookies) {

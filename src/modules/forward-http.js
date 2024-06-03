@@ -5,7 +5,9 @@ var $resource
 var $target
 var $stickyCookie
 var $stickyAddress
+var $retry = false
 var $retryWait
+var $retryCount = 0
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
@@ -46,29 +48,28 @@ var servicePipelines = new algo.Cache(
         )
 
         $.replaceMessageStart(res => {
-          if (res.head.status in retryCodes) {
-            if ($retryWait === undefined) {
-              $retryWait = retry.BackoffBaseInterval
-            } else {
+          if (res.head.status in retryCodes && $retryCount < retry.NumRetries) {
+            if ($retryCount > 0) {
               $retryWait *= 2
+            } else {
+              $retryWait = retry.BackoffBaseInterval
             }
+            $retry = true
+            $retryCount++
           } else {
-            $retryWait = undefined
+            $retry = false
             return res
           }
         })
 
-        $.replaceData(data => $retryWait === undefined ? data : null)
-        $.replaceMessageEnd(end => $retryWait === undefined ? end : new StreamEnd)
+        $.replaceData(data => $retry ? null : data)
+        $.replaceMessageEnd(end => $retry ? new StreamEnd : end)
       }
     })
 
     if (retry) {
       forward = pipeline($=>$
-        .repeat(() => {
-          if ($retryWait === undefined) return false
-          return new Timeout($retryWait).wait().then(true)
-        }).to($=>$
+        .repeat(() => $retry ? new Timeout($retryWait).wait().then(true) : false).to($=>$
           .pipe(forward)
         )
       )

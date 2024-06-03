@@ -394,7 +394,7 @@
       },
       "Retry": {
         "RetryOn": "5xx,403",
-        "NumRetries": 4,
+        "NumRetries": 3,
         "BackoffBaseInterval": 0.1
       }
     },

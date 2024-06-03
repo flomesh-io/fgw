@@ -5,7 +5,7 @@ function startServer(indent) {
       () => {
         print(indent)
         println('request count', counter)
-        if (counter++ < 4) {
+        if (counter++ < 6) {
           return new Message({ status: 503 }, "www-port-8845")
         } else {
           return new Message({ status: 200 }, "www-port-8845")
@@ -38,6 +38,12 @@ export default function () {
     var status = res.head.status
     print(indent)
     println(urlDirect, status)
+    if (status !== 503) return false
+    return request(urlProxy)
+  }).then(res => {
+    var status = res.head.status
+    print(indent)
+    println(urlProxy, status)
     if (status !== 503) return false
     return request(urlProxy)
   }).then(res => {

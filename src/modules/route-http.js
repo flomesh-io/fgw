@@ -91,7 +91,15 @@ var httpRouters = new algo.Cache(
     switch (hostConfig.RouteType) {
       case 'GRPC':
         routes = routes.map(
-          function (match) {
+          function (route) {
+            var matchPath = route.Method && makeGRPCPathMather(route.Method)
+            var matchHeaders = route.Headers && makeObjectMatcher(route.Headers)
+            var check = function (head) {
+              if (matchPath && !matchPath(head.path)) return false
+              if (matchHeaders && !matchHeaders(head.headers)) return false
+              return true
+            }
+            return { check, route }
           }
         )
         break
@@ -159,5 +167,20 @@ function makeObjectMatcher(rule) {
     if (exact && exact.some(([k, v]) => (v !== (obj[k] || '')))) return false
     if (regex && regex.some(([k, v]) => !v.test(obj[k] || ''))) return false
     return true
+  }
+}
+
+function makeGRPCPathMather(rule) {
+  switch (rule.Type) {
+    case 'Exact':
+      var prefix = rule.Service && `/${rule.Service}/`
+      var postfix = rule.Method && `/${rule.Method}`
+      return path => (
+        path.startsWith('/grpc.reflection.') || (
+          (!prefix || path.startsWith(prefix)) &&
+          (!postfix || path.endsWith(postfix))
+        )
+      )
+    default: return () => false
   }
 }

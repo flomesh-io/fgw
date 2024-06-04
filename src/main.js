@@ -13,6 +13,7 @@ config.Listeners?.forEach?.(
     var proto = l.Protocol
     var wireProto = 'tcp'
     var chain
+    var hasRouter = false
 
     switch (proto) {
       case 'TCP':
@@ -26,20 +27,26 @@ config.Listeners?.forEach?.(
         wireProto = 'udp'
         break
       case 'TLS':
-        chain = l.TLS?.TLSModeType === 'Terminate' ?  [
-          'modules/terminate-tls.js',
-          'modules/route-http.js',
-          'modules/forward-http.js',
-        ] : [
-          'modules/route-tls.js',
-          'modules/forward-tcp.js',
-        ]
+        if (l.TLS?.TLSModeType === 'Terminate') {
+          chain = [
+            'modules/terminate-tls.js',
+            'modules/route-http.js',
+            'modules/forward-http.js',
+          ]
+        } else {
+          chain = [
+            'modules/route-tls.js',
+            'modules/forward-tcp.js',
+          ]
+        }
+        hasRouter = true
         break
       case 'HTTP':
         chain = [
           'modules/route-http.js',
           'modules/forward-http.js',
         ]
+        hasRouter = true
         break
       case 'HTTPS':
         chain = [
@@ -47,6 +54,7 @@ config.Listeners?.forEach?.(
           'modules/route-http.js',
           'modules/forward-http.js',
         ]
+        hasRouter = true
         break
       default: throw `Unknown protocol '${proto}'`
     }
@@ -69,7 +77,7 @@ config.Listeners?.forEach?.(
           config,
           listenerConfig: l,
           portConfig,
-          hostRouter: hostRouters.get(portConfig),
+          hostRouter: hasRouter ? hostRouters.get(portConfig) : null,
           hostConfig: null,
           serverName: '',
           serverCert: null,
@@ -100,23 +108,23 @@ function makeHostRouter(portConfig) {
   var fullnames = {}
   var postfixes = []
   Object.entries(portConfig).forEach(
-    ([names, rules]) => (
+    ([names, hostConfig]) => {
       names.split(',').forEach(
         name => {
           name = name.trim().toLowerCase()
           if (name.startsWith('*')) {
-            postfixes.push([name.substring(1), rules])
+            postfixes.push([name.substring(1), hostConfig])
           } else {
-            fullnames[name] = rules
+            fullnames[name] = hostConfig
           }
         }
       )
-    )
+    }
   )
   return function (name) {
     name = name.toLowerCase()
-    var rules = fullnames[name]
-    if (rules) return rules
+    var hostConfig = fullnames[name]
+    if (hostConfig) return hostConfig
     return postfixes.find(
       ([postfix]) => name.endsWith(postfix)
     )?.[1]

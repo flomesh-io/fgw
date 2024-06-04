@@ -1,5 +1,11 @@
+import config from '../config.js'
+import { makeFilters } from '../utils.js'
+
+var allServices = config.Services
+
 var $ctx
 var $resource
+var $filters
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
@@ -53,10 +59,10 @@ export default pipeline($=>$
 )
 
 function route(msg) {
-  var route
-  var services
   var hostRouter = $ctx.parent.hostRouter
   var hostConfig
+  var routeConfig
+  var services
   var head = msg.head
   var host = head.headers.host
   if (host) {
@@ -76,13 +82,14 @@ function route(msg) {
   if (!hostConfig.Matches) {
     services = hostConfig
   } else {
-    route = httpRouters.get(hostConfig)(head)
-    services = route?.BackendService
+    routeConfig = httpRouters.get(hostConfig)(head)
+    services = routeConfig?.BackendService
   }
   if (!services) return
   $resource = serviceLoadBalancers.get(services).allocate()
-  $ctx.serviceConfig = $ctx.parent.config.Services[$ctx.serviceName = $resource.target.id]
-  $ctx.routeConfig = route
+  $ctx.serviceConfig = allServices[$ctx.serviceName = $resource.target.id]
+  $ctx.routeConfig = routeConfig
+  $filters = $resource.target.filters
 }
 
 var httpRouters = new algo.Cache(
@@ -91,15 +98,15 @@ var httpRouters = new algo.Cache(
     switch (hostConfig.RouteType) {
       case 'GRPC':
         routes = routes.map(
-          function (route) {
-            var matchPath = route.Method && makeGRPCPathMather(route.Method)
-            var matchHeaders = route.Headers && makeObjectMatcher(route.Headers)
+          function (config) {
+            var matchPath = config.Method && makeGRPCPathMather(config.Method)
+            var matchHeaders = config.Headers && makeObjectMatcher(config.Headers)
             var check = function (head) {
               if (matchPath && !matchPath(head.path)) return false
               if (matchHeaders && !matchHeaders(head.headers)) return false
               return true
             }
-            return { check, route }
+            return { check, config }
           }
         )
         break
@@ -107,11 +114,11 @@ var httpRouters = new algo.Cache(
       case 'HTTP2':
       default:
         routes = routes.map(
-          function (route) {
-            var matchMethod = route.Methods && makeMethodMatcher(route.Methods)
-            var matchPath = route.Path && makePathMatcher(route.Path)
-            var matchHeaders = route.Headers && makeObjectMatcher(route.Headers)
-            var matchParams = route.QueryParams && makeObjectMatcher(route.QueryParams)
+          function (config) {
+            var matchMethod = config.Methods && makeMethodMatcher(config.Methods)
+            var matchPath = config.Path && makePathMatcher(config.Path)
+            var matchHeaders = config.Headers && makeObjectMatcher(config.Headers)
+            var matchParams = config.QueryParams && makeObjectMatcher(config.QueryParams)
             var check = function (head) {
               if (matchMethod && !matchMethod(head.method)) return false
               if (matchPath && !matchPath(head.path)) return false
@@ -119,21 +126,39 @@ var httpRouters = new algo.Cache(
               if (matchParams && !matchParams(new URL(head.path).searchParams.toObject())) return false
               return true
             }
-            return { check, route }
+            var routeFilters = makeFilters('http', config.Filters)
+            Object.entries(config.BackendService).forEach(
+              ([k, v]) => {
+                var svc = allServices[k]
+                var filters = [
+                  ...hostFilters.get(hostConfig),
+                  ...routeFilters,
+                  ...makeFilters('http', svc?.Filters)
+                ]
+                if (filters.length > 0) {
+                  v.filters = pipeline($=>$.pipe(filters))
+                }
+              }
+            )
+            return { check, config }
           }
         )
         break
     }
     return function (head) {
-      return routes.find(({ check }) => check(head))?.route
+      return routes.find(({ check }) => check(head))?.config
     }
   }
 )
 
 var serviceLoadBalancers = new algo.Cache(
   services => new algo.LoadBalancer(
-    Object.entries(services).map(
-      ([k, v]) => ({ id: k, weight: v.Weight })
+    Object.entries(services).filter(([id]) => id !== 'filters').map( // TODO: Remove this ugly patch
+      ([id, v]) => ({
+        id,
+        weight: v.Weight,
+        filters: v.filters,
+      })
     ), {
       weight: t => t.weight,
     }
@@ -184,3 +209,11 @@ function makeGRPCPathMather(rule) {
     default: return () => false
   }
 }
+
+var hostFilters = new algo.Cache(
+  hostConfig => {
+    if ('Matches' in hostConfig) {
+      return makeFilters('http', hostConfig.Filters)
+    }
+  }
+)

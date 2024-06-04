@@ -233,14 +233,6 @@
                 "backendRef": "namespace/service-name:port"
               },
               {
-                "Type": "RequestRedirect0",
-                "Scheme": "https",
-                "Hostname": "",
-                "Path": "/abc",
-                "Port": 8443,
-                "StatusCode": 301
-              },
-              {
                 "Type": "URLRewrite",
                 "Hostname": "",
                 "Path": {
@@ -333,14 +325,6 @@
                 "backendRef": "namespace/service-name:port"
               },
               {
-                "Type": "RequestRedirect0",
-                "Scheme": "https",
-                "Hostname": "",
-                "Path": "/abc",
-                "Port": 8443,
-                "StatusCode": 301
-              },
-              {
                 "Type": "URLRewrite",
                 "Hostname": "",
                 "Path": {
@@ -412,14 +396,6 @@
                 "backendRef": "namespace/service-name:port"
               },
               {
-                "Type": "RequestRedirect0",
-                "Scheme": "https",
-                "Hostname": "",
-                "Path": "/abc",
-                "Port": 8443,
-                "StatusCode": 301
-              },
-              {
                 "Type": "URLRewrite",
                 "Hostname": "",
                 "Path": {
@@ -489,14 +465,6 @@
               {
                 "Type": "RequestMirror",
                 "backendRef": "namespace/service-name:port"
-              },
-              {
-                "Type": "RequestRedirect0",
-                "Scheme": "https",
-                "Hostname": "",
-                "Path": "/abc",
-                "Port": 8443,
-                "StatusCode": 301
               },
               {
                 "Type": "URLRewrite",

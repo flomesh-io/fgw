@@ -28,7 +28,6 @@ export default function () {
     })
   ).then(answers => answers.map(res => res.body?.toString?.())
   ).then(answers => {
-    stopServer()
     var ok = true
     var total = 0
     var half = Math.floor(answers.length / 2)
@@ -52,9 +51,8 @@ export default function () {
     if (total !== answers.length) ok = false
     return ok
   }).catch(err => {
-    stopServer()
     print(indent)
     println(err)
     return false
-  })
+  }).finally(stopServer)
 }

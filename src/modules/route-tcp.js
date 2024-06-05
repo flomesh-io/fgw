@@ -1,3 +1,5 @@
+import forward from './forward-tcp.js'
+
 var $ctx
 var $resource
 
@@ -5,7 +7,7 @@ export default pipeline($=>$
   .onStart(c => void ($ctx = c))
   .pipe(
     () => findService() ? 'pass' : 'deny', {
-      'pass': $=>$.pipeNext().onEnd(() => $resource.free()),
+      'pass': $=>$.pipe(forward, () => $ctx).onEnd(() => $resource.free()),
       'deny': $=>$.replaceStreamStart(new StreamEnd),
     }
   )

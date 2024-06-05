@@ -1,3 +1,5 @@
+import forward from './forward-tcp.js'
+
 var $ctx
 var $hello = false
 
@@ -6,7 +8,7 @@ export default pipeline($=>$
   .handleTLSClientHello(findHost)
   .wait(() => $hello)
   .pipe(() => $ctx.hostConfig ? 'pass' : 'deny', {
-    'pass': $=>$.pipeNext(),
+    'pass': $=>$.pipe(forward, () => $ctx),
     'deny': $=>$.replaceStreamStart(new StreamEnd)
   })
 )

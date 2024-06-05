@@ -1,11 +1,11 @@
 import config from '../config.js'
+import forward from './forward-http.js'
 import { makeFilters } from '../utils.js'
 
 var allServices = config.Services
 
 var $ctx
 var $resource
-var $filters
 
 export default pipeline($=>$
   .onStart(c => void ($ctx = c))
@@ -37,10 +37,12 @@ export default pipeline($=>$
         $ctx.tailTime = Date.now()
       }
     )
-    .pipe(() => $resource ? 'pass' : 'deny', {
-      'pass': $=>$.pipeNext(() => $ctx).onEnd(() => $resource.free()),
-      'deny': $=>$.replaceMessage(new Message({ status: 404 }, 'Not found'))
-    })
+    .pipe(
+      () => $resource?.target?.chain ? 'pass' : 'deny', {
+        'pass': $=>$.pipe(() => $resource.target.chain).onEnd(() => $resource.free()),
+        'deny': $=>$.replaceMessage(new Message({ status: 404 }, 'Not found'))
+      }
+    )
     .handleMessageStart(
       function (msg) {
         var r = $ctx.response
@@ -89,7 +91,6 @@ function route(msg) {
   $resource = serviceLoadBalancers.get(services).allocate()
   $ctx.serviceConfig = allServices[$ctx.serviceName = $resource.target.id]
   $ctx.routeConfig = routeConfig
-  $filters = $resource.target.filters
 }
 
 var httpRouters = new algo.Cache(
@@ -106,6 +107,7 @@ var httpRouters = new algo.Cache(
               if (matchHeaders && !matchHeaders(head.headers)) return false
               return true
             }
+            makeRouteChains(hostConfig, config)
             return { check, config }
           }
         )
@@ -126,20 +128,7 @@ var httpRouters = new algo.Cache(
               if (matchParams && !matchParams(new URL(head.path).searchParams.toObject())) return false
               return true
             }
-            var routeFilters = makeFilters('http', config.Filters)
-            Object.entries(config.BackendService).forEach(
-              ([k, v]) => {
-                var svc = allServices[k]
-                var filters = [
-                  ...hostFilters.get(hostConfig),
-                  ...routeFilters,
-                  ...makeFilters('http', svc?.Filters)
-                ]
-                if (filters.length > 0) {
-                  v.filters = pipeline($=>$.pipe(filters))
-                }
-              }
-            )
+            makeRouteChains(hostConfig, config)
             return { check, config }
           }
         )
@@ -153,11 +142,11 @@ var httpRouters = new algo.Cache(
 
 var serviceLoadBalancers = new algo.Cache(
   services => new algo.LoadBalancer(
-    Object.entries(services).filter(([id]) => id !== 'filters').map( // TODO: Remove this ugly patch
+    Object.entries(services).map(
       ([id, v]) => ({
         id,
         weight: v.Weight,
-        filters: v.filters,
+        chain: v.chain,
       })
     ), {
       weight: t => t.weight,
@@ -217,3 +206,19 @@ var hostFilters = new algo.Cache(
     }
   }
 )
+
+function makeRouteChains(hostConfig, routeConfig) {
+  var routeFilters = makeFilters('http', routeConfig.Filters)
+  Object.entries(routeConfig.BackendService).forEach(
+    ([k, v]) => {
+      var svc = allServices[k]
+      var chain = [
+        ...hostFilters.get(hostConfig),
+        ...routeFilters,
+        ...makeFilters('http', svc?.Filters),
+        forward
+      ]
+      v.chain = pipeline($=>$.pipe(chain, () => $ctx))
+    }
+  )
+}

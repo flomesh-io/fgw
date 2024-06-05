@@ -19,7 +19,6 @@ config.Listeners?.forEach?.(
       case 'TCP':
         chain = [
           'modules/route-tcp.js',
-          'modules/forward-tcp.js',
         ]
         break
       case 'UDP':
@@ -31,12 +30,10 @@ config.Listeners?.forEach?.(
           chain = [
             'modules/terminate-tls.js',
             'modules/route-http.js',
-            'modules/forward-http.js',
           ]
         } else {
           chain = [
             'modules/route-tls.js',
-            'modules/forward-tcp.js',
           ]
         }
         hasRouter = true
@@ -44,7 +41,6 @@ config.Listeners?.forEach?.(
       case 'HTTP':
         chain = [
           'modules/route-http.js',
-          'modules/forward-http.js',
         ]
         hasRouter = true
         break
@@ -52,7 +48,6 @@ config.Listeners?.forEach?.(
         chain = [
           'modules/terminate-tls.js',
           'modules/route-http.js',
-          'modules/forward-http.js',
         ]
         hasRouter = true
         break

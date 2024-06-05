@@ -5,6 +5,7 @@
 
 pipy({
   _metrics: null,
+  _requestTime: null,
 })
 
 .export('connect-tcp', {
@@ -31,7 +32,8 @@ pipy({
     $=>$
     .handleStreamStart(
       () => (
-        console.log('[connect-tcp] metrics, target :', __metricLabel, __target)
+        console.log('[connect-tcp] metrics, target :', __metricLabel, __target),
+        _requestTime = Date.now() * 1000
       )
     )
   )
@@ -43,7 +45,15 @@ pipy({
 )
 .connect(() => __target, socketTimeoutOptions)
 .handleStreamEnd(
-  e => e.error && (__upstreamError = e.error)
+  e => (
+    e.error && (
+      __upstreamError = e.error,
+      console.log('[connect-tcp] target, error :',  __target, e.error)
+    ),
+    _requestTime && (
+      console.log('[connect-tcp] target, response time :',  __target, Date.now() * 1000 - _requestTime)
+    )
+  )
 )
 .handleData(
   data => (

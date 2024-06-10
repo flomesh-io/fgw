@@ -36,7 +36,8 @@ function runOneTest() {
     kill = f
     println('  Running test...')
     os.chdir(os.path.join(rootpath, path))
-    return pipy.import(os.path.join('.', path, 'test.js')).default()
+    var testMain =pipy.import(os.path.join('.', path, 'test.js')).default
+    return testMain({ log, fetch, fetchAll })
   }).then(ok => {
     return new Timeout(1).wait().then(ok)
   }).then(ok => {
@@ -53,7 +54,7 @@ function startFGW(path) {
   var pipyFilename = pipy.exec('which pipy').toString().trim()
   if (!pipyFilename) return Promise.reject('pipy not found')
 
-  var configFilename = os.path.join('.', path, 'config.json')
+  var configFilename = os.path.join('.', path, 'config.yaml')
   var logDirname = os.path.join('.logs', path)
   var logFilename = os.path.join(logDirname, 'out.log')
 
@@ -89,6 +90,53 @@ function startFGW(path) {
   ).spawn()
 
   return new Promise(r => startupCallback = r)
+}
+
+function log(a, b, c, d, e, f) {
+  var n = 6
+  if (f === undefined) n--
+  if (e === undefined) n--
+  if (d === undefined) n--
+  if (c === undefined) n--
+  if (b === undefined) n--
+  if (a === undefined) n--
+  if (n >= 1) print('   ', a)
+  if (n >= 2) print('', b)
+  if (n >= 3) print('', c)
+  if (n >= 4) print('', d)
+  if (n >= 5) print('', e)
+  if (n >= 6) print('', f)
+  println('')
+}
+
+function fetch(host, method, url, headers, body) {
+  var c = new http.Agent(host)
+  var u = new URL(url)
+  return c.request(
+    method, u.path, {
+      host: u.hostname,
+      ...(headers || {}),
+    },
+    body
+  ).catch(e => e)
+}
+
+function fetchAll(host, items) {
+  var c = new http.Agent(host)
+  return Promise.all(
+    items.map(
+      ([method, url, headers, body]) => {
+        var u = new URL(url)
+        return c.request(
+          method, u.path, {
+            host: u.hostname,
+            ...(headers || {}),
+          },
+          body
+        ).catch(e => e)
+      }
+    )
+  )
 }
 
 if (testcases.length > 0) {

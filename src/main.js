@@ -1,137 +1,106 @@
 import config from './config.js'
-
-var portConfigs = makePortMap()
-var hostRouters = new algo.Cache(makeHostRouter)
+import { log } from './log.js'
 
 var $ctx
 
-config.Listeners?.forEach?.(
-  function (l) {
-    var port = l.Listen || l.Port
-    if (!port) return
+config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
+  gw.spec.listeners.forEach(l => {
+    var wireProto
+    var routeKind
+    var routeModuleName
+    var termTLS = false
 
-    var proto = l.Protocol
-    var wireProto = 'tcp'
-    var chain
-    var hasRouter = false
-
-    switch (proto) {
-      case 'TCP':
-        chain = [
-          'modules/route-tcp.js',
-        ]
-        break
-      case 'UDP':
-        chain = []
-        wireProto = 'udp'
-        break
-      case 'TLS':
-        if (l.TLS?.TLSModeType === 'Terminate') {
-          chain = [
-            'modules/terminate-tls.js',
-            'modules/route-http.js',
-          ]
-        } else {
-          chain = [
-            'modules/route-tls.js',
-          ]
-        }
-        hasRouter = true
-        break
+    switch (l.protocol) {
       case 'HTTP':
-        chain = [
-          'modules/route-http.js',
-        ]
-        hasRouter = true
+        wireProto = 'tcp'
+        routeKind = 'HTTPRoute'
+        routeModuleName = './modules/route-http.js'
         break
       case 'HTTPS':
-        chain = [
-          'modules/terminate-tls.js',
-          'modules/route-http.js',
-        ]
-        hasRouter = true
+        wireProto = 'tcp'
+        routeKind = 'HTTPRoute'
+        routeModuleName = './modules/route-http.js'
+        termTLS = true
         break
-      default: throw `Unknown protocol '${proto}'`
+      case 'GRPC':
+        wireProto = 'tcp'
+        routeKind = 'HTTPRoute'
+        routeModuleName = './modules/route-http.js'
+        termTLS = true
+        break
+      case 'TLS':
+        wireProto = 'tcp'
+        switch (l.tls?.mode) {
+          case 'Terminate':
+            routeKind = 'TCPRoute'
+            routeModuleName = './modules/route-tcp.js'
+            termTLS = true
+            break
+          case 'Passthrough':
+            routeKind = 'TLSRoute'
+            routeModuleName = './modules/route-tls.js'
+            break
+          default: throw `Listener: unknown TLS mode '${l.tls?.mode}'`
+        }
+        break
+      case 'TCP':
+        wireProto = 'tcp'
+        routeKind = 'TCPRoute'
+        routeModuleName = './modules/route-tcp.js'
+        break
+      case 'UDP':
+        wireProto = 'udp'
+        routeKind = 'UDPRoute'
+        routeModuleName = './modules/route-udp.js'
+        break
+      default: throw `Listener: unknown protocol '${l.protocol}'`
     }
 
-    chain = chain || []
-    chain = chain.map(filename => pipy.import('./' + filename).default)
+    var routeResources = config.resources.filter(
+      r => {
+        if (r.kind !== routeKind) return false
+        var refs = r.spec?.parentRefs
+        if (refs instanceof Array) {
+          if (refs.some(
+            r => {
+              if (r.kind && r.kind !== 'Gateway') return false
+              if (r.name !== gw.metadata.name) return false
+              if (r.sectionName === l.name && l.name) return true
+              if (r.port == l.port) return true
+              return false
+            }
+          )) return true
+        }
+        return false
+      }
+    )
 
-    var timeout = config.Configs?.SocketTimeout
-    var options = timeout <= 0 ? {} : {
-      connectTimeout: timeout,
-      readTimeout: timeout,
-      writeTimeout: timeout,
-      idleTimeout: timeout,
+    var pipelines = [
+      pipy.import(routeModuleName).default(config, l, routeResources)
+    ]
+
+    if (termTLS) {
+      pipelines.unshift(
+        pipy.import('./modules/terminate-tls.js').default(config, l)
+      )
     }
 
-    pipy.listen(port, wireProto, options, $=>$
+    pipy.listen(l.port, wireProto, $=>$
       .onStart(i => {
-        var portConfig = portConfigs[i.localPort]
         $ctx = {
-          config,
-          listenerConfig: l,
-          portConfig,
-          hostRouter: hasRouter ? hostRouters.get(portConfig) : null,
-          hostConfig: null,
+          inbound: i,
+          messageCount: 0,
           serverName: '',
           serverCert: null,
           clientCert: null,
-          serviceName: '',
-          serviceConfig: null,
+          backendResource: null,
         }
+        log?.(`Inbound #${i.id} accepted on [${i.localAddress}]:${i.localPort} from [${i.remoteAddress}]:${i.remotePort}`)
         return new Data
       })
-      .pipe(chain, () => $ctx)
+      .pipe(pipelines, () => $ctx)
     )
-  }
-)
 
-function makePortMap() {
-  var map = {}
-  Object.entries(config.RouteRules).forEach(
-    ([ports, rules]) => {
-      ports.split(',').forEach(
-        port => map[port.trim()] = rules
-      )
-    }
-  )
-  return map
-}
-
-function makeHostRouter(portConfig) {
-  var fullnames = {}
-  var postfixes = []
-  Object.entries(portConfig).forEach(
-    ([names, hostConfig]) => {
-      names.split(',').forEach(
-        name => {
-          name = name.trim().toLowerCase()
-          if (name.startsWith('*')) {
-            postfixes.push([name.substring(1), hostConfig])
-          } else {
-            fullnames[name] = hostConfig
-          }
-        }
-      )
-    }
-  )
-  return function (name) {
-    name = name.toLowerCase()
-    var hostConfig = fullnames[name]
-    if (hostConfig) return hostConfig
-    return postfixes.find(
-      ([postfix]) => name.endsWith(postfix)
-    )?.[1]
-  }
-}
-
-var pidFilename = config.Configs?.PidFile
-if (pidFilename) {
-  os.write(pidFilename, pipy.pid.toString())
-  pipy.exit(
-    function () {
-      os.unlink(pidFilename)
-    }
-  )
-}
+    log?.(`Listening ${l.protocol} on ${l.port}`)
+  })
+})

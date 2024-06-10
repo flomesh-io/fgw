@@ -1,0 +1,97 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test
+        port: 8080
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test
+    hostnames:
+        - test.com
+    rules:
+      - matches:
+        - path:
+            type: PathPrefix
+            value: /path
+          headers:
+            - type: Exact
+              name: a
+              value: 1
+            - type: Exact
+              name: b
+              value: 2
+            - type: Exact
+              name: c
+              value: 3
+          method: GET
+          queryParams:
+            - type: Exact
+              name: abc
+              value: 1
+            - type: Exact
+              name: xyz
+              value: 2
+        backendRefs:
+          - name: test-svc-1
+            weight: 1
+      - matches:
+        - path:
+            type: Exact
+            value: /path/abc
+        backendRefs:
+          - name: test-svc-2
+      - matches:
+        - path:
+            type: Exact
+            value: /path/abc/tail
+          method: GET
+        backendRefs:
+          - name: test-svc-2
+      - matches:
+        - path:
+            type: RegularExpression
+            value: .*/tail
+        backendRefs:
+          - name: test-svc-3
+      - backendRefs:
+          - name: test-svc-4
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8081
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8082
+
+- kind: Backend
+  metadata:
+    name: test-svc-3
+  spec:
+    targets:
+      - address: localhost
+        port: 8083
+
+- kind: Backend
+  metadata:
+    name: test-svc-4
+  spec:
+    targets:
+      - address: localhost
+        port: 8084

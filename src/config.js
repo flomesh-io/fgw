@@ -9,11 +9,17 @@ var opts = options(pipy.argv, {
   },
 })
 
+var config
 var configFilename = opts['--config']
-var config = JSON.decode(
-  configFilename
-    ? os.read(configFilename)
-    : pipy.load('config.json')
-)
+
+if (configFilename) {
+  if (configFilename.endsWith('.yaml') || configFilename.endsWith('.yml')) {
+    config = YAML.decode(os.read(configFilename))
+  } else {
+    config = JSON.decode(os.read(configFilename))
+  }
+} else {
+  config = JSON.decode(pipy.load('config.json'))
+}
 
 export default config

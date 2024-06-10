@@ -40,29 +40,34 @@ resources:
               name: xyz
               value: 2
         backendRefs:
-          - name: test-svc-1
+          - kind: Backend
+            name: test-svc-1
             weight: 1
       - matches:
         - path:
             type: Exact
             value: /path/abc
         backendRefs:
-          - name: test-svc-2
+          - kind: Backend
+            name: test-svc-2
       - matches:
         - path:
             type: Exact
             value: /path/abc/tail
           method: GET
         backendRefs:
-          - name: test-svc-2
+          - kind: Backend
+            name: test-svc-2
       - matches:
         - path:
             type: RegularExpression
             value: .*/tail
         backendRefs:
-          - name: test-svc-3
+          - kind: Backend
+            name: test-svc-3
       - backendRefs:
-          - name: test-svc-4
+          - kind: Backend
+            name: test-svc-4
 
 - kind: Backend
   metadata:

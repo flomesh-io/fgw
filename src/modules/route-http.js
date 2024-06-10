@@ -120,8 +120,10 @@ export default function (config, listener, routeResources) {
 
   function findBackendResource(backendRef) {
     if (backendRef) {
+      var kind = backendRef.kind || 'Backend'
+      var name = backendRef.name
       return config.resources.find(
-        r => r.kind === 'Backend' && r.metadata.name === backendRef.name
+        r => r.kind === kind && r.metadata.name === name
       )
     }
   }

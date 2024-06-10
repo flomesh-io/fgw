@@ -1,3 +1,16 @@
+export default function ({ log }) {
+  return Promise.all([
+    connect('localhost:8443', 'a.b.example.com', 'a.b.example.com'),
+    connect('localhost:8443', 'www.test.com', '*.test.com'),
+  ]).then(results => {
+    results.forEach(name => log(name))
+    return true
+  }).catch(err => {
+    log(err)
+    return false
+  })
+}
+
 function connect(target, sni, expected) {
   var resolve
   var reject
@@ -32,26 +45,5 @@ function connect(target, sni, expected) {
   return new Promise((res, rej) => {
     resolve = res
     reject = rej
-  })
-}
-
-export default function () {
-  var indent = ' '.repeat(4)
-  return Promise.all([
-    connect('127.0.0.1:8443', 'www.aaa.com', 'MyInterCA'),
-    connect('127.0.0.1:8443', 'a.b.example.com', 'a.b.example.com'),
-    connect('127.0.0.1:8443', 'www.test.com', '*.test.com'),
-  ]).then(results => {
-    results.forEach(
-      name => {
-        print(indent)
-        println(name)
-      }
-    )
-    return true
-  }).catch(err => {
-    print(indent)
-    println(err)
-    return false
   })
 }

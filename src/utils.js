@@ -9,13 +9,3 @@ export function stringifyHTTPHeaders(headers) {
     }
   ).join(' ')
 }
-
-export function makeFilters(layer, filters) {
-  if (!filters) return []
-  return filters.map(
-    config => {
-      var maker = pipy.import(`./filters/${layer}/${config.Type}.js`).default
-      return maker(config)
-    }
-  )
-}

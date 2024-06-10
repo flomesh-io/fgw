@@ -15,7 +15,7 @@ resources:
         name: test
         sectionName: test
     hostnames:
-        - test.com
+      - test.com
     rules:
       - matches:
         - path:

@@ -110,8 +110,12 @@ function log(a, b, c, d, e, f) {
 }
 
 function fetch(host, method, url, headers, body) {
-  var c = new http.Agent(host)
   var u = new URL(url)
+  var c = new http.Agent(host, {
+    tls: u.protocol !== 'https:' ? null : {
+      sni: u.hostname
+    }
+  })
   return c.request(
     method, u.path, {
       host: u.hostname,

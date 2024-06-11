@@ -1,8 +1,8 @@
 export default function ({ log, fetchAll }) {
-  [1, 2, 3, 4].forEach(n => {
-    pipy.listen(8080 + n, $=>$
+  [1, 2, 3, 4].forEach(i => {
+    pipy.listen(8080 + i, $=>$
       .serveHTTP(
-        new Message(`test-svc-${n}`)
+        new Message(`test-svc-${i}`)
       )
     )
   })
@@ -41,14 +41,16 @@ export default function ({ log, fetchAll }) {
       (res, i) => {
         var req = requests[i]
         var answer = res.body?.toString?.()
-        if (answer != req[0]) {
-          log(`Req #${i} ${req[2]} expected ${req[0]} but got ${answer}`)
-          ok = false
-        }
+        var failed = (answer != req[0])
+        if (failed) ok = false
+        log(
+          failed ? 'FAIL' : 'PASS', `#${i}`,
+          `expecting '${req[0]}', got '${answer}' from ${req[2]}`
+        )
       }
     )
     return ok
   }).finally(() => {
-    [1, 2, 3, 4].forEach(n => pipy.listen(8080 + n, null))
+    [1, 2, 3, 4].forEach(i => pipy.listen(8080 + i, null))
   })
 }

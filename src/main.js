@@ -22,12 +22,6 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
         routeModuleName = './modules/route-http.js'
         termTLS = true
         break
-      case 'GRPC':
-        wireProto = 'tcp'
-        routeKind = 'HTTPRoute'
-        routeModuleName = './modules/route-http.js'
-        termTLS = true
-        break
       case 'TLS':
         wireProto = 'tcp'
         switch (l.tls?.mode) {
@@ -56,9 +50,12 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
       default: throw `Listener: unknown protocol '${l.protocol}'`
     }
 
+    var routeKinds = [routeKind]
+    if (routeKind === 'HTTPRoute') routeKinds.push('GRPCRoute')
+
     var routeResources = config.resources.filter(
       r => {
-        if (r.kind !== routeKind) return false
+        if (!routeKinds.includes(r.kind)) return false
         var refs = r.spec?.parentRefs
         if (refs instanceof Array) {
           if (refs.some(

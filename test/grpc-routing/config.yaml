@@ -1,0 +1,75 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: grpc
+        port: 8000
+        protocol: HTTP
+
+- kind: GRPCRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: grpc
+    hostnames:
+      - test.com
+    rules:
+      - matches:
+        - method:
+            service: com.example.GreetingService
+            method: Hello
+          headers:
+            - name: canary
+              value: true
+            - name: version
+              value: 2
+            - name: region
+              value: gz
+        backendRefs:
+          - kind: Backend
+            name: test-svc-1
+      - matches:
+        - method:
+            type: Exact
+            service: com.example.secure
+            method: login
+          headers:
+            - type: Exact
+              name: canary
+              value: true
+            - type: Exact
+              name: version
+              value: 2
+        backendRefs:
+          - kind: Backend
+            name: test-svc-2
+      - backendRefs:
+          - kind: Backend
+            name: test-svc-0
+
+- kind: Backend
+  metadata:
+    name: test-svc-0
+  spec:
+    targets:
+      - address: localhost
+        port: 8080
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8081
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8082

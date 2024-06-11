@@ -65,19 +65,37 @@ export default function (config, listener, routeResources) {
               return true
             }
           })
-          var matchAny = matches.length > 0 && (
+          var matchFunc = matches.length > 0 && (
             function (head) {
               return matches.some(f => f(head))
             }
           )
-          return [matchAny, makeBackendSelector(config, 'http', r, makeBackendTarget)]
+          return [matchFunc, makeBackendSelector(config, 'http', r, makeBackendTarget)]
         })
         break
       case 'GRPCRoute':
+        rules = rules.map(r => {
+          var matches = (r.matches || []).map(m => {
+            var matchMethod = makeGRPCMethodMatcher(m.method)
+            var matchHeaders = makeObjectMatcher(m.headers)
+            return function (head) {
+              if (matchMethod && !matchMethod(head.path)) return false
+              if (matchHeaders && !matchHeaders(head.headers)) return false
+              return true
+            }
+          })
+          var matchFunc = matches.length > 0 && (
+            function (head) {
+              return matches.some(f => f(head))
+            }
+          )
+          return [matchFunc, makeBackendSelector(config, 'http', r, makeBackendTarget)]
+        })
+        break
       default: throw `route-http: unknown resource kind: '${resource.kind}'`
     }
     return function (head) {
-      var r = rules.find(([matchAny]) => !matchAny || matchAny(head))
+      var r = rules.find(([matchFunc]) => !matchFunc || matchFunc(head))
       if (r) return r[1]()
     }
   }
@@ -90,7 +108,7 @@ export default function (config, listener, routeResources) {
 
   function makePathMatcher(match) {
     if (match) {
-      var type = match.type
+      var type = match.type || 'Exact'
       var value = match.value
       switch (type) {
         case 'Exact':
@@ -107,14 +125,41 @@ export default function (config, listener, routeResources) {
     }
   }
 
-  function makeObjectMatcher(matches) {
-    if (matches instanceof Array && matches.length > 0) {
-      var exact = matches.filter(m => m.type === 'Exact').map(m => [m.name.toLowerCase(), m.value])
-      var regex = matches.filter(m => m.type === 'RegularExpression').map(m => [m.name.toLowerCase(), new RegExp(m.value)])
+  function makeObjectMatcher(items) {
+    if (items instanceof Array && items.length > 0) {
+      var exact = items.filter(i => i.type === 'Exact' || !i.type).map(i => [i.name.toLowerCase(), i.value])
+      var regex = items.filter(i => i.type === 'RegularExpression').map(i => [i.name.toLowerCase(), new RegExp(i.value)])
       return (obj) => (
         exact.every(([k, v]) => v === (obj[k] || '')) &&
         regex.every(([k, v]) => v.test(obj[k] || ''))
       )
+    }
+  }
+
+  function makeGRPCMethodMatcher(match) {
+    if (match) {
+      var service = match.service
+      var method = match.method
+      var checkFunc
+      switch (match.type || 'Exact') {
+        case 'Exact':
+          checkFunc = (s, m) => (!service || service === s) && (!method || method === m)
+          break
+        case 'RegularExpression':
+          var reService = service && new RegExp(service)
+          var reMethod = method && new RegExp(method)
+          checkFunc = (s, m) => (!reService || reService.test(s)) && (!reMethod || reMethod.test(m))
+          break
+        default: return () => false
+      }
+      return path => {
+        if (!path.startsWith('/')) return false
+        var s = path.split('/')
+        var service = s[1]
+        var method = s[2]
+        if (!service || !method) return false
+        return checkFunc(service, method)
+      }
     }
   }
 

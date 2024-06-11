@@ -1,51 +1,37 @@
+import { log } from '../log.js'
+
 var $ctx
-var $resource
-var $target
+var $selection
 
-export default pipeline($=>$
-  .onStart(c => void ($ctx = c))
-  .wait(() => findTarget())
-  .connect(() => $target)
-  .onEnd(() => $resource?.free?.())
-)
+export default function (config, rule, backendRef, backendResource) {
+  var targets = backendResource ? backendResource.spec.targets.map(t => {
+    var port = t.port || backendRef.port
+    var address = `${t.address}:${port}`
+    var weight = t.weight
+    return { address, weight }
+  }) : []
 
-function findTarget() {
-  var serviceConfig = $ctx.serviceConfig
-  if (serviceConfig) {
-    findTargetByService(serviceConfig)
-    return true
-  }
-
-  var hostConfig = $ctx.hostConfig
-  if (hostConfig) {
-    findTargetByHost(hostConfig)
-    return true
-  }
-
-  return false
-}
-
-function findTargetByService(serviceConfig) {
-  var lb = loadBalancers.get(serviceConfig.Endpoints)
-  $resource = lb.allocate()
-  if ($resource) $target = $resource.target.address
-}
-
-function findTargetByHost(hostConfig) {
-  if (typeof hostConfig === 'string') {
-    $target = hostConfig
-    if ($target.indexOf(':') < 0) {
-      $target += ':' + ($ctx.config.Configs.DefaultPassthroughUpstreamPort || 443)
-    }
-  }
-}
-
-var loadBalancers = new algo.Cache(
-  endpoints => new algo.LoadBalancer(
-    Object.entries(endpoints).map(
-      ([k, v]) => ({ address: k, weight: v.Weight, tags: v.Tags })
-    ), {
+  var loadBalancer = new algo.LoadBalancer(
+    targets, {
+      key: t => t.address,
       weight: t => t.weight,
     }
   )
-)
+
+  var isHealthy = (target) => true
+
+  return pipeline($=>$
+    .onStart(c => {
+      $ctx = c
+      $selection = loadBalancer.allocate(null, isHealthy)
+      log?.(
+        `In #${$ctx.inbound.id}`,
+        `target ${$selection?.target?.address}`
+      )
+    })
+    .pipe(() => $selection ? 'pass' : 'deny', {
+      'pass': $=>$.connect(() => $selection.target.address).onEnd(() => $selection.free()),
+      'deny': $=>$.replaceStreamStart(new StreamEnd),
+    })
+  )
+}

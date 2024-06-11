@@ -1,3 +1,4 @@
+import makeBackendSelector from './backend-selector.js'
 import makeForwarder from './forward-http.js'
 import { stringifyHTTPHeaders } from '../utils.js'
 import { log } from '../log.js'
@@ -6,14 +7,15 @@ var $ctx
 var $selection
 
 export default function (config, listener, routeResources) {
-  var hostFullnames = {}
-  var hostPostfixes = []
-
   var response404 = pipeline($=>$.replaceMessage(new Message({ status: 404 })))
   var response500 = pipeline($=>$.replaceMessage(new Message({ status: 500 })))
 
+  var hostFullnames = {}
+  var hostPostfixes = []
+
   routeResources.forEach(r => {
-    r.spec.hostnames.forEach(name => {
+    var hostnames = r.spec.hostnames || ['*']
+    hostnames.forEach(name => {
       name = name.trim().toLowerCase()
       if (name.startsWith('*')) {
         hostPostfixes.push([name.substring(1), makeRuleSelector(r)])
@@ -67,7 +69,7 @@ export default function (config, listener, routeResources) {
               return matches.some(f => f(head))
             }
           )
-          return [matchAny, makeBackendSelector(r)]
+          return [matchAny, makeBackendSelector(config, 'http', r, makeBackendTarget)]
         })
         break
       case 'GRPCRoute':
@@ -76,55 +78,6 @@ export default function (config, listener, routeResources) {
     return function (head) {
       var r = rules.find(([matchAny]) => !matchAny || matchAny(head))
       if (r) return r[1]()
-    }
-  }
-
-  function makeBackendSelector(rule) {
-    var ruleFilters = makeFilters('http', rule.filters)
-    var refs = rule.backendRefs || []
-    if (refs.length > 1) {
-      var lb = new algo.LoadBalancer(
-        refs.map(ref => makeBackendTarget(rule, ruleFilters, ref, true)),
-        {
-          weight: t => t.weight,
-        }
-      )
-      return () => lb.allocate()
-    } else {
-      var singleSelection = { target: makeBackendTarget(rule, ruleFilters, refs[0], false) }
-      return () => singleSelection
-    }
-  }
-
-  function makeBackendTarget(rule, ruleFilters, backendRef, useLB) {
-    var filters = [
-      ...ruleFilters,
-      ...makeFilters('http', backendRef?.filters),
-    ]
-    var backendResource = findBackendResource(backendRef)
-    if (backendResource) {
-      filters.push(makeForwarder(config, rule, backendRef, backendResource))
-    } else {
-      filters.push(response500)
-    }
-    return {
-      backend: backendResource,
-      weight: backendRef?.weight,
-      pipeline: useLB ? (
-        pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free()))
-      ) : (
-        pipeline($=>$.pipe(filters, () => $ctx))
-      )
-    }
-  }
-
-  function findBackendResource(backendRef) {
-    if (backendRef) {
-      var kind = backendRef.kind || 'Backend'
-      var name = backendRef.name
-      return config.resources.find(
-        r => r.kind === kind && r.metadata.name === name
-      )
     }
   }
 
@@ -164,14 +117,17 @@ export default function (config, listener, routeResources) {
     }
   }
 
-  function makeFilters(layer, filters) {
-    if (!filters) return []
-    return filters.map(
-      config => {
-        var maker = pipy.import(`./filters/${layer}/${config.Type}.js`).default
-        return maker(config)
-      }
-    )
+  function makeBackendTarget(rule, backendRef, backendResource, filters) {
+    if (backendResource) {
+      filters = [...filters, makeForwarder(config, rule, backendRef, backendResource)]
+    } else {
+      filters = [...filters, response500]
+    }
+    return {
+      backend: backendResource,
+      weight: backendRef?.weight || 1,
+      pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
+    }
   }
 
   return pipeline($=>$

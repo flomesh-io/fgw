@@ -36,7 +36,7 @@ export default function (config, rule, backendRef, backendResource) {
     }
   } else {
     var targetSelector = function () {
-      $selection = loadBalancer.allocate(null, target => isHealthy(target.address))
+      $selection = loadBalancer.allocate(null, isHealthy)
     }
   }
 

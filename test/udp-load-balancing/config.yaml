@@ -1,0 +1,41 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: UDP
+
+- kind: UDPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    rules:
+      - backendRefs:
+        - kind: Backend
+          name: test-svc-1
+        - kind: Backend
+          name: test-svc-2
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8080
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8081
+      - address: localhost
+        port: 8082
+      - address: localhost
+        port: 8083

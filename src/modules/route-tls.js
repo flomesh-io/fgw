@@ -67,16 +67,11 @@ export default function (config, listener, routeResources) {
       }, {
         'pass': ($=>$
           .handleTLSClientHello(route)
-          .pipe(
-            () => {
-              if ($selection !== undefined) {
-                return $selection ? 'pass' : 'deny'
-              }
-            }, {
-              'pass': $=>$.pipe(() => $selection.target.pipeline),
-              'deny': $=>$.replaceStreamStart(new StreamEnd),
+          .pipe(() => {
+            if ($selection !== undefined) {
+              return $selection ? $selection.target.pipeline : shutdown
             }
-          )
+          })
         ),
         'deny': $=>$.replaceStreamStart(new StreamEnd),
       }

@@ -25,6 +25,17 @@ export default function (config, listener) {
     )
   })
 
+  var trusted
+  var frontendValidation = listener.tls?.frontendValidation
+  if (frontendValidation) {
+    trusted = []
+    frontendValidation.caCertificates?.forEach?.(c => {
+      var crtFile = config.secrets[c['ca.crt']]
+      var crt = new crypto.Certificate(crtFile)
+      trusted.push(crt)
+    })
+  }
+
   function findCertificate(hello) {
     var sni = hello.serverNames?.[0] || ''
     var name = sni.toLowerCase()
@@ -59,9 +70,12 @@ export default function (config, listener) {
               'pass': ($=>$
                 .acceptTLS({
                   certificate: () => $ctx.serverCert,
+                  trusted,
                   onState: session => {
                     if (session.state === 'connected') {
                       $ctx.clientCert = session.peer
+                    } else if (session.error) {
+                      log?.(`Inb #${$ctx.inbound.id} tls error:`, session.error)
                     }
                   }
                 }).to($=>$.pipeNext())

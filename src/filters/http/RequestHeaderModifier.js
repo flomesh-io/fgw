@@ -1,12 +1,12 @@
 export default function (config) {
   var $ctx
 
-  var set = config.RequestHeaderModifier.Set
-  var add = config.RequestHeaderModifier.Add
-  var del = config.RequestHeaderModifier.Remove
+  var set = config.requestHeaderModifier.set
+  var add = config.requestHeaderModifier.add
+  var del = config.requestHeaderModifier.remove
 
-  if (set) set = set.map(({ Name, Value }) => [Name.toLowerCase(), Value])
-  if (add) add = add.map(({ Name, Value }) => [Name.toLowerCase(), Value, ',' + Value])
+  if (set) set = set.map(({ name, value }) => [name.toLowerCase(), value])
+  if (add) add = add.map(({ name, value }) => [name.toLowerCase(), value, ',' + value])
   if (del) del = del.map(name => name.toLowerCase())
 
   return pipeline($=>$

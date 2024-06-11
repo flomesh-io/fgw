@@ -38,8 +38,12 @@ export default function (config, layer, rule, makeBackendTargetCB) {
     if (!filters) return []
     return filters.map(
       config => {
-        var maker = pipy.import(`./filters/${layer}/${config.Type}.js`).default
-        return maker(config)
+        try {
+          var maker = pipy.import(`../filters/${layer}/${config.type}.js`).default
+          return maker(config)
+        } catch {
+          throw `invalid filter type: ${config.type}`
+        }
       }
     )
   }

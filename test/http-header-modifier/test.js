@@ -1,5 +1,5 @@
-export default function () {
-  pipy.listen(8849, $=>$
+export default function ({ fetch, log }) {
+  pipy.listen(8080, $=>$
     .serveHTTP(
       req => new Message(
         {
@@ -15,18 +15,13 @@ export default function () {
     )
   )
 
-  var indent = ' '.repeat(4)
-  var c = new http.Agent('localhost:8080')
-
-  return c.request(
-    'GET', '/', { host: 'www.test.com', 'user-agent': 'pipy' }
+  return fetch(
+    'localhost:8000', 'GET', 'http://www.test.com/', { 'user-agent': 'pipy' }
   ).then(res => {
     try { var req = JSON.decode(res.body) } catch {}
     res = res.head.headers
-    print(indent)
-    println('REQ', req)
-    print(indent)
-    println('RES', res)
+    log('REQ', req)
+    log('RES', res)
     return (
       req.host === 'set-bar' &&
       req.accept === 'xxx' &&
@@ -35,8 +30,7 @@ export default function () {
       res.dummy2 === 'test2,add,baz' &&
       res.dummy3 === undefined
     )
-    return true
   }).finally(() => {
-    pipy.listen(8849, null)
+    pipy.listen(8080, null)
   })
 }

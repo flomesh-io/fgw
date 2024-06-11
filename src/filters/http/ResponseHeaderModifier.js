@@ -1,12 +1,12 @@
 export default function (config) {
   var $ctx
 
-  var set = config.ResponseHeaderModifier.Set
-  var add = config.ResponseHeaderModifier.Add
-  var del = config.ResponseHeaderModifier.Remove
+  var set = config.responseHeaderModifier.set
+  var add = config.responseHeaderModifier.add
+  var del = config.responseHeaderModifier.remove
 
-  if (set) set = set.map(({ Name, Value }) => [Name.toLowerCase(), Value])
-  if (add) add = add.map(({ Name, Value }) => [Name.toLowerCase(), Value, ',' + Value])
+  if (set) set = set.map(({ name, value }) => [name.toLowerCase(), value])
+  if (add) add = add.map(({ name, value }) => [name.toLowerCase(), value, ',' + value])
   if (del) del = del.map(name => name.toLowerCase())
 
   return pipeline($=>$

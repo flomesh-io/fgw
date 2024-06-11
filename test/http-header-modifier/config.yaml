@@ -1,0 +1,52 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    hostnames:
+      - www.test.com
+    rules:
+      - filters:
+          - type: RequestHeaderModifier
+            requestHeaderModifier:
+              set:
+                - name: host
+                  value: set-bar
+              add:
+                - name: accept
+                  value: xxx
+              remove:
+                - user-agent
+                - my-awesome-header
+          - type: ResponseHeaderModifier
+            responseHeaderModifier:
+              set:
+                - name: dummy1
+                  value: set-bar
+              add:
+                - name: dummy2
+                  value: add,baz
+              remove:
+                - dummy3
+                - my-incredible-header
+        backendRefs:
+          - kind: Backend
+            name: test-svc-1
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8080

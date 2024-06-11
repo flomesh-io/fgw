@@ -15,12 +15,13 @@ export default function (config, listener, routeResources) {
 
   routeResources.forEach(r => {
     var hostnames = r.spec.hostnames || ['*']
+    var selector = makeRuleSelector(r)
     hostnames.forEach(name => {
       name = name.trim().toLowerCase()
       if (name.startsWith('*')) {
-        hostPostfixes.push([name.substring(1), makeRuleSelector(r)])
+        hostPostfixes.push([name.substring(1), selector])
       } else {
-        hostFullnames[name] = makeRuleSelector(r)
+        hostFullnames[name] = selector
       }
     })
   })
@@ -40,8 +41,8 @@ export default function (config, listener, routeResources) {
       if (selector) $selection = selector(head)
     }
     log?.(
-      `In #${$ctx.inbound.id} Req #${$ctx.messageCount+1}`, head.method, head.path,
-      `backend ${$selection.target.backend.metadata.name}`,
+      `Inb #${$ctx.inbound.id} Req #${$ctx.messageCount+1}`, head.method, head.path,
+      `backend ${$selection?.target?.backendRef?.name}`,
       `headers ${stringifyHTTPHeaders(head.headers)}`,
     )
   }
@@ -124,7 +125,8 @@ export default function (config, listener, routeResources) {
       filters = [...filters, response500]
     }
     return {
-      backend: backendResource,
+      backendRef,
+      backendResource,
       weight: backendRef?.weight || 1,
       pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
     }
@@ -149,7 +151,7 @@ export default function (config, listener, routeResources) {
               tail: null,
               tailTime: 0,
             },
-            backendResource: $selection?.target?.backend,
+            backendResource: $selection?.target?.backendResource,
           }
         }
       )

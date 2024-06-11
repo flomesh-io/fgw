@@ -46,7 +46,7 @@ export default function (config, rule, backendRef, backendResource) {
       if (evt instanceof MessageStart) {
         targetSelector(evt)
         log?.(
-          `In #${$ctx.parent.inbound.id} Req #${$ctx.id}`, evt.head.method, evt.head.path,
+          `Inb #${$ctx.parent.inbound.id} Req #${$ctx.id}`, evt.head.method, evt.head.path,
           `forward ${$selection?.target?.address}`,
           `headers ${stringifyHTTPHeaders(evt.head.headers)}`,
         )
@@ -64,7 +64,7 @@ export default function (config, rule, backendRef, backendResource) {
     if (log) {
       $.handleMessageStart(
         res => log?.(
-          `In #${$ctx.parent.inbound.id} Req #${$ctx.id}`, $ctx.head.method, $ctx.head.path,
+          `Inb #${$ctx.parent.inbound.id} Req #${$ctx.id}`, $ctx.head.method, $ctx.head.path,
           `return ${res.head.status} ${res.head.statusText}`,
           `headers ${stringifyHTTPHeaders(res.head.headers)}`,
         )

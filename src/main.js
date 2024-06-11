@@ -95,7 +95,7 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
           clientCert: null,
           backendResource: null,
         }
-        log?.(`Inbound #${i.id} accepted on [${i.localAddress}]:${i.localPort} from [${i.remoteAddress}]:${i.remotePort}`)
+        log?.(`Inb #${i.id} accepted on [${i.localAddress}]:${i.localPort} from [${i.remoteAddress}]:${i.remotePort}`)
         return new Data
       })
       .pipe(pipelines, () => $ctx)

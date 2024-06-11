@@ -10,7 +10,7 @@ export default function ({ fetch, log }) {
   var tests = [
     ['https://a.b.example.com/', res => res.head.status === 200 && res.body?.toString?.() === 'test-svc-1'],
     ['https://a.b.c.test.com/', res => res.head.status === 200 && res.body?.toString?.() === 'test-svc-2'],
-    ['https://no.test.com/', res => res.head.status === 502],
+    ['https://no.test.com/', res => res.head.status === 404],
   ]
 
   return Promise.all(

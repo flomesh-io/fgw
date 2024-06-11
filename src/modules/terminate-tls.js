@@ -33,7 +33,7 @@ export default function (config, listener) {
     $ctx.serverCert = certificate || null
     $hello = true
     log?.(
-      `In #${$ctx.inbound.id}`,
+      `Inb #${$ctx.inbound.id}`,
       `sni ${sni} cert`, $ctx.serverCert?.cert?.subject || null
     )
   }
@@ -44,7 +44,7 @@ export default function (config, listener) {
     .pipe(
       () => {
         if ($proto !== undefined) {
-          log?.(`In #${$ctx.inbound.id} protocol ${$proto || 'unknown'}`)
+          log?.(`Inb #${$ctx.inbound.id} protocol ${$proto || 'unknown'}`)
           return $proto === 'TLS' ? 'pass' : 'deny'
         }
       }, {

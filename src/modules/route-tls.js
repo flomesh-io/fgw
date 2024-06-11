@@ -15,12 +15,12 @@ export default function (config, listener, routeResources) {
   routeResources.forEach(r => {
     var hostnames = r.spec.hostnames || ['*']
     hostnames.forEach(name => {
-      var f = makeBackendSelector(config, 'tcp', r.spec.rules?.[0], makeBackendTarget)
+      var selector = makeBackendSelector(config, 'tcp', r.spec.rules?.[0], makeBackendTarget)
       name = name.trim().toLowerCase()
       if (name.startsWith('*')) {
-        hostPostfixes.push([name.substring(1), f])
+        hostPostfixes.push([name.substring(1), selector])
       } else {
-        hostFullnames[name] = f
+        hostFullnames[name] = selector
       }
     })
   })
@@ -35,7 +35,7 @@ export default function (config, listener, routeResources) {
     )
     $selection = selector?.() || null
     log?.(
-      `In #${$ctx.inbound.id}`,
+      `Inb #${$ctx.inbound.id}`,
       `sni ${sni}`,
       `backend ${$selection?.target?.backendRef?.name}`
     )
@@ -49,7 +49,7 @@ export default function (config, listener, routeResources) {
     }
     return {
       backendRef,
-      backend: backendResource,
+      backendResource,
       weight: backendRef?.weight || 1,
       pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
     }
@@ -61,7 +61,7 @@ export default function (config, listener, routeResources) {
     .pipe(
       () => {
         if ($proto !== undefined) {
-          log?.(`In #${$ctx.inbound.id} protocol ${$proto || 'unknown'}`)
+          log?.(`Inb #${$ctx.inbound.id} protocol ${$proto || 'unknown'}`)
           return $proto === 'TLS' ? 'pass' : 'deny'
         }
       }, {

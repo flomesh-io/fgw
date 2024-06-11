@@ -25,7 +25,7 @@ export default function (config, rule, backendRef, backendResource) {
       $ctx = c
       $selection = loadBalancer.allocate(null, isHealthy)
       log?.(
-        `In #${$ctx.inbound.id}`,
+        `Inb #${$ctx.inbound.id}`,
         `target ${$selection?.target?.address}`
       )
     })

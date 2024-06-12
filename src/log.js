@@ -1,6 +1,6 @@
 export var log
 
-log = function (a, b, c, d, e, f) {
+var logFunc = function (a, b, c, d, e, f) {
   var n = 6
   if (f === undefined) n--
   if (e === undefined) n--
@@ -17,4 +17,8 @@ log = function (a, b, c, d, e, f) {
     case 5: console.log(a, b, c, d, e); break
     case 6: console.log(a, b, c, d, e, f); break
   }
+}
+
+export function logEnable(on) {
+  log = on ? logFunc : null
 }

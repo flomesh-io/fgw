@@ -1,5 +1,22 @@
+#!/usr/bin/env -S pipy --args
+
+import options from './options.js'
 import config from './config.js'
-import { log } from './log.js'
+import { log, logEnable } from './log.js'
+
+var opts = options(pipy.argv, {
+  defaults: {
+    '--config': '',
+    '--debug': false,
+  },
+  shorthands: {
+    '-c': '--config',
+    '-d': '--debug',
+  },
+})
+
+logEnable(opts['--debug'])
+config.load(opts['--config'])
 
 var $ctx
 

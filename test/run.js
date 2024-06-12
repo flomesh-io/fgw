@@ -64,6 +64,7 @@ function startFGW(path) {
     '--log-local-only',
     '--args',
     '--config', os.path.resolve(configFilename),
+    '--debug',
   ]
 
   println(`  Starting fgw...`)

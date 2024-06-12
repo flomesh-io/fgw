@@ -1,6 +1,6 @@
 import makeHealthCheck from './health-check.js'
-import makeSessionPersistance from './session-persistance.js'
-import { stringifyHTTPHeaders } from '../utils.js'
+import makeSessionPersistence from './session-persistence.js'
+import { stringifyHTTPHeaders, findPolicies } from '../utils.js'
 import { log } from '../log.js'
 
 var $ctx
@@ -8,7 +8,10 @@ var $selection
 
 export default function (config, rule, backendRef, backendResource) {
   var tlsPolicies = []
-  var sessionPersistance = rule.sessionPersistance && makeSessionPersistance(rule.sessionPersistance)
+
+  var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
+  var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
+  var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
 
   var targets = backendResource.spec.targets.map(t => {
     var port = t.port || backendRef.port
@@ -26,8 +29,8 @@ export default function (config, rule, backendRef, backendResource) {
 
   var isHealthy = (target) => true
 
-  if (sessionPersistance) {
-    var restoreSession = sessionPersistance.restore
+  if (sessionPersistence) {
+    var restoreSession = sessionPersistence.restore
     var targetSelector = function (req) {
       $selection = loadBalancer.allocate(
         restoreSession(req.head),
@@ -53,13 +56,6 @@ export default function (config, rule, backendRef, backendResource) {
         return $selection ? forward : reject
       }
     })
-
-    if (sessionPersistance) {
-      var preserveSession = sessionPersistance.preserve
-      $.handleMessageStart(
-        res => preserveSession(res.head)
-      )
-    }
 
     if (log) {
       $.handleMessageStart(
@@ -88,8 +84,11 @@ export default function (config, rule, backendRef, backendResource) {
         }
       })
 
-      if (preserveSession) {
-        $.handleMessageStart(preserveSession)
+      if (sessionPersistence) {
+        var preserveSession = sessionPersistence.preserve
+        $.handleMessageStart(
+          res => preserveSession(res.head, $selection.target.address)
+        )
       }
 
       $.onEnd(() => $selection.free())

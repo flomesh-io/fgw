@@ -9,3 +9,17 @@ export function stringifyHTTPHeaders(headers) {
     }
   ).join(' ')
 }
+
+export function findPolicies(config, kind, targetResource) {
+  return config.resources.filter(
+    r => {
+      if (r.kind !== kind) return false
+      return r.spec.targetRefs.some(
+        ref => (
+          ref.kind === targetResource.kind &&
+          ref.name === targetResource.metadata.name
+        )
+      )
+    }
+  )
+}

@@ -6,7 +6,7 @@ import { log } from '../log.js'
 var $ctx
 var $selection
 
-export default function (config, rule, backendRef, backendResource) {
+export default function (config, backendRef, backendResource) {
   var tlsPolicies = []
 
   var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)

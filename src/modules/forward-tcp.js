@@ -3,7 +3,7 @@ import { log } from '../log.js'
 var $ctx
 var $selection
 
-export default function (config, rule, backendRef, backendResource) {
+export default function (config, backendRef, backendResource) {
   var targets = backendResource ? backendResource.spec.targets.map(t => {
     var port = t.port || backendRef.port
     var address = `${t.address}:${port}`

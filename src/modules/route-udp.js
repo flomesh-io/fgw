@@ -11,7 +11,13 @@ export default function (config, listener, routeResources) {
   var selector = makeBackendSelector(
     config, 'udp',
     routeResources[0]?.spec?.rules?.[0],
-    makeBackendTarget
+    function (backendRef, backendResource, filters) {
+      var forwarder = backendResource ? makeForwarder(config, backendRef, backendResource) : shutdown
+      return pipeline($=>$
+        .pipe([...filters, forwarder], () => $ctx)
+        .onEnd(() => $selection.free?.())
+      )
+    }
   )
 
   function route() {
@@ -20,20 +26,6 @@ export default function (config, listener, routeResources) {
       `Inb #${$ctx.inbound.id}`,
       `backend ${$selection?.target?.backendRef?.name}`
     )
-  }
-
-  function makeBackendTarget(rule, backendRef, backendResource, filters) {
-    if (backendResource) {
-      filters = [...filters, makeForwarder(config, rule, backendRef, backendResource)]
-    } else {
-      filters = [...filters, shutdown]
-    }
-    return {
-      backendRef,
-      backendResource,
-      weight: backendRef?.weight || 1,
-      pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
-    }
   }
 
   return pipeline($=>$

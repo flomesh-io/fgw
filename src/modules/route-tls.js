@@ -15,7 +15,16 @@ export default function (config, listener, routeResources) {
   routeResources.forEach(r => {
     var hostnames = r.spec.hostnames || ['*']
     hostnames.forEach(name => {
-      var selector = makeBackendSelector(config, 'tcp', r.spec.rules?.[0], makeBackendTarget)
+      var selector = makeBackendSelector(
+        config, 'tcp', r.spec.rules?.[0],
+        function (backendRef, backendResource, filters) {
+          var forwarder = backendResource ? makeForwarder(config, backendRef, backendResource) : shutdown
+          return pipeline($=>$
+            .pipe([...filters, forwarder], () => $ctx)
+            .onEnd(() => $selection.free?.())
+          )
+        }
+      )
       name = name.trim().toLowerCase()
       if (name.startsWith('*')) {
         hostPostfixes.push([name.substring(1), selector])
@@ -39,20 +48,6 @@ export default function (config, listener, routeResources) {
       `sni ${sni}`,
       `backend ${$selection?.target?.backendRef?.name}`
     )
-  }
-
-  function makeBackendTarget(rule, backendRef, backendResource, filters) {
-    if (backendResource) {
-      filters = [...filters, makeForwarder(config, rule, backendRef, backendResource)]
-    } else {
-      filters = [...filters, shutdown]
-    }
-    return {
-      backendRef,
-      backendResource,
-      weight: backendRef?.weight || 1,
-      pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
-    }
   }
 
   return pipeline($=>$

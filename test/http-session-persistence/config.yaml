@@ -1,0 +1,42 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8080
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8080
+    hostnames:
+      - '*'
+    rules:
+      - backendRefs:
+        - kind: Backend
+          name: test-svc-1
+        - kind: Backend
+          name: test-svc-2
+        sessionPersistence:
+          sessionName: user-id
+          type: Cookie
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8081
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8082

@@ -1,5 +1,6 @@
 import makeBackendSelector from './backend-selector.js'
 import makeForwarder from './forward-http.js'
+import makeSessionPersistence from './session-persistence.js'
 import { stringifyHTTPHeaders } from '../utils.js'
 import { log } from '../log.js'
 
@@ -70,7 +71,7 @@ export default function (config, listener, routeResources) {
               return matches.some(f => f(head))
             }
           )
-          return [matchFunc, makeBackendSelector(config, 'http', r, makeBackendTarget)]
+          return [matchFunc, makeBackendSelectorForRule(r)]
         })
         break
       case 'GRPCRoute':
@@ -89,14 +90,14 @@ export default function (config, listener, routeResources) {
               return matches.some(f => f(head))
             }
           )
-          return [matchFunc, makeBackendSelector(config, 'http', r, makeBackendTarget)]
+          return [matchFunc, makeBackendSelectorForRule(r)]
         })
         break
       default: throw `route-http: unknown resource kind: '${resource.kind}'`
     }
     return function (head) {
       var r = rules.find(([matchFunc]) => !matchFunc || matchFunc(head))
-      if (r) return r[1]()
+      if (r) return r[1](head)
     }
   }
 
@@ -163,18 +164,36 @@ export default function (config, listener, routeResources) {
     }
   }
 
-  function makeBackendTarget(rule, backendRef, backendResource, filters) {
-    if (backendResource) {
-      filters = [...filters, makeForwarder(config, rule, backendRef, backendResource)]
-    } else {
-      filters = [...filters, response500]
+  function makeBackendSelectorForRule(rule) {
+    var sessionPersistenceConfig = rule.sessionPersistence
+    var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
+    var selector = makeBackendSelector(
+      config, 'http', rule,
+      function (backendRef, backendResource, filters) {
+        if (!backendResource) return response500
+        var forwarder = makeForwarder(config, backendRef, backendResource)
+        if (sessionPersistence) {
+          var preserveSession = sessionPersistence.preserve
+          return pipeline($=>$
+            .pipe([...filters, forwarder], () => $ctx)
+            .handleMessageStart(
+              msg => preserveSession(msg.head, $selection?.target?.backendRef?.name)
+            )
+            .onEnd(() => $selection.free?.())
+          )
+        } else {
+          return pipeline($=>$
+            .pipe([...filters, forwarder], () => $ctx)
+            .onEnd(() => $selection.free?.())
+          )
+        }
+      }
+    )
+    if (sessionPersistence) {
+      var restoreSession = sessionPersistence.restore
+      return (head) => selector(restoreSession(head))
     }
-    return {
-      backendRef,
-      backendResource,
-      weight: backendRef?.weight || 1,
-      pipeline: pipeline($=>$.pipe(filters, () => $ctx).onEnd(() => $selection.free?.()))
-    }
+    return () => selector()
   }
 
   return pipeline($=>$

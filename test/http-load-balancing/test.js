@@ -1,72 +1,38 @@
-function startServer() {
-  pipy.listen(8886, $=>$
+export default function ({ fetchAll, log }) {
+  [0, 1, 2, 3].forEach(i => pipy.listen(8080 + i, $=>$
     .serveHTTP(
-      new Message('www-port-8886')
+      new Message(`target-${i}`)
     )
-  )
+  ))
 
-  pipy.listen(8887, $=>$
-    .serveHTTP(
-      new Message('www-port-8887')
+  return fetchAll(
+    'localhost:8000',
+    new Array(60).fill().map(
+      () => ['GET', 'http://test.com/']
     )
-  )
-
-  pipy.listen(8888, $=>$
-    .serveHTTP(
-      new Message('www-port-8888')
-    )
-  )
-
-  pipy.listen(8889, $=>$
-    .serveHTTP(
-      new Message('www-port-8889')
-    )
-  )
-}
-
-function stopServer() {
-  pipy.listen(8886, null)
-  pipy.listen(8887, null)
-  pipy.listen(8888, null)
-  pipy.listen(8889, null)
-}
-
-export default function () {
-  startServer()
-
-  var c = new http.Agent('127.0.0.1:8080')
-
-  var answers = []
-
-  function step() {
-    if (answers.length === 99) {
-      stopServer()
-      var ok = true
-      var total = 0
-      var expected = Math.floor(answers.length / 3)
-      var indent = ' '.repeat(4)
-      ;['www-port-8886', 'www-port-8887', 'www-port-8888'].forEach(
-        s => {
-          var n = answers.filter(i => i === s).length
-          print(indent)
-          println(s, '=', n)
-          if (Math.abs(n - expected) > 1) ok = false
-          total += n
-        }
-      )
-      print(indent)
-      println('total =', total)
-      if (total !== answers.length) ok = false
-      return ok
-    }
-
-    return c.request('GET', '/').then(
-      res => {
-        answers.push(res.body.toString())
-        return step()
+  ).then(answers => answers.map(res => res.body?.toString?.())
+  ).then(answers => {
+    var ok = true
+    var total = 0
+    var half = Math.floor(answers.length / 2)
+    var halfThird = Math.floor(half / 3)
+    ;[
+      ['target-0', half],
+      ['target-1', halfThird],
+      ['target-2', halfThird],
+      ['target-3', halfThird],
+    ].forEach(
+      ([answer, expected]) => {
+        var n = answers.filter(i => i === answer).length
+        log(answer, '=', n)
+        if (Math.abs(n - expected) > 1) ok = false
+        total += n
       }
     )
-  }
-
-  return step()
+    log('total =', total)
+    if (total !== answers.length) ok = false
+    return ok
+  }).finally(() => {
+    [0, 1, 2, 3].forEach(i => pipy.listen(8080 + i, null))
+  })
 }

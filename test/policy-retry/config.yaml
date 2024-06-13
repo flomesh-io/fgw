@@ -1,0 +1,60 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    rules:
+      - matches:
+        - path:
+            type: Exact
+            value: /no-retry
+        backendRefs:
+          - kind: Backend
+            name: service-no-retry
+      - matches:
+        - path:
+            type: Exact
+            value: /retry
+        backendRefs:
+          - kind: Backend
+            name: service-retry
+
+- kind: Backend
+  metadata:
+    name: service-no-retry
+  spec:
+    targets:
+      - address: localhost
+        port: 8080
+
+- kind: Backend
+  metadata:
+    name: service-retry
+  spec:
+    targets:
+      - address: localhost
+        port: 8080
+
+- kind: RetryPolicy
+  spec:
+    targetRefs:
+      - kind: Backend
+        name: service-retry
+    ports:
+      - port: 8080
+        retry:
+          retryOn:
+            - 5xx
+            - 403
+          numRetries: 3
+          backoffBaseInterval: 0.1

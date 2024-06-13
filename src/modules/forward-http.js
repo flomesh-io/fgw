@@ -11,10 +11,6 @@ export default function (config, backendRef, backendResource) {
   var hc = makeHealthCheck(config, backendRef, backendResource)
   var tls = makeBackendTLS(config, backendRef, backendResource)
 
-  var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
-  var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
-  var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
-
   var targets = backendResource.spec.targets.map(t => {
     var port = t.port || backendRef.port
     var address = `${t.address}:${port}`
@@ -28,6 +24,13 @@ export default function (config, backendRef, backendResource) {
       weight: t => t.weight,
     }
   )
+
+  var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
+  var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
+  var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
+
+  var retryPolices = findPolicies(config, 'RetryPolicy', backendResource)
+  var retryConfig = retryPolices?.[0]?.spec?.retry
 
   if (sessionPersistence) {
     var restoreSession = sessionPersistence.restore
@@ -98,6 +101,45 @@ export default function (config, backendRef, backendResource) {
 
       $.onEnd(() => $selection.free())
     })
+
+    if (retryConfig) {
+      var retryCodes = {}
+      ;(retryConfig.retryOn || ['5xx']).forEach(code => {
+        if (code.toString().substring(1) === 'xx') {
+          var base = Number.parseInt(code.toString().charAt(0) + '00')
+          new Array(100).fill().forEach((_, i) => retryCodes[base + i] = true)
+        } else {
+          retryCodes[Number.parseInt(code)] = true
+        }
+      })
+
+      var $retryCounter = 0
+      forward = pipeline($=>$
+        .repeat(() => {
+          if ($retryCounter > 0) {
+            return new Timeout(retryConfig.backoffBaseInterval * Math.pow(2, $retryCounter - 1)).wait().then(true)
+          } else {
+            return false
+          }
+        }).to($=>$
+          .pipe(forward)
+          .replaceMessageStart(
+            function (msg) {
+              if (retryCodes[msg.head.status]) {
+                if (++$retryCounter < retryConfig.numRetries) {
+                  log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} retry ${$retryCounter} status ${msg.head.status}`)
+                  return new StreamEnd
+                } else {
+                  log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} retry ${$retryCounter} status ${msg.head.status} gave up`)
+                  $retryCounter = 0
+                }
+              }
+              return msg
+            }
+          )
+        )
+      )
+    }
 
     function connect($) {
       $.connect(() => $selection.target.address)

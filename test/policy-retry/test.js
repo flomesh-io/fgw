@@ -25,11 +25,13 @@ export default function ({ fetch, log }) {
     if (status !== 503) return false
     return fetch(host, 'GET', urlB)
   }).then(res => {
+    if (!res) return false
     var status = res.head.status
     log(urlB, status)
     if (status !== 503) return false
     return fetch(host, 'GET', urlB)
   }).then(res => {
+    if (!res) return false
     var status = res.head.status
     log(urlB, status)
     if (status !== 200) return false

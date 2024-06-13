@@ -50,11 +50,9 @@ resources:
     targetRefs:
       - kind: Backend
         name: service-retry
-    ports:
-      - port: 8080
-        retry:
-          retryOn:
-            - 5xx
-            - 403
-          numRetries: 3
-          backoffBaseInterval: 0.1
+    retry:
+      retryOn:
+        - 5xx
+        - 403
+      numRetries: 3
+      backoffBaseInterval: 0.1

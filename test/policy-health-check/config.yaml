@@ -42,7 +42,7 @@ resources:
           path: /
           matches:
             - statusCodes:
-                - 200
+              - 200
       - port: 8082
         healthCheck:
           interval: 5
@@ -51,4 +51,4 @@ resources:
           path: /
           matches:
             - statusCodes:
-                - 200
+              - 200

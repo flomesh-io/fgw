@@ -1,21 +1,36 @@
-export default function (healthCheck, targets) {
-  var allTargets = []
+import { findPolicies } from '../utils.js'
+import { log } from '../log.js'
+
+export default function (config, backendRef, backendResource) {
+  var healthCheckPolicies = findPolicies(config, 'HealthCheckPolicy', backendResource)
+  if (healthCheckPolicies.length === 0) {
+    return { isHealthy: () => true }
+  }
+
+  var targets = backendResource.spec.targets
+  var ports = healthCheckPolicies[0].spec.ports
+
   var unhealthyCache = new algo.Cache
+  var allTargets = []
 
   if (pipy.thread.id === 0) {
-    Object.keys(targets).forEach(
-      address => {
+    ports.forEach(({ port, healthCheck }) => {
+      var checkPort = port
+      targets.forEach(({ address, port }) => {
+        if (port != checkPort) return
+
+        var targetAddress = `${address}:${port}`
         var isHealthy = true
         var failCount = 0
         var failTime = 0
         var lastCheckTime = Date.now() / 1000
 
-        var checkers = healthCheck.Matches.map(
+        var matches = healthCheck.matches.map(
           m => {
-            if (m.StatusCodes) return res => m.StatusCodes.includes(res.head.status)
-            if (m.Body) return res => res.body?.toString?.() === m.Body
-            if (m.Headers) {
-              var headers = Object.entries(m.Headers).map(([k, v]) => [k.toLowerCase(), v])
+            if (m.statusCodes) return res => m.statusCodes.some(code => code == res.head.status)
+            if (m.body) return res => res.body?.toString?.() === m.body
+            if (m.headers) {
+              var headers = Object.entries(m.headers).map(([k, v]) => [k.toLowerCase(), v])
               return res => {
                 var h = res.head.headers
                 return !headers.some(([k, v]) => h[k] !== v)
@@ -25,47 +40,69 @@ export default function (healthCheck, targets) {
           }
         )
 
-        var hcPipeline = pipeline($=>$
-          .onStart(new Message({ path: healthCheck.Path }))
-          .encodeHTTPRequest()
-          .connect(address, { connectTimeout: 5, idleTimeout: 5 })
-          .decodeHTTPResponse()
-          .handleMessage(
-            function (res, i) {
-              if (i > 0) return
-              if (checkers.some(f => !f(res))) {
-                fail()
-              } else {
-                reset()
+        if (healthCheck.path) {
+          var hcPipeline = pipeline($=>$
+            .onStart(new Message({ path: healthCheck.path }))
+            .encodeHTTPRequest()
+            .connect(targetAddress, { connectTimeout: 5, idleTimeout: 5 })
+            .decodeHTTPResponse()
+            .handleMessage(
+              function (res, i) {
+                if (i > 0) return
+                if (matches.some(f => !f(res))) {
+                  fail()
+                } else {
+                  reset()
+                }
               }
-            }
+            )
           )
-        )
+        } else {
+          var hcPipeline = pipeline($=>$
+            .onStart(new Data)
+            .connect(checkAddress, { connectTimeout: 5, idleTimeout: 5 })
+            .handleStreamEnd(
+              function (eos) {
+                if (eos.error) {
+                  fail()
+                } else {
+                  reset()
+                }
+              }
+            )
+          )
+        }
 
         function reset() {
+          if (!isHealthy) {
+            log?.(`Health backend ${backendResource.metadata.name} reset ${targetAddress}`)
+          }
           isHealthy = true
           failCount = 0
           failTime = 0
-          unhealthyCache.remove(address, true)
+          unhealthyCache.remove(targetAddress, true)
         }
 
         function fail() {
           failCount++
           failTime = Date.now() / 1000
-          if (failCount >= healthCheck.MaxFails) {
+          if (failCount >= healthCheck.maxFails) {
             isHealthy = false
-            unhealthyCache.set(address, true)
+            unhealthyCache.set(targetAddress, true)
+            log?.(`Health backend ${backendResource.metadata.name} down ${targetAddress}`)
+          } else {
+            log?.(`Health backend ${backendResource.metadata.name} fail ${targetAddress}`)
           }
         }
 
         function check(t) {
-          if (healthCheck.Interval) {
-            if (t - lastCheckTime >= healthCheck.Interval) {
+          if (healthCheck.interval) {
+            if (t - lastCheckTime >= healthCheck.interval) {
               lastCheckTime = t
               return hcPipeline.spawn()
             }
           } else if (!isHealthy) {
-            if (t - failTime >= healthCheck.FailTimeout) {
+            if (t - failTime >= healthCheck.failTimeout) {
               reset()
             }
           }
@@ -73,12 +110,12 @@ export default function (healthCheck, targets) {
         }
 
         allTargets.push({
-          address,
+          address: targetAddress,
           isHealthy: () => isHealthy,
           reset, fail, check,
         })
-      }
-    )
+      })
+    })
   
     function healthCheckAll() {
       Promise.all(allTargets.map(

@@ -8,6 +8,7 @@ var $ctx
 var $selection
 
 export default function (config, backendRef, backendResource) {
+  var hc = makeHealthCheck(config, backendRef, backendResource)
   var tls = makeBackendTLS(config, backendRef, backendResource)
 
   var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
@@ -28,19 +29,17 @@ export default function (config, backendRef, backendResource) {
     }
   )
 
-  var isHealthy = (target) => true
-
   if (sessionPersistence) {
     var restoreSession = sessionPersistence.restore
     var targetSelector = function (req) {
       $selection = loadBalancer.allocate(
         restoreSession(req.head),
-        target => isHealthy(target.address)
+        target => hc.isHealthy(target.address)
       )
     }
   } else {
     var targetSelector = function () {
-      $selection = loadBalancer.allocate(null, isHealthy)
+      $selection = loadBalancer.allocate(null, target => hc.isHealthy(target.address))
     }
   }
 

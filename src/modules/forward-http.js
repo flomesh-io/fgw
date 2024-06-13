@@ -1,4 +1,5 @@
 import makeHealthCheck from './health-check.js'
+import makeBackendTLS from './backend-tls.js'
 import makeSessionPersistence from './session-persistence.js'
 import { stringifyHTTPHeaders, findPolicies } from '../utils.js'
 import { log } from '../log.js'
@@ -7,7 +8,7 @@ var $ctx
 var $selection
 
 export default function (config, backendRef, backendResource) {
-  var tlsPolicies = []
+  var tls = makeBackendTLS(config, backendRef, backendResource)
 
   var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
   var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
@@ -75,9 +76,14 @@ export default function (config, backendRef, backendResource) {
 
     var forward = pipeline($=>{
       $.muxHTTP(() => $selection).to($=>{
-        if (tlsPolicies.length > 0) {
+        if (tls) {
           $.connectTLS({
-            trusted: [],
+            ...tls,
+            onState: session => {
+              if (session.error) {
+                log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} tls error:`, session.error)
+              }
+            }
           }).to(connect)
         } else {
           connect($)

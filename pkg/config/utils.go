@@ -17,7 +17,7 @@ func UpdateConfigVersion(basepath string, repoClient *repo.PipyRepoClient) error
 
 	newConfigVersion := utils.SimpleHash(fmt.Sprintf("%x", time.Now().UnixMilli()))
 	klog.Infof("Updating config version to %q", newConfigVersion)
-	newJson, err := sjson.Set(json, "Version", newConfigVersion)
+	newJson, err := sjson.Set(json, "version", newConfigVersion)
 	if err != nil {
 		klog.Errorf("Failed to update HTTP config: %s", err)
 		return err

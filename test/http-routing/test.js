@@ -24,8 +24,8 @@ export default function ({ log, fetchAll }) {
     ['test-svc-2', 'GET', 'http://test.com/path/abc/tail', {}],
     ['test-svc-3', 'GET', 'http://test.com/path/tail', {}],
     ['test-svc-2', 'GET', 'http://test.com/path/abc/tail?xyz=1', { a:1, b:2, c:3 }],
-    ['test-svc-1', 'GET', 'http://test.com/path/abc/tail?abc=1&xyz=2', { a:1, b:2, c:3 }],
-    ['test-svc-1', 'GET', 'http://test.com/path/abc?abc=1&xyz=2', { a:1, b:2, c:3 }],
+    ['test-svc-2', 'GET', 'http://test.com/path/abc/tail?abc=1&xyz=2', { a:1, b:2, c:3 }],
+    ['test-svc-2', 'GET', 'http://test.com/path/abc?abc=1&xyz=2', { a:1, b:2, c:3 }],
     ['test-svc-4', 'GET', 'http://test.com/path?xyz=2', { a:1, b:20, c:30 }],
     ['test-svc-4', 'GET', 'http://test.com/pat?xyz=2', { a:1, b:2, c:3 }],
   ]

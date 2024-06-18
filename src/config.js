@@ -17,7 +17,9 @@ function load(filename) {
   if (!st) throw `file or directory not found: ${filename}`
 
   if (st.isDirectory()) {
-    pipy.mount('config', filename)
+    if (pipy.thread.id === 0) {
+      pipy.mount('config', filename)
+    }
     loadConfigDir('/config')
   } else {
     if (isYAML(filename)) {
@@ -31,6 +33,14 @@ function load(filename) {
 function loadConfig(obj) {
   config.resources = obj.resources || []
   config.secrets = obj.secrets || {}
+  if (pipy.thread.id === 0) {
+    Object.entries(obj.filters?.http || {}).forEach(
+      ([name, content]) => pipy.patch(`filters/http/${name}.js`, content)
+    )
+    Object.entries(config.filters?.tcp || {}).forEach(
+      ([name, content]) => pipy.patch(`filters/tcp/${name}.js`, content)
+    )
+  }
 }
 
 function loadConfigDir(dirname) {

@@ -24,12 +24,13 @@ RUN apk update && apk add --no-cache make
 # Build
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg \
-    GOOS=$TARGETOS GOARCH=$TARGETARCH LDFLAGS=$LDFLAGS make build
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH go build -v -o ./bin/fgw -ldflags "$LDFLAGS" ./
+
 
 # Build the final image
 FROM flomesh/pipy-repo:$PIPY_VERSION
 WORKDIR /repo
 COPY --from=builder /workspace/bin/fgw .
-COPY pjs/ pjs/
+COPY src/ src/
 
 ENTRYPOINT ["/repo/fgw"]

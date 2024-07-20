@@ -47,10 +47,12 @@ export default function (config, backendRef, backendResource, isHTTP2) {
   }
 
   return pipeline($=>{
-    $.onStart(c => void ($ctx = c))
+    $.onStart(c => { $ctx = c })
     $.pipe(evt => {
       if (evt instanceof MessageStart) {
         targetSelector(evt)
+        var target = $selection?.target
+        if (target) $ctx.targets.push(target.address)
         log?.(
           `Inb #${$ctx.parent.inbound.id} Req #${$ctx.id}`, evt.head.method, evt.head.path,
           `forward ${$selection?.target?.address}`,
@@ -58,6 +60,16 @@ export default function (config, backendRef, backendResource, isHTTP2) {
         )
         return $selection ? forward : reject
       }
+    })
+    $.handleMessageStart(res => {
+      var r = $ctx.response
+      r.head = res.head
+      r.headTime = Date.now()
+    })
+    $.handleMessageEnd(res => {
+      var r = $ctx.response
+      r.tail = res.tail
+      r.tailTime = res.tailTime
     })
 
     if (log) {

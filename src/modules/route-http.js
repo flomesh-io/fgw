@@ -213,7 +213,7 @@ export default function (config, listener, routeResources) {
     var sessionPersistenceConfig = rule.sessionPersistence
     var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
     var selector = makeBackendSelector(
-      config, 'http', rule,
+      config, 'http', listener, rule,
       function (backendRef, backendResource, filters) {
         if (!backendResource) return response500
         var forwarder = makeForwarder(config, backendRef, backendResource, isHTTP2)
@@ -250,6 +250,7 @@ export default function (config, listener, routeResources) {
           $ctx = {
             parent: $ctx,
             id: ++$ctx.messageCount,
+            path: msg.head.path,
             head: msg.head,
             headTime: Date.now(),
             tail: null,
@@ -262,6 +263,7 @@ export default function (config, listener, routeResources) {
             },
             basePath: $basePath,
             backendResource: $selection?.target?.backendResource,
+            targets: [],
           }
         }
       )

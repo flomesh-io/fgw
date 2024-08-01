@@ -1,8 +1,8 @@
 import config from '../../config.js'
 
-export default function ({ tlsDelegator }) {
-  var ca = new crypto.Certificate(config.secrets[tlsDelegator.certificate['ca.crt']])
-  var caKey = new crypto.PrivateKey(config.secrets[tlsDelegator.certificate['ca.key']])
+export default function ({ tlsDelegate }) {
+  var ca = new crypto.Certificate(config.secrets[tlsDelegate.certificate['ca.crt']])
+  var caKey = new crypto.PrivateKey(config.secrets[tlsDelegate.certificate['ca.key']])
   var key = new crypto.PrivateKey({ type: 'rsa', bits: 2048 })
   var pkey = new crypto.PublicKey(key)
 

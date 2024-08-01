@@ -10,7 +10,7 @@ resources:
         filters:
           - type: ProxyAccept
           - type: TLSDelegate
-            tlsDelegator:
+            tlsDelegate:
               certificate:
                 ca.crt: TestCA.crt
                 ca.key: TestCA.key

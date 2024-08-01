@@ -1,0 +1,75 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test
+        port: 9090
+        protocol: HTTP
+        filters:
+          - type: ProxyAccept
+          - type: TLSDelegate
+            tlsDelegator:
+              certificate:
+                ca.crt: TestCA.crt
+                ca.key: TestCA.key
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test
+    rules:
+      - filters:
+        - type: HTTPForward
+
+secrets:
+  TestCA.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIICwDCCAaigAwIBAgIUb2gPedcGw5xQIf0TDlnQBCin5C0wDQYJKoZIhvcNAQEL
+    BQAwETEPMA0GA1UEAwwGVGVzdENBMB4XDTI0MDgwMTExMzAxNFoXDTM0MDczMDEx
+    MzAxNFowETEPMA0GA1UEAwwGVGVzdENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8A
+    MIIBCgKCAQEAvyo+3LgKa2R2ZVhqXHmv8ypbMBg6dBSjEwh/YCaWbrbdrwgb06q6
+    IsTwLjJBdMsFvaoGn6t28FV9R3+hmNNiJO/2Ti4eFbuTYSkvVvfoG/zJ3HZAMKQj
+    Y9L2vd6nQggn+07lK1FZ8smeQL/l4hXpmb9ug0c9VLUOwCLpd/IQfP/m5qX6a3e4
+    rY3550kcX6SN5Gr4Szb51gYu2K7NlRee3V3xKQkpBftkCvRe0C7ap3P02uoE/9SG
+    OEqvyhfjaFJH+q4oyPHCKjRLfE14vLZcyQJwXjoh4DgSPHopMuYXQrgs63JaOuNf
+    y4WihHg1tJzJjw2TPBbeQaEjDuEhK3Br5QIDAQABoxAwDjAMBgNVHRMEBTADAQH/
+    MA0GCSqGSIb3DQEBCwUAA4IBAQB1WdlbvlJMQkzY//moBmartuqNXPX2Zucv550E
+    tiv3HruoN0xXfvYBP5UykLXxTbO/fMvY3aEsV6QuJWiFe0THivegjRCufIJcDbj7
+    R1EyIUipb79hwj01rkHH7sKNMleAQnMTufXc421Peo/F165kQxbhpub1B7y3xTT6
+    o1gCjXBuhRkMuGk6P6QFEXSCuZNC/NiirecSjzoroyp48DdPht1MLpRG7L3fmke7
+    U2VuAzjvu6VnWh75fbLyVcBnVQeNYfWsI3CbkvoW9LhQfIQ+a4ScrWsWJElSZi3J
+    +w9ImUZY+e+hWz1oXXpNhCgV7Nw/AJWXSdrtFsbb9kNBzcER
+    -----END CERTIFICATE-----
+  TestCA.key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC/Kj7cuAprZHZl
+    WGpcea/zKlswGDp0FKMTCH9gJpZutt2vCBvTqroixPAuMkF0ywW9qgafq3bwVX1H
+    f6GY02Ik7/ZOLh4Vu5NhKS9W9+gb/MncdkAwpCNj0va93qdCCCf7TuUrUVnyyZ5A
+    v+XiFemZv26DRz1UtQ7AIul38hB8/+bmpfprd7itjfnnSRxfpI3kavhLNvnWBi7Y
+    rs2VF57dXfEpCSkF+2QK9F7QLtqnc/Ta6gT/1IY4Sq/KF+NoUkf6rijI8cIqNEt8
+    TXi8tlzJAnBeOiHgOBI8eiky5hdCuCzrclo641/LhaKEeDW0nMmPDZM8Ft5BoSMO
+    4SErcGvlAgMBAAECggEAIwlPny19/2PYzUdQqyVEaclkECMIp5jWsJjYm5tG7ADJ
+    DZjrXLaISfIVYSol1A2XvkTI1P/cmzzX6sBKMlPfw4xVdMvACNSptN+TBRoHqQWC
+    S81Cg4e50sRqI6+IsTIEfeteVjuhRD3Oquhg7jh86Yhr7VSjuYA7tVxQtQKhIf+F
+    vIm5xGo9Y0JiAO3hQSRtC7k9hqq736Zv7qrYOVwF1CWU3J/YKG66l8Ydf015FKm9
+    oFnYmj6PRiCnf1D4/h+mJKZOvGM/T6rKJx6GvCDqccCTopyFmT+O6J1v90T36LSJ
+    sDiJqprTXhfQypnAk5L6hC/sFFnf/Wx0dU/uuf5DGwKBgQDm50Av0hDd9lMwemEn
+    +eRMO/+vsNzYAQzki6b8JBeFX1QLMBQGgSuNnaddr4VH1RLjUKvok+wTK1UiYXXF
+    q1LIf9P/UIG/sM65MSLTjJtWtyQsXupMpnGXJR4MjYiUVN7ofUTXCtv4QCGm0XHY
+    yY3lG73uaYLaZx6u4H+gr9oANwKBgQDT8UzI7FSE0Geyuy4iWP3LIjShye13qVby
+    s969ZGumsojGHa+bKk8barI5aq7JedEzQUy+SodOBq8fB6DR9UsGdXYJUNaot3qn
+    XQXiNBZ+P+zK8lbvsMiDSwPSSp3G1sdS+I7EAf5DBsyOtPahWNRCNonloRnqsq1L
+    mIAK3nrOwwKBgQC5iM92nWCYObmWln9C0/SxnPRSg9awagemDODccVPFA1hQtQ0i
+    POB2Jlu5V7PMiFVo+gVoGJP0wzjhK1aqwoL+QFhkKphXIwa4n9bQDYc0ImyaipnR
+    hVx4ioaep4s7RQbn4OBTupIN49omZN0JyMqPcb8ntvhB7eIlupZS03pj+QKBgHpE
+    yrdfH6M/V5OUyJioHkICCbsMcyKFXtPFUMqSFEim1qD0n0o0rk5yzz6wfQVecYHQ
+    OiXNeSFaWczc6bo2eIHRYbceG7hZoTjMQYit5AwRdNnf1KeSpRqZPCslQMBlR7hm
+    DHanb7fbREdPvrh2Nn28WPFQb1MmoTLrV3LtxothAoGAcd6TpdGsQ9LcWK3pfPiK
+    fkgUoaE2IO0V+Tpl7LlX8BPlsJDHk7f+QjwX3CY8Nhl+Fu58ZeUP3AzwAzA5J6iq
+    pxKv+RCmbT5yGOw+HszURCWJX7IBbTPV/uTUVO31rWkwHyaeVWIJkZaIaCPTKvUb
+    pmtk7RJXy+gSFMLojTvHa0g=
+    -----END PRIVATE KEY-----

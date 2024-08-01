@@ -1,5 +1,6 @@
 #!/usr/bin/env -S pipy --args
 
+import makeFilters from './filters.js'
 import options from './options.js'
 import config from './config.js'
 import { log, logEnable } from './log.js'
@@ -99,12 +100,21 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
       )
     }
 
+    if (l.filters) {
+      pipelines = [
+        ...makeFilters(wireProto, l.filters),
+        ...pipelines,
+      ]
+    }
+
     pipy.listen(l.port, wireProto, $=>$
       .onStart(i => {
         $ctx = {
           inbound: i,
+          originalTarget: undefined,
+          originalServerName: undefined,
           messageCount: 0,
-          serverName: '',
+          serverName: undefined,
           serverCert: null,
           clientCert: null,
           backendResource: null,

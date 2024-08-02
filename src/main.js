@@ -16,7 +16,7 @@ var opts = options(pipy.argv, {
 })
 
 logEnable(opts['--debug'])
-resources.init(opts['--config'])
+resources.init(opts['--config'], onResourceChange)
 
 var $ctx
 
@@ -126,3 +126,51 @@ resources.list('Gateway').forEach(gw => {
     log?.(`Listening ${l.protocol} on ${l.port}`)
   })
 })
+
+var dirtyRouters = {}
+var dirtyBackends = []
+
+function onResourceChange(newResource, oldResource) {
+  var res = newResource || oldResource
+  var kind = res.kind
+  var name = res.metadata?.name
+  switch (kind) {
+    case 'Gateway':
+      break
+    case 'HTTPRoute':
+    case 'TCPRoute':
+    case 'TLSRoute':
+    case 'UDPRoute':
+      addDirtyRouters(res.spec?.parentRefs)
+      if (oldResource && res !== oldResource) addDirtyRouters(oldResource.spec?.parentRefs)
+      break
+    case 'Backend':
+      if (name) {
+        dirtyBackends[name] = newResource
+      }
+      break
+  }
+}
+
+function addDirtyRouters(refs) {
+  if (refs instanceof Array) {
+    refs.forEach(ref => {
+      if (!dirtyRouters.some(r => isEqualListenerRef(r, ref))) {
+        dirtyRouters.push(ref)
+      }
+    })
+  }
+}
+
+function isEqualRef(a, b) {
+  if (a.kind !== b.kind) return false
+  if (a.name !== b.name) return false
+  return true
+}
+
+function isEqualListenerRef(a, b) {
+  if (!isEqualRef(a, b)) return false
+  if (a.port !== b.port) return false
+  if (a.sectionName !== b.sectionName) return false
+  return true
+}

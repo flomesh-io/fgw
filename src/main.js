@@ -1,9 +1,8 @@
 #!/usr/bin/env -S pipy --args
 
-import makeFilters from './filters.js'
 import options from './options.js'
-import config from './config.js'
-import { log, logEnable } from './log.js'
+import resources from './resources.js'
+import { log, logEnable, makeFilters } from './utils.js'
 
 var opts = options(pipy.argv, {
   defaults: {
@@ -17,11 +16,11 @@ var opts = options(pipy.argv, {
 })
 
 logEnable(opts['--debug'])
-config.load(opts['--config'])
+resources.init(opts['--config'])
 
 var $ctx
 
-config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
+resources.list('Gateway').forEach(gw => {
   gw.spec.listeners.forEach(l => {
     var wireProto
     var routeKind
@@ -71,9 +70,8 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
     var routeKinds = [routeKind]
     if (routeKind === 'HTTPRoute') routeKinds.push('GRPCRoute')
 
-    var routeResources = config.resources.filter(
+    var routeResources = routeKinds.flatMap(kind => resources.list(kind)).filter(
       r => {
-        if (!routeKinds.includes(r.kind)) return false
         var refs = r.spec?.parentRefs
         if (refs instanceof Array) {
           if (refs.some(
@@ -91,12 +89,12 @@ config.resources.filter(r => r.kind === 'Gateway').forEach(gw => {
     )
 
     var pipelines = [
-      pipy.import(routeModuleName).default(config, l, routeResources)
+      pipy.import(routeModuleName).default(l, routeResources)
     ]
 
     if (termTLS) {
       pipelines.unshift(
-        pipy.import('./modules/terminate-tls.js').default(config, l)
+        pipy.import('./modules/terminate-tls.js').default(l)
       )
     }
 

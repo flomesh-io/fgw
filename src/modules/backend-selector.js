@@ -1,4 +1,5 @@
-import makeFilters from '../filters.js'
+import resources from '../resources.js'
+import { makeFilters } from '../utils.js'
 
 var listenerFilterCaches = new algo.Cache(
   protocol => new algo.Cache(
@@ -6,7 +7,7 @@ var listenerFilterCaches = new algo.Cache(
   )
 )
 
-export default function (config, protocol, listener, rule, makeForwarder) {
+export default function (protocol, listener, rule, makeForwarder) {
   var ruleFilters = [
     ...listenerFilterCaches.get(protocol).get(listener),
     ...makeFilters(protocol, rule?.filters),
@@ -46,8 +47,8 @@ export default function (config, protocol, listener, rule, makeForwarder) {
     if (backendRef) {
       var kind = backendRef.kind || 'Backend'
       var name = backendRef.name
-      return config.resources.find(
-        r => r.kind === kind && r.metadata.name === name
+      return resources.list(kind).find(
+        r => r.metadata.name === name
       )
     }
   }

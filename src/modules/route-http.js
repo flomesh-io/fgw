@@ -1,8 +1,7 @@
 import makeBackendSelector from './backend-selector.js'
 import makeForwarder from './forward-http.js'
 import makeSessionPersistence from './session-persistence.js'
-import { stringifyHTTPHeaders } from '../utils.js'
-import { log } from '../log.js'
+import { log, stringifyHTTPHeaders } from '../utils.js'
 
 var $ctx
 var $hostname
@@ -11,7 +10,7 @@ var $matchedRoute
 var $matchedRule
 var $selection
 
-export default function (config, listener, routeResources) {
+export default function (listener, routeResources) {
   var response404 = pipeline($=>$.replaceMessage(new Message({ status: 404 })))
   var response500 = pipeline($=>$.replaceMessage(new Message({ status: 500 })))
 
@@ -221,10 +220,10 @@ export default function (config, listener, routeResources) {
     var sessionPersistenceConfig = rule.sessionPersistence
     var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
     var selector = makeBackendSelector(
-      config, 'http', listener, rule,
+      'http', listener, rule,
       function (backendRef, backendResource, filters) {
         if (!backendResource && filters.length === 0) return response500
-        var forwarder = backendResource ? [makeForwarder(config, backendRef, backendResource, isHTTP2)] : []
+        var forwarder = backendResource ? [makeForwarder(backendRef, backendResource, isHTTP2)] : []
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve
           return pipeline($=>$

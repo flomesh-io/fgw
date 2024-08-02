@@ -1,12 +1,12 @@
 import makeBackendSelector from './backend-selector.js'
 import makeForwarder from './forward-tcp.js'
-import { log } from '../log.js'
+import { log } from '../utils.js'
 
 var $ctx
 var $proto
 var $selection
 
-export default function (config, listener, routeResources) {
+export default function (listener, routeResources) {
   var shutdown = pipeline($=>$.replaceStreamStart(new StreamEnd))
 
   var hostFullnames = {}
@@ -16,9 +16,9 @@ export default function (config, listener, routeResources) {
     var hostnames = r.spec.hostnames || ['*']
     hostnames.forEach(name => {
       var selector = makeBackendSelector(
-        config, 'tcp', listener, r.spec.rules?.[0],
+        'tcp', listener, r.spec.rules?.[0],
         function (backendRef, backendResource, filters) {
-          var forwarder = backendResource ? makeForwarder(config, backendRef, backendResource) : shutdown
+          var forwarder = backendResource ? makeForwarder(backendRef, backendResource) : shutdown
           return pipeline($=>$
             .pipe([...filters, forwarder], () => $ctx)
             .onEnd(() => $selection.free?.())

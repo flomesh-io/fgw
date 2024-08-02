@@ -1,18 +1,18 @@
 import makeBackendSelector from './backend-selector.js'
 import makeForwarder from './forward-udp.js'
-import { log } from '../log.js'
+import { log } from '../utils.js'
 
 var $ctx
 var $selection
 
-export default function (config, listener, routeResources) {
+export default function (listener, routeResources) {
   var shutdown = pipeline($=>$.replaceStreamStart(new StreamEnd))
 
   var selector = makeBackendSelector(
-    config, 'udp', listener,
+    'udp', listener,
     routeResources[0]?.spec?.rules?.[0],
     function (backendRef, backendResource, filters) {
-      var forwarder = backendResource ? makeForwarder(config, backendRef, backendResource) : shutdown
+      var forwarder = backendResource ? makeForwarder(backendRef, backendResource) : shutdown
       return pipeline($=>$
         .pipe([...filters, forwarder], () => $ctx)
         .onEnd(() => $selection.free?.())

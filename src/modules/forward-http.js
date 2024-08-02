@@ -1,18 +1,17 @@
 import makeHealthCheck from './health-check.js'
 import makeBackendTLS from './backend-tls.js'
 import makeSessionPersistence from './session-persistence.js'
-import { stringifyHTTPHeaders, findPolicies } from '../utils.js'
-import { log } from '../log.js'
+import { log, stringifyHTTPHeaders, findPolicies } from '../utils.js'
 
 var backends = {}
 
 var $ctx
 var $session
 
-export default function (config, backendRef, backendResource, isHTTP2) {
+export default function (backendRef, backendResource, isHTTP2) {
   var name = backendResource.metadata.name
-  var hc = makeHealthCheck(config, backendRef, backendResource)
-  var tls = makeBackendTLS(config, backendRef, backendResource)
+  var hc = makeHealthCheck(backendRef, backendResource)
+  var tls = makeBackendTLS(backendRef, backendResource)
 
   var targets = backendResource.spec.targets.map(t => {
     var port = t.port || backendRef.port
@@ -41,11 +40,11 @@ export default function (config, backendRef, backendResource, isHTTP2) {
     }
   )
 
-  var backendLBPolicies = findPolicies(config, 'BackendLBPolicy', backendResource)
+  var backendLBPolicies = findPolicies('BackendLBPolicy', backendResource)
   var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
   var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
 
-  var retryPolices = findPolicies(config, 'RetryPolicy', backendResource)
+  var retryPolices = findPolicies('RetryPolicy', backendResource)
   var retryConfig = retryPolices?.[0]?.spec?.retry
 
   if (sessionPersistence) {

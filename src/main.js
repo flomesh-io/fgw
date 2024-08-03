@@ -31,12 +31,12 @@ resources.list('Gateway').forEach(gw => {
       case 'HTTP':
         wireProto = 'tcp'
         routeKind = 'HTTPRoute'
-        routeModuleName = './modules/route-http.js'
+        routeModuleName = './modules/router-http.js'
         break
       case 'HTTPS':
         wireProto = 'tcp'
         routeKind = 'HTTPRoute'
-        routeModuleName = './modules/route-http.js'
+        routeModuleName = './modules/router-http.js'
         termTLS = true
         break
       case 'TLS':
@@ -44,12 +44,12 @@ resources.list('Gateway').forEach(gw => {
         switch (l.tls?.mode) {
           case 'Terminate':
             routeKind = 'TCPRoute'
-            routeModuleName = './modules/route-tcp.js'
+            routeModuleName = './modules/router-tcp.js'
             termTLS = true
             break
           case 'Passthrough':
             routeKind = 'TLSRoute'
-            routeModuleName = './modules/route-tls.js'
+            routeModuleName = './modules/router-tls.js'
             break
           default: throw `Listener: unknown TLS mode '${l.tls?.mode}'`
         }
@@ -57,12 +57,12 @@ resources.list('Gateway').forEach(gw => {
       case 'TCP':
         wireProto = 'tcp'
         routeKind = 'TCPRoute'
-        routeModuleName = './modules/route-tcp.js'
+        routeModuleName = './modules/router-tcp.js'
         break
       case 'UDP':
         wireProto = 'udp'
         routeKind = 'UDPRoute'
-        routeModuleName = './modules/route-udp.js'
+        routeModuleName = './modules/router-udp.js'
         break
       default: throw `Listener: unknown protocol '${l.protocol}'`
     }

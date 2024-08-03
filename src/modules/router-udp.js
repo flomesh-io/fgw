@@ -1,5 +1,5 @@
 import makeBackendSelector from './backend-selector.js'
-import makeForwarder from './forward-tcp.js'
+import makeBalancer from './balancer-udp.js'
 import { log } from '../utils.js'
 
 var $ctx
@@ -9,10 +9,10 @@ export default function (listener, routeResources) {
   var shutdown = pipeline($=>$.replaceStreamStart(new StreamEnd))
 
   var selector = makeBackendSelector(
-    'tcp', listener,
+    'udp', listener,
     routeResources[0]?.spec?.rules?.[0],
     function (backendRef, backendResource, filters) {
-      var forwarder = backendResource ? makeForwarder(backendRef, backendResource) : shutdown
+      var forwarder = backendResource ? makeBalancer(backendRef, backendResource) : shutdown
       return pipeline($=>$
         .pipe([...filters, forwarder], () => $ctx)
         .onEnd(() => $selection.free?.())

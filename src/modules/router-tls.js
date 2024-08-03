@@ -1,5 +1,5 @@
 import makeBackendSelector from './backend-selector.js'
-import makeForwarder from './forward-tcp.js'
+import makeBalancer from './balancer-tcp.js'
 import { log } from '../utils.js'
 
 var $ctx
@@ -18,7 +18,7 @@ export default function (listener, routeResources) {
       var selector = makeBackendSelector(
         'tcp', listener, r.spec.rules?.[0],
         function (backendRef, backendResource, filters) {
-          var forwarder = backendResource ? makeForwarder(backendRef, backendResource) : shutdown
+          var forwarder = backendResource ? makeBalancer(backendRef, backendResource) : shutdown
           return pipeline($=>$
             .pipe([...filters, forwarder], () => $ctx)
             .onEnd(() => $selection.free?.())

@@ -1,5 +1,5 @@
 import makeBackendSelector from './backend-selector.js'
-import makeForwarder from './forward-http.js'
+import makeBalancer from './balancer-http.js'
 import makeSessionPersistence from './session-persistence.js'
 import { log, stringifyHTTPHeaders } from '../utils.js'
 
@@ -223,7 +223,7 @@ export default function (listener, routeResources) {
       'http', listener, rule,
       function (backendRef, backendResource, filters) {
         if (!backendResource && filters.length === 0) return response500
-        var forwarder = backendResource ? [makeForwarder(backendRef, backendResource, isHTTP2)] : []
+        var forwarder = backendResource ? [makeBalancer(backendRef, backendResource, isHTTP2)] : []
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve
           return pipeline($=>$

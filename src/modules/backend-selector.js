@@ -7,7 +7,7 @@ var listenerFilterCaches = new algo.Cache(
   )
 )
 
-export default function (protocol, listener, rule, makeForwarder) {
+export default function (protocol, listener, rule, makeBalancer) {
   var ruleFilters = [
     ...listenerFilterCaches.get(protocol).get(listener),
     ...makeFilters(protocol, rule?.filters),
@@ -39,7 +39,7 @@ export default function (protocol, listener, rule, makeForwarder) {
       backendRef,
       backendResource,
       weight: backendRef?.weight || 1,
-      pipeline: makeForwarder(backendRef, backendResource, filters)
+      pipeline: makeBalancer(backendRef, backendResource, filters)
     }
   }
 

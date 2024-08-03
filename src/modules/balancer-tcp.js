@@ -1,3 +1,4 @@
+import makeBackend from './backend.js'
 import makeBackendTLS from './backend-tls.js'
 import { log } from '../utils.js'
 
@@ -5,28 +6,17 @@ var $ctx
 var $selection
 
 export default function (backendRef, backendResource) {
+  var name = backendResource.metadata.name
+  var backend = makeBackend(name)
+  var balancer = backend.balancer
   var tls = makeBackendTLS(backendRef, backendResource)
-
-  var targets = backendResource ? backendResource.spec.targets.map(t => {
-    var port = t.port || backendRef.port
-    var address = `${t.address}:${port}`
-    var weight = t.weight
-    return { address, weight }
-  }) : []
-
-  var loadBalancer = new algo.LoadBalancer(
-    targets, {
-      key: t => t.address,
-      weight: t => t.weight,
-    }
-  )
 
   var isHealthy = (target) => true
 
   return pipeline($=>$
     .onStart(c => {
       $ctx = c
-      $selection = loadBalancer.allocate(null, isHealthy)
+      $selection = balancer.allocate(null, isHealthy)
       log?.(
         `Inb #${$ctx.inbound.id}`,
         `target ${$selection?.target?.address}`

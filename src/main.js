@@ -21,6 +21,9 @@ resources.init(opts['--config'], onResourceChange)
 var $ctx
 
 resources.list('Gateway').forEach(gw => {
+  var gatewayName = gw.metadata?.name
+  if (!gatewayName) return
+
   gw.spec.listeners.forEach(l => {
     var wireProto
     var routeKind
@@ -88,9 +91,8 @@ resources.list('Gateway').forEach(gw => {
       }
     )
 
-    var pipelines = [
-      pipy.import(routeModuleName).default(l, routeResources)
-    ]
+    var routerKey = [gatewayName, l.address, l.port, l.protocol]
+    var pipelines = [pipy.import(routeModuleName).default(routerKey, l, routeResources)]
 
     if (termTLS) {
       pipelines.unshift(

@@ -1,44 +1,18 @@
-import makeHealthCheck from './health-check.js'
+import makeBackend from './backend.js'
 import makeBackendTLS from './backend-tls.js'
 import makeSessionPersistence from './session-persistence.js'
+import makeHealthCheck from './health-check.js'
 import { log, stringifyHTTPHeaders, findPolicies } from '../utils.js'
-
-var backends = {}
 
 var $ctx
 var $session
 
 export default function (backendRef, backendResource, isHTTP2) {
   var name = backendResource.metadata.name
+  var backend = makeBackend(name)
+  var balancer = backend.balancer
   var hc = makeHealthCheck(backendRef, backendResource)
   var tls = makeBackendTLS(backendRef, backendResource)
-
-  var targets = backendResource.spec.targets.map(t => {
-    var port = t.port || backendRef.port
-    var address = `${t.address}:${port}`
-    var weight = t.weight
-    return { address, weight }
-  })
-
-  var backend = (backends[name] ??= {
-    name,
-    concurrency: 0,
-    targets: Object.fromEntries(
-      targets.map(({ address, weight }) => [
-        address, {
-          weight,
-          concurrency: 0,
-        }
-      ])
-    )
-  })
-
-  var loadBalancer = new algo.LoadBalancer(
-    targets, {
-      key: t => t.address,
-      weight: t => t.weight,
-    }
-  )
 
   var backendLBPolicies = findPolicies('BackendLBPolicy', backendResource)
   var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence
@@ -50,14 +24,14 @@ export default function (backendRef, backendResource, isHTTP2) {
   if (sessionPersistence) {
     var restoreSession = sessionPersistence.restore
     var targetSelector = function (req) {
-      $session = loadBalancer.allocate(
+      $session = balancer.allocate(
         restoreSession(req.head),
         target => hc.isHealthy(target.address)
       )
     }
   } else {
     var targetSelector = function () {
-      $session = loadBalancer.allocate(null, target => hc.isHealthy(target.address))
+      $session = balancer.allocate(null, target => hc.isHealthy(target.address))
     }
   }
 
@@ -186,14 +160,12 @@ export default function (backendRef, backendResource, isHTTP2) {
 
     function connect($) {
       $.onStart(() => {
-        var t = backends[$session.target.address]
-        if (t) t.concurrency++
-        backend.concurrency++
+        var t = (backend.targets[$session.target.address] ??= { concurrency: 0 })
+        t.concurrency++
       })
       $.connect(() => $session.target.address)
       $.onEnd(() => {
-        var t = backends[$session.target.address]
-        if (t) t.concurrency--
+        backend.targets[$session.target.address].concurrency--
         backend.concurrency--
       })
     }

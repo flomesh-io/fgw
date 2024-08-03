@@ -118,10 +118,14 @@ function isSecret(filename) {
 var updaterLists = []
 
 function findUpdaterKey(key) {
-  updaterLists.findIndex(([k]) => (
-    k.length === key.length &&
-    !k.some((v, i) => (v !== key[i]))
-  ))
+  if (key instanceof Array) {
+    updaterLists.findIndex(([k]) => (
+      k.length === key.length &&
+      !k.some((v, i) => (v !== key[i]))
+    ))
+  } else {
+    updaterLists.findIndex(([k]) => (k === key))
+  }
 }
 
 function addUpdater(key, updater) {
@@ -129,7 +133,8 @@ function addUpdater(key, updater) {
   if (i >= 0) {
     updaterLists[i][1].push(updater)
   } else {
-    updaterLists.push([[...key], [updater]])
+    if (key instanceof Array) key = [...key]
+    updaterLists.push([key, [updater]])
   }
 }
 

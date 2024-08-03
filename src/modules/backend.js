@@ -3,16 +3,21 @@ import resources from '../resources.js'
 var cache = new algo.Cache(
   backendName => {
     var targets = findTargets(backendName)
+    var balancer = new algo.LoadBalancer(
+      targets, {
+        key: t => t.address,
+        weight: t => t.weight,
+      }
+    )
+    resources.addUpdater(backendName, () => {
+      var targets = findTargets(backendName)
+      balancer.provision(targets)
+    })
     return {
       name: backendName,
       concurrency: 0,
       targets: {},
-      balancer: new algo.LoadBalancer(
-        targets, {
-          key: t => t.address,
-          weight: t => t.weight,
-        }
-      ),
+      balancer,
     }
   }
 )

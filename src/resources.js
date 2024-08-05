@@ -1,9 +1,9 @@
-import { log } from './utils.js'
+import { log, isIdentical } from './utils.js'
 
 var DEFAULT_CONFIG_PATH = '/etc/fgw'
 
+var resources = null
 var files = {}
-var kinds = {}
 var secrets = {}
 
 var notifyCreate = () => {}
@@ -41,12 +41,7 @@ function init(pathname, onChange) {
       throw 'cannot parse configuration file as JSON or YAML'
     }
 
-    config.resources.forEach(r => {
-      if (r.kind) {
-        list(r.kind).push(r)
-      }
-    })
-
+    resources = config.resources
     Object.entries(config.secrets || {}).forEach(([k, v]) => secrets[k] = v)
 
   } else {
@@ -55,13 +50,53 @@ function init(pathname, onChange) {
     notifyUpdate = function (resource, old) { onChange(resource, old) }
 
     pipy.list('/config').forEach(
-      pathname => addFile(pathname)
+      pathname => {
+        var pathname = os.path.join('/config', pathname)
+        var data = readFile(pathname)
+        if (data && data.kind && data.spec) {
+          log?.(`Load resource file: ${pathname}`)
+          files[pathname] = data
+        }
+      }
     )
+
+    function watch() {
+      pipy.watch('/config/').then(pathnames => {
+        log?.('Resource files changed:', pathnames)
+        pathnames.forEach(pathname => {
+          var old = files[pathname]
+          var cur = readFile(pathname)
+          var oldKind = old?.kind
+          var curKind = cur?.kind
+          if (curKind && curKind === oldKind) {
+            files[pathname] = cur
+            notifyUpdate(cur, old)
+          } else if (curKind && oldKind) {
+            files[pathname] = cur
+            notifyDelete(old)
+            notifyCreate(cur)
+          } else if (cur) {
+            files[pathname] = cur
+            notifyCreate(cur)
+          } else if (old) {
+            delete files[pathname]
+            notifyDelete(old)
+          }
+        })
+        watch()
+      })
+    }
+
+    watch()
   }
 }
 
 function list(kind) {
-  return (kinds[kind] ??= [])
+  if (resources) {
+    return resources.filter(r => r.kind === kind)
+  } else {
+    return Object.values(files).filter(r => r.kind === kind)
+  }
 }
 
 function readFile(pathname) {
@@ -76,30 +111,6 @@ function readFile(pathname) {
     }
   } catch {
     console.error(`Cannot load or parse file: ${pathname}, skpped.`)
-  }
-}
-
-function addFile(pathname) {
-  var data = readFile(pathname)
-  if (data && data.kind && data.spec) {
-    log?.(`Load resource file: ${pathname}`)
-    files[pathname] = data
-    var resources = list(data.kind)
-    var name = data.metadata?.name
-    if (name) {
-      var i = resources.find(r => r.metadata?.name === name)
-      if (i >= 0) {
-        var old = resources[i]
-        resources[i] = data
-        notifyUpdate(data, old)
-      } else {
-        resources.push(data)
-        notifyCreate(data)
-      }
-    } else {
-      resources.push(data)
-      notifyCreate(data)
-    }
   }
 }
 
@@ -118,14 +129,9 @@ function isSecret(filename) {
 var updaterLists = []
 
 function findUpdaterKey(key) {
-  if (key instanceof Array) {
-    updaterLists.findIndex(([k]) => (
-      k.length === key.length &&
-      !k.some((v, i) => (v !== key[i]))
-    ))
-  } else {
-    updaterLists.findIndex(([k]) => (k === key))
-  }
+  return updaterLists.findIndex(
+    ([k]) => isIdentical(k, key)
+  )
 }
 
 function addUpdater(key, updater) {

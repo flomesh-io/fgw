@@ -2,7 +2,7 @@
 
 import options from './options.js'
 import resources from './resources.js'
-import { log, logEnable, makeFilters } from './utils.js'
+import { isIdentical, log, logEnable, makeFilters } from './utils.js'
 
 var opts = options(pipy.argv, {
   defaults: {
@@ -21,91 +21,11 @@ resources.init(opts['--config'], onResourceChange)
 var $ctx
 
 resources.list('Gateway').forEach(gw => {
-  var gatewayName = gw.metadata?.name
-  if (!gatewayName) return
+  if (!gw.metadata?.name) return
 
   gw.spec.listeners.forEach(l => {
-    var wireProto
-    var routeKind
-    var routeModuleName
-    var termTLS = false
-
-    switch (l.protocol) {
-      case 'HTTP':
-        wireProto = 'tcp'
-        routeKind = 'HTTPRoute'
-        routeModuleName = './modules/router-http.js'
-        break
-      case 'HTTPS':
-        wireProto = 'tcp'
-        routeKind = 'HTTPRoute'
-        routeModuleName = './modules/router-http.js'
-        termTLS = true
-        break
-      case 'TLS':
-        wireProto = 'tcp'
-        switch (l.tls?.mode) {
-          case 'Terminate':
-            routeKind = 'TCPRoute'
-            routeModuleName = './modules/router-tcp.js'
-            termTLS = true
-            break
-          case 'Passthrough':
-            routeKind = 'TLSRoute'
-            routeModuleName = './modules/router-tls.js'
-            break
-          default: throw `Listener: unknown TLS mode '${l.tls?.mode}'`
-        }
-        break
-      case 'TCP':
-        wireProto = 'tcp'
-        routeKind = 'TCPRoute'
-        routeModuleName = './modules/router-tcp.js'
-        break
-      case 'UDP':
-        wireProto = 'udp'
-        routeKind = 'UDPRoute'
-        routeModuleName = './modules/router-udp.js'
-        break
-      default: throw `Listener: unknown protocol '${l.protocol}'`
-    }
-
-    var routeKinds = [routeKind]
-    if (routeKind === 'HTTPRoute') routeKinds.push('GRPCRoute')
-
-    var routeResources = routeKinds.flatMap(kind => resources.list(kind)).filter(
-      r => {
-        var refs = r.spec?.parentRefs
-        if (refs instanceof Array) {
-          if (refs.some(
-            r => {
-              if (r.kind && r.kind !== 'Gateway') return false
-              if (r.name !== gw.metadata.name) return false
-              if (r.sectionName === l.name && l.name) return true
-              if (r.port == l.port) return true
-              return false
-            }
-          )) return true
-        }
-        return false
-      }
-    )
-
-    var routerKey = [gatewayName, l.address, l.port, l.protocol]
-    var pipelines = [pipy.import(routeModuleName).default(routerKey, l, routeResources)]
-
-    if (termTLS) {
-      pipelines.unshift(
-        pipy.import('./modules/terminate-tls.js').default(l)
-      )
-    }
-
-    if (l.filters) {
-      pipelines = [
-        ...makeFilters(wireProto, l.filters),
-        ...pipelines,
-      ]
-    }
+    var wireProto = l.protocol === 'UDP' ? 'udp' : 'tcp'
+    var pipelines = makeListenerPipelines(gw, l, wireProto)
 
     pipy.listen(l.port, wireProto, $=>$
       .onStart(i => {
@@ -129,8 +49,107 @@ resources.list('Gateway').forEach(gw => {
   })
 })
 
-var dirtyRouters = {}
+function makeListenerPipelines(gateway, listener, wireProto) {
+  var routeModuleName
+  var termTLS = false
+
+  switch (listener.protocol) {
+    case 'HTTP':
+      routeModuleName = './modules/router-http.js'
+      break
+    case 'HTTPS':
+      routeModuleName = './modules/router-http.js'
+      termTLS = true
+      break
+    case 'TLS':
+      switch (listener.tls?.mode) {
+        case 'Terminate':
+          routeModuleName = './modules/router-tcp.js'
+          termTLS = true
+          break
+        case 'Passthrough':
+          routeModuleName = './modules/router-tls.js'
+          break
+        default: throw `Listener: unknown TLS mode '${listener.tls?.mode}'`
+      }
+      break
+    case 'TCP':
+      routeModuleName = './modules/router-tcp.js'
+      break
+    case 'UDP':
+      routeModuleName = './modules/router-udp.js'
+      break
+    default: throw `Listener: unknown protocol '${l.protocol}'`
+  }
+
+  var routeResources = findRouteResources(gateway, listener)
+
+  var routerKey = [gateway.metadata.name, listener.address, listener.port, listener.protocol]
+  var pipelines = [pipy.import(routeModuleName).default(routerKey, listener, routeResources)]
+
+  if (termTLS) {
+    pipelines.unshift(
+      pipy.import('./modules/terminate-tls.js').default(listener)
+    )
+  }
+
+  if (listener.filters) {
+    pipelines = [
+      ...makeFilters(wireProto, listener.filters),
+      ...pipelines,
+    ]
+  }
+
+  return pipelines
+}
+
+function findRouteResources(gateway, listener, routeKinds) {
+  var routeKinds = []
+  switch (listener.protocol) {
+    case 'HTTP':
+    case 'HTTPS':
+      routeKinds.push('HTTPRoute', 'GRPCRoute')
+      break
+    case 'TLS':
+      switch (listener.tls?.mode) {
+        case 'Terminate':
+          routeKinds.push('TCPRoute')
+          break
+        case 'Passthrough':
+          routeKinds.push('TLSRoute')
+          break
+      }
+      break
+    case 'TCP':
+      routeKinds.push('TCPRoute')
+      break
+    case 'UDP':
+      routeKinds.push('UDPRoute')
+      break
+  }
+
+  return routeKinds.flatMap(kind => resources.list(kind)).filter(
+    r => {
+      var refs = r.spec?.parentRefs
+      if (refs instanceof Array) {
+        if (refs.some(
+          r => {
+            if (r.kind && r.kind !== 'Gateway') return false
+            if (r.name !== gateway.metadata.name) return false
+            if (r.sectionName === listener.name && listener.name) return true
+            if (r.port == listener.port) return true
+            return false
+          }
+        )) return true
+      }
+      return false
+    }
+  )
+}
+
+var dirtyRouters = []
 var dirtyBackends = []
+var dirtyTimeout = null
 
 function onResourceChange(newResource, oldResource) {
   var res = newResource || oldResource
@@ -140,15 +159,22 @@ function onResourceChange(newResource, oldResource) {
     case 'Gateway':
       break
     case 'HTTPRoute':
+    case 'GRPCRoute':
     case 'TCPRoute':
     case 'TLSRoute':
     case 'UDPRoute':
       addDirtyRouters(res.spec?.parentRefs)
-      if (oldResource && res !== oldResource) addDirtyRouters(oldResource.spec?.parentRefs)
+      if (oldResource && res !== oldResource) {
+        addDirtyRouters(oldResource.spec?.parentRefs)
+      }
+      scheduleResourceUpdate()
       break
     case 'Backend':
       if (name) {
-        dirtyBackends[name] = newResource
+        if (!dirtyBackends.includes(name)) {
+          dirtyBackends.push(name)
+        }
+        scheduleResourceUpdate()
       }
       break
   }
@@ -157,22 +183,27 @@ function onResourceChange(newResource, oldResource) {
 function addDirtyRouters(refs) {
   if (refs instanceof Array) {
     refs.forEach(ref => {
-      if (!dirtyRouters.some(r => isEqualListenerRef(r, ref))) {
-        dirtyRouters.push(ref)
+      var key = [ref.kind, ref.name, ref.port, ref.sectionName]
+      if (!dirtyRouters.some(k => isIdentical(k, key))) {
+        dirtyRouters.push(key)
       }
     })
   }
 }
 
-function isEqualRef(a, b) {
-  if (a.kind !== b.kind) return false
-  if (a.name !== b.name) return false
-  return true
+function scheduleResourceUpdate() {
+  if (dirtyTimeout) dirtyTimeout.cancel()
+  dirtyTimeout = new Timeout(5)
+  dirtyTimeout.wait().then(updateDirtyResources)
 }
 
-function isEqualListenerRef(a, b) {
-  if (!isEqualRef(a, b)) return false
-  if (a.port !== b.port) return false
-  if (a.sectionName !== b.sectionName) return false
-  return true
+function updateDirtyResources() {
+  dirtyBackends.forEach(
+    backendName => {
+      var updaters = resources.getUpdaters(backendName)
+      updaters.forEach(f => f())
+      updaters.length = 0
+      log?.(`Updated backend '${backendName}'`)
+    }
+  )
 }

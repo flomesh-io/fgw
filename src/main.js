@@ -105,7 +105,7 @@ function makeListenerPipelines(gateway, listener, wireProto) {
   return pipelines
 }
 
-function findRouteResources(gateway, listener, routeKinds) {
+function findRouteResources(gateway, listener) {
   var routeKinds = []
   switch (listener.protocol) {
     case 'HTTP':
@@ -207,5 +207,28 @@ function updateDirtyResources() {
       log?.(`Updated backend '${backendName}'`)
     }
   )
+
+  var gateways = resources.list('Gateway')
+
+  dirtyRouters.forEach(
+    ([kind, name, port, sectionName]) => {
+      if (kind !== 'Gateway') return
+      var gw = gateways.find(gw => gw.metadata?.name === name)
+      var l = gw?.spec?.listeners?.find?.(
+        l => {
+          if (l.name === sectionName && sectionName) return true
+          if (l.port === port) return true
+          return false
+        }
+      )
+      if (!l) return
+      var routerKey = [gw.metadata.name, l.address, l.port, l.protocol]
+      var routeResources = findRouteResources(gw, l)
+      var updaters = resources.getUpdaters(routerKey)
+      updaters.forEach(f => f(l, routeResources))
+      log?.(`Updated router for gateway '${gw.metadata.name}' port ${l.port} protocol ${l.protocol}`)
+    }
+  )
+
   dirtyBackends = []
 }

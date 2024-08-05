@@ -7,16 +7,18 @@ import { isIdentical, log, logEnable, makeFilters } from './utils.js'
 var opts = options(pipy.argv, {
   defaults: {
     '--config': '',
+    '--watch': false,
     '--debug': false,
   },
   shorthands: {
     '-c': '--config',
+    '-w': '--watch',
     '-d': '--debug',
   },
 })
 
 logEnable(opts['--debug'])
-resources.init(opts['--config'], onResourceChange)
+resources.init(opts['--config'], opts['--watch'] ? onResourceChange : null)
 
 var $ctx
 
@@ -202,8 +204,8 @@ function updateDirtyResources() {
     backendName => {
       var updaters = resources.getUpdaters(backendName)
       updaters.forEach(f => f())
-      updaters.length = 0
       log?.(`Updated backend '${backendName}'`)
     }
   )
+  dirtyBackends = []
 }

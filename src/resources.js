@@ -87,7 +87,7 @@ function init(pathname, onChange) {
       })
     }
 
-    watch()
+    if (onChange) watch()
   }
 }
 

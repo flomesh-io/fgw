@@ -9,7 +9,7 @@ var cache = new algo.Cache(
         weight: t => t.weight,
       }
     )
-    resources.addUpdater(backendName, () => {
+    resources.setUpdater(backendName, () => {
       var targets = findTargets(backendName)
       balancer.provision(targets)
     })

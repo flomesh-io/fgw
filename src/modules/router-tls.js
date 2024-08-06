@@ -12,7 +12,7 @@ var $selection
 export default function (routerKey, listener, routeResources) {
   var router = makeRouter(listener, routeResources)
 
-  resources.addUpdater(routerKey, (listener, routeResources) => {
+  resources.setUpdater(routerKey, (listener, routeResources) => {
     router = makeRouter(listener, routeResources)
   })
 

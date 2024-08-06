@@ -126,34 +126,34 @@ function isSecret(filename) {
   return filename.endsWith('.crt') || filename.endsWith('.key')
 }
 
-var updaterLists = []
+var updaters = []
 
 function findUpdaterKey(key) {
-  return updaterLists.findIndex(
+  return updaters.findIndex(
     ([k]) => isIdentical(k, key)
   )
 }
 
-function addUpdater(key, updater) {
+function setUpdater(key, updater) {
   var i = findUpdaterKey(key)
   if (i >= 0) {
-    updaterLists[i][1].push(updater)
+    updaters[i][1] = updater
   } else {
     if (key instanceof Array) key = [...key]
-    updaterLists.push([key, [updater]])
+    updaters.push([key, updater])
   }
 }
 
-function getUpdaters(key) {
+function getUpdater(key) {
   var i = findUpdaterKey(key)
-  if (i >= 0) return updaterLists[i][1]
-  return []
+  if (i >= 0) return updaters[i][1]
+  return null
 }
 
 export default {
   init,
   list,
   secrets,
-  addUpdater,
-  getUpdaters,
+  setUpdater,
+  getUpdater,
 }

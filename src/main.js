@@ -20,38 +20,26 @@ var opts = options(pipy.argv, {
 logEnable(opts['--debug'])
 resources.init(opts['--config'], opts['--watch'] ? onResourceChange : null)
 
-var $ctx
+var currentListeners = []
 
 resources.list('Gateway').forEach(gw => {
   if (!gw.metadata?.name) return
-
   gw.spec.listeners.forEach(l => {
-    var wireProto = l.protocol === 'UDP' ? 'udp' : 'tcp'
-    var pipelines = makeListenerPipelines(gw, l, wireProto)
-
-    pipy.listen(l.port, wireProto, $=>$
-      .onStart(i => {
-        $ctx = {
-          inbound: i,
-          originalTarget: undefined,
-          originalServerName: undefined,
-          messageCount: 0,
-          serverName: undefined,
-          serverCert: null,
-          clientCert: null,
-          backendResource: null,
-        }
-        log?.(`Inb #${i.id} accepted on [${i.localAddress}]:${i.localPort} from [${i.remoteAddress}]:${i.remotePort}`)
-        return new Data
-      })
-      .pipe(pipelines, () => $ctx)
-    )
-
-    log?.(`Listening ${l.protocol} on ${l.port}`)
+    try {
+      var listenerKey = makeListener(gw, l)
+      if (!currentListeners.some(k => isIdentical(k, listenerKey))) {
+        currentListeners.push(listenerKey)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   })
 })
 
-function makeListenerPipelines(gateway, listener, wireProto) {
+function makeListener(gateway, listener) {
+  var key = makeListenerKey(listener)
+  var port = key[0]
+  var wireProto = key[1]
   var routeModuleName
   var termTLS = false
 
@@ -81,12 +69,11 @@ function makeListenerPipelines(gateway, listener, wireProto) {
     case 'UDP':
       routeModuleName = './modules/router-udp.js'
       break
-    default: throw `Listener: unknown protocol '${l.protocol}'`
+    default: throw `Listener: unknown protocol '${listener.protocol}'`
   }
 
   var routeResources = findRouteResources(gateway, listener)
-
-  var routerKey = [gateway.metadata.name, listener.address, listener.port, listener.protocol]
+  var routerKey = [gateway.metadata.name, ...key]
   var pipelines = [pipy.import(routeModuleName).default(routerKey, listener, routeResources)]
 
   if (termTLS) {
@@ -102,7 +89,35 @@ function makeListenerPipelines(gateway, listener, wireProto) {
     ]
   }
 
-  return pipelines
+  var $ctx
+
+  pipy.listen(port, wireProto, $=>$
+    .onStart(i => {
+      $ctx = {
+        inbound: i,
+        originalTarget: undefined,
+        originalServerName: undefined,
+        messageCount: 0,
+        serverName: undefined,
+        serverCert: null,
+        clientCert: null,
+        backendResource: null,
+      }
+      log?.(`Inb #${i.id} accepted on [${i.localAddress}]:${i.localPort} from [${i.remoteAddress}]:${i.remotePort}`)
+      return new Data
+    })
+    .pipe(pipelines, () => $ctx)
+  )
+
+  log?.(`Start listening on ${wireProto} port ${port}`)
+  return key
+}
+
+function makeListenerKey(listener) {
+  var address = listener.address || '0.0.0.0'
+  var port = listener.port
+  var protocol = (listener.protocol === 'UDP' ? 'udp' : 'tcp')
+  return [`${address}:${port}`, protocol]
 }
 
 function findRouteResources(gateway, listener) {
@@ -149,6 +164,7 @@ function findRouteResources(gateway, listener) {
   )
 }
 
+var dirtyGateways = []
 var dirtyRouters = []
 var dirtyBackends = []
 var dirtyTimeout = null
@@ -156,9 +172,12 @@ var dirtyTimeout = null
 function onResourceChange(newResource, oldResource) {
   var res = newResource || oldResource
   var kind = res.kind
-  var name = res.metadata?.name
+  var newName = newResource?.metadata?.name
+  var oldName = oldResource?.metadata?.name
   switch (kind) {
     case 'Gateway':
+      if (newName) addDirtyGateway(newName)
+      if (oldName) addDirtyGateway(oldName)
       break
     case 'HTTPRoute':
     case 'GRPCRoute':
@@ -169,16 +188,23 @@ function onResourceChange(newResource, oldResource) {
       if (oldResource && res !== oldResource) {
         addDirtyRouters(oldResource.spec?.parentRefs)
       }
-      scheduleResourceUpdate()
       break
     case 'Backend':
-      if (name) {
-        if (!dirtyBackends.includes(name)) {
-          dirtyBackends.push(name)
-        }
-        scheduleResourceUpdate()
-      }
+      if (newName) addDirtyBackend(newName)
+      if (oldName) addDirtyBackend(oldName)
       break
+  }
+  if (dirtyTimeout) dirtyTimeout.cancel()
+  dirtyTimeout = new Timeout(5)
+  dirtyTimeout.wait().then(updateDirtyResources)
+}
+
+function addDirtyGateway(name) {
+  if (!dirtyGateways.includes(name)) {
+    dirtyGateways.push(name)
+    dirtyRouters = dirtyRouters.filter(
+      ([kind, nm]) => (kind !== 'Gateway' || nm !== name)
+    )
   }
 }
 
@@ -193,22 +219,24 @@ function addDirtyRouters(refs) {
   }
 }
 
-function scheduleResourceUpdate() {
-  if (dirtyTimeout) dirtyTimeout.cancel()
-  dirtyTimeout = new Timeout(5)
-  dirtyTimeout.wait().then(updateDirtyResources)
+function addDirtyBackend(name) {
+  if (!dirtyBackends.includes(name)) {
+    dirtyBackends.push(name)
+  }
 }
 
 function updateDirtyResources() {
+  var gateways = resources.list('Gateway')
+
   dirtyBackends.forEach(
     backendName => {
-      var updaters = resources.getUpdaters(backendName)
-      updaters.forEach(f => f())
-      log?.(`Updated backend '${backendName}'`)
+      var updater = resources.getUpdater(backendName)
+      if (updater) {
+        updater()
+        log?.(`Updated backend '${backendName}'`)
+      }
     }
   )
-
-  var gateways = resources.list('Gateway')
 
   dirtyRouters.forEach(
     ([kind, name, port, sectionName]) => {
@@ -222,13 +250,49 @@ function updateDirtyResources() {
         }
       )
       if (!l) return
-      var routerKey = [gw.metadata.name, l.address, l.port, l.protocol]
+      var listenerKey = makeListenerKey(l)
+      var routerKey = [gw.metadata.name, ...listenerKey]
       var routeResources = findRouteResources(gw, l)
-      var updaters = resources.getUpdaters(routerKey)
-      updaters.forEach(f => f(l, routeResources))
-      log?.(`Updated router for gateway '${gw.metadata.name}' port ${l.port} protocol ${l.protocol}`)
+      var updater = resources.getUpdater(routerKey)
+      if (updater) {
+        updater(l, routeResources)
+        log?.(`Updated router for gateway '${gw.metadata.name}' ${listenerKey[1]} port ${listenerKey[0]}`)
+      }
     }
   )
 
+  if (dirtyGateways.length > 0) {
+    var updatedListeners = []
+    gateways.forEach(gw => {
+      var name = gw.metadata?.name
+      if (name) {
+        var isUpdated = dirtyGateways.includes(name)
+        gw.spec.listeners.forEach(l => {
+          try {
+            var listenerKey = isUpdated ? makeListener(gw, l) : makeListenerKey(l)
+            if (!updatedListeners.some(k => isIdentical(k, listenerKey))) {
+              updatedListeners.push(listenerKey)
+            }
+          } catch (err) {
+            console.error(err)
+          }
+        })
+      }
+    })
+    currentListeners.forEach(
+      listenerKey => {
+        if (!updatedListeners.some(k => isIdentical(k, listenerKey))) {
+          var port = listenerKey[0]
+          var protocol = listenerKey[1]
+          pipy.listen(port, protocol, null)
+          log?.(`Stop listening on ${protocol} port ${port}`)
+        }
+      }
+    )
+    currentListeners = updatedListeners
+  }
+
+  dirtyGateways = []
+  dirtyRouters = []
   dirtyBackends = []
 }

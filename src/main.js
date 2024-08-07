@@ -189,6 +189,15 @@ function onResourceChange(newResource, oldResource) {
         addDirtyRouters(oldResource.spec?.parentRefs)
       }
       break
+    case 'BackendLBPolicy':
+    case 'BackendTLSPolicy':
+    case 'HealthCheckPolicy':
+    case 'RetryPolicy':
+      addDirtyBackendPolicies(res.spec?.targetRefs)
+      if (oldResource && res !== oldResource) {
+        addDirtyBackendPolicies(oldResource.spec?.targetRefs)
+      }
+      break
     case 'Backend':
       if (newName) addDirtyBackend(newName)
       if (oldName) addDirtyBackend(oldName)
@@ -223,6 +232,30 @@ function addDirtyBackend(name) {
   if (!dirtyBackends.includes(name)) {
     dirtyBackends.push(name)
   }
+}
+
+function allRouteResources() {
+  return [
+    'HTTPRoute',
+    'GRPCRoute',
+    'TCPRoute',
+    'TLSRoute',
+    'UDPRoute',
+  ].flatMap(kind => resources.list(kind))
+}
+
+function addDirtyBackendPolicies(refs) {
+  var dirtyBackendNames = Object.fromEntries(
+    refs.filter(r => r.kind === 'Backend').map(r => [r.name, true])
+  )
+  allRouteResources().forEach(res => {
+    var backendNames = res.spec?.rules?.flatMap?.(
+      r => r.backendRefs?.map?.(r => r.name) || []
+    )
+    if (backendNames && backendNames.some(bn => bn in dirtyBackendNames)) {
+      addDirtyRouters(res.spec.parentRefs)
+    }
+  })
 }
 
 function updateDirtyResources() {

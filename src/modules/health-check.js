@@ -7,9 +7,12 @@ export default function (backendRef, backendResource) {
   }
 
   var targets = backendResource.spec.targets
-  var ports = healthCheckPolicies[0].spec.ports
+  var policy = healthCheckPolicies[0]
+  var ports = policy.spec.ports
+  var policyName = policy.metadata?.name
+  var sharedMapName = policyName ? 'HealthCheckPolicy:' + policyName : 'Backend:' + backendRef.name
 
-  var unhealthyCache = new algo.Cache
+  var unhealthySet = new algo.SharedMap(sharedMapName)
   var allTargets = []
 
   if (pipy.thread.id === 0) {
@@ -79,7 +82,7 @@ export default function (backendRef, backendResource) {
           isHealthy = true
           failCount = 0
           failTime = 0
-          unhealthyCache.remove(targetAddress, true)
+          unhealthySet.delete(targetAddress)
         }
 
         function fail() {
@@ -87,7 +90,7 @@ export default function (backendRef, backendResource) {
           failTime = Date.now() / 1000
           if (failCount >= healthCheck.maxFails) {
             isHealthy = false
-            unhealthyCache.set(targetAddress, true)
+            unhealthySet.set(targetAddress, true)
             log?.(`Health backend ${backendResource.metadata.name} down ${targetAddress}`)
           } else {
             log?.(`Health backend ${backendResource.metadata.name} fail ${targetAddress}`)
@@ -128,7 +131,7 @@ export default function (backendRef, backendResource) {
   }
 
   function isHealthy(target) {
-    return !unhealthyCache.has(target)
+    return !unhealthySet.has(target)
   }
 
   return { isHealthy }

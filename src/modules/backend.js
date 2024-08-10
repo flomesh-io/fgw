@@ -9,10 +9,22 @@ var cache = new algo.Cache(
         weight: t => t.weight,
       }
     )
-    resources.setUpdater(backendName, () => {
-      var targets = findTargets(backendName)
-      balancer.provision(targets)
-    })
+
+    function watch() {
+      resources.addUpdater('Backend', backendName, () => {
+        var backendResource = findBackendResource(backendName)
+        if (backendResource) {
+          var targets = getTargets(backendResource)
+          balancer.provision(targets)
+          watch()
+        } else {
+          cache.remove(backendName)
+        }
+      })
+    }
+
+    watch()
+
     return {
       name: backendName,
       concurrency: 0,
@@ -23,9 +35,16 @@ var cache = new algo.Cache(
 )
 
 function findTargets(backendName) {
-  var backendResource = resources.list('Backend').find(
+  return getTargets(findBackendResource(backendName))
+}
+
+function findBackendResource(backendName) {
+  return resources.list('Backend').find(
     r => r.metadata?.name === backendName
   )
+}
+
+function getTargets(backendResource) {
   if (!backendResource?.spec?.targets) return []
   return backendResource.spec.targets.map(t => {
     var port = t.port || backendRef.port

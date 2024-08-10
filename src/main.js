@@ -73,7 +73,7 @@ function makeListener(gateway, listener) {
   }
 
   var routeResources = findRouteResources(gateway, listener)
-  var routerKey = [gateway.metadata.name, ...key]
+  var routerKey = makeRouterKey(gateway, key)
   var pipelines = [pipy.import(routeModuleName).default(routerKey, listener, routeResources)]
 
   if (termTLS) {
@@ -113,11 +113,25 @@ function makeListener(gateway, listener) {
   return key
 }
 
+function makeRouterKey(gateway, listenerKey) {
+  return `${listenerKey.join(':')}:${gateway.metadata.name}`
+}
+
 function makeListenerKey(listener) {
   var address = listener.address || '0.0.0.0'
-  var port = listener.port
+  var port = address.indexOf(':') >= 0 ? `[${address}]:${listener.port}` : `${address}:${listener.port}`
   var protocol = (listener.protocol === 'UDP' ? 'udp' : 'tcp')
-  return [`${address}:${port}`, protocol]
+  return [port, protocol]
+}
+
+function allRouteResources() {
+  return [
+    'HTTPRoute',
+    'GRPCRoute',
+    'TCPRoute',
+    'TLSRoute',
+    'UDPRoute',
+  ].flatMap(kind => resources.list(kind))
 }
 
 function findRouteResources(gateway, listener) {
@@ -167,6 +181,7 @@ function findRouteResources(gateway, listener) {
 var dirtyGateways = []
 var dirtyRouters = []
 var dirtyBackends = []
+var dirtyPolicies = []
 var dirtyTimeout = null
 
 function onResourceChange(newResource, oldResource) {
@@ -191,11 +206,16 @@ function onResourceChange(newResource, oldResource) {
       break
     case 'BackendLBPolicy':
     case 'BackendTLSPolicy':
-    case 'HealthCheckPolicy':
     case 'RetryPolicy':
-      addDirtyBackendPolicies(res.spec?.targetRefs)
+      addDirtyRoutersByPolicy(res.spec?.targetRefs)
       if (oldResource && res !== oldResource) {
-        addDirtyBackendPolicies(oldResource.spec?.targetRefs)
+        addDirtyRoutersByPolicy(oldResource.spec?.targetRefs)
+      }
+      break
+    case 'HealthCheckPolicy':
+      addDirtyPolicy(res)
+      if (oldResource && res != oldResource) {
+        addDirtyPolicy(oldResource)
       }
       break
     case 'Backend':
@@ -234,17 +254,7 @@ function addDirtyBackend(name) {
   }
 }
 
-function allRouteResources() {
-  return [
-    'HTTPRoute',
-    'GRPCRoute',
-    'TCPRoute',
-    'TLSRoute',
-    'UDPRoute',
-  ].flatMap(kind => resources.list(kind))
-}
-
-function addDirtyBackendPolicies(refs) {
+function addDirtyRoutersByPolicy(refs) {
   var dirtyBackendNames = Object.fromEntries(
     refs.filter(r => r.kind === 'Backend').map(r => [r.name, true])
   )
@@ -258,15 +268,25 @@ function addDirtyBackendPolicies(refs) {
   })
 }
 
+function addDirtyPolicy(policy) {
+  var kind = policy.kind
+  policy.spec?.targetRefs?.forEach?.(
+    ref => {
+      var key = [kind, ref.kind, ref.name]
+      if (!dirtyPolicies.some(k => isIdentical(k, key))) {
+        dirtyPolicies.push(key)
+      }
+    }
+  )
+}
+
 function updateDirtyResources() {
   var gateways = resources.list('Gateway')
 
   dirtyBackends.forEach(
     backendName => {
-      var updater = resources.getUpdater(backendName)
-      if (updater) {
-        updater()
-        log?.(`Updated backend '${backendName}'`)
+      if (resources.runUpdaters('Backend', backendName)) {
+        log?.(`Updated backend ${backendName}`)
       }
     }
   )
@@ -284,12 +304,18 @@ function updateDirtyResources() {
       )
       if (!l) return
       var listenerKey = makeListenerKey(l)
-      var routerKey = [gw.metadata.name, ...listenerKey]
+      var routerKey = makeRouterKey(gw, listenerKey)
       var routeResources = findRouteResources(gw, l)
-      var updater = resources.getUpdater(routerKey)
-      if (updater) {
-        updater(l, routeResources)
-        log?.(`Updated router for gateway '${gw.metadata.name}' ${listenerKey[1]} port ${listenerKey[0]}`)
+      if (resources.runUpdaters('Route', routerKey, l, routeResources)) {
+        log?.(`Updated router ${routerKey}`)
+      }
+    }
+  )
+
+  dirtyPolicies.forEach(
+    ([kind, refKind, refName]) => {
+      if (resources.runUpdaters(kind, refName)) {
+        log?.(`Updated ${kind} for ${refKind}/${refName}`)
       }
     }
   )
@@ -328,4 +354,5 @@ function updateDirtyResources() {
   dirtyGateways = []
   dirtyRouters = []
   dirtyBackends = []
+  dirtyPolicies = []
 }

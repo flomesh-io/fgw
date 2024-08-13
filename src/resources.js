@@ -6,7 +6,6 @@ var resources = null
 var files = {}
 var secrets = {}
 var updaters = {}
-var ztm = null
 
 var notifyCreate = () => {}
 var notifyDelete = () => {}
@@ -158,8 +157,9 @@ function runUpdaters(kind, key, a, b, c) {
 }
 
 function initZTM({ mesh, app }, onResourceChange) {
-  var resourceFolder = `/users/${app.username}/`
-  return mesh.dir(resourceFolder).then(
+  allExports.ztm = { mesh, app }
+  var resourceDir = `/users/${app.username}/`
+  return mesh.dir(resourceDir).then(
     paths => Promise.all(paths.map(
       pathname => readFileZTM(mesh, app, pathname).then(
         data => {
@@ -171,7 +171,7 @@ function initZTM({ mesh, app }, onResourceChange) {
       )
     )).then(() => {
       function watch() {
-        mesh.watch(resourceFolder).then(pathnames => {
+        mesh.watch(resourceDir).then(pathnames => {
           Promise.all(pathnames.map(
             pathname => readFileZTM(mesh, app, pathname).then(
               data => {
@@ -214,7 +214,7 @@ function readFileZTM(mesh, app, pathname) {
   )
 }
 
-export default {
+var allExports = {
   init,
   initZTM,
   list,
@@ -222,4 +222,7 @@ export default {
   setUpdater,
   addUpdater,
   runUpdaters,
+  ztm: null,
 }
+
+export default allExports

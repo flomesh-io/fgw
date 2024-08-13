@@ -28,6 +28,7 @@ export default function ({ mesh, app, utils }) {
   }
 
   var $ctx
+  var $params
 
   var serveUser = utils.createServer({
     '/cli': {
@@ -35,7 +36,21 @@ export default function ({ mesh, app, utils }) {
     },
   })
 
-  var servePeer = utils.createServer({})
+  var servePeer = utils.createServer({
+    '/backends/{name}/{target}': {
+      'CONNECT': pipeline($=>$
+        .onStart(p => { $params = p })
+        .acceptHTTPTunnel(() => {
+          var backend = $params.name
+          var target = $params.target
+          app.log(`Forward to backend ${backend} target ${target}`)
+          return new Message({ status: 200 })
+        }).to($=>$
+          .connect(() => $params.target)
+        )
+      ),
+    },
+  })
 
   return pipeline($=>$
     .onStart(c => void ($ctx = c))

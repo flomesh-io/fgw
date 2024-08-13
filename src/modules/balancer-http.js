@@ -90,9 +90,9 @@ export default function (backendRef, backendResource, isHTTP2) {
                 log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} tls error:`, session.error)
               }
             }
-          }).to(connect)
+          }).to($=>$.pipe(backend.connect, () => $session.target))
         } else {
-          connect($)
+          $.pipe(backend.connect, () => $session.target)
         }
       })
 
@@ -156,18 +156,6 @@ export default function (backendRef, backendResource, isHTTP2) {
           })
         )
       )
-    }
-
-    function connect($) {
-      $.onStart(() => {
-        var t = (backend.targets[$session.target.address] ??= { concurrency: 0 })
-        t.concurrency++
-      })
-      $.connect(() => $session.target.address)
-      $.onEnd(() => {
-        backend.targets[$session.target.address].concurrency--
-        backend.concurrency--
-      })
     }
   })
 }

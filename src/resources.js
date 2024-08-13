@@ -6,6 +6,7 @@ var resources = null
 var files = {}
 var secrets = {}
 var updaters = {}
+var ztm = null
 
 var notifyCreate = () => {}
 var notifyDelete = () => {}

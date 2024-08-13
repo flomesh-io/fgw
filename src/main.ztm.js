@@ -96,8 +96,9 @@ function initCLI({ mesh, app, utils }) {
                 return Promise.all(meshPaths.map(
                   meshPath => {
                     var localPath = meshPath.substring(meshDir.length)
-                    var localData = os.read(os.path.join(localDir, localPath))
-                    if (localData) {
+                    var localFullPath = os.path.join(localDir, localPath)
+                    if (os.stat(localFullPath)?.isFile?.()) {
+                      var localData = os.read(localFullPath)
                       return mesh.read(meshPath).then(data => {
                         if (localData.size !== data?.size || localData.toString() !== data?.toString?.()) {
                           output(`Update file: ${localPath}\n`)
@@ -105,8 +106,8 @@ function initCLI({ mesh, app, utils }) {
                         }
                       })
                     } else if (args['--delete']) {
-                      // TODO
                       output(`Delete file: ${localPath}\n`)
+                      mesh.erase(meshPath)
                     }
                   }
                 ))

@@ -55,6 +55,7 @@ export function findPolicies(kind, targetResource) {
     )
   )
 }
+
 export function makeFilters(protocol, filters) {
   if (!filters) return []
   return filters.map(

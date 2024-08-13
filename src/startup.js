@@ -21,22 +21,6 @@ export function startGateway(gateway) {
   })
 }
 
-// export function startListeners() {
-//   resources.list('Gateway').forEach(gw => {
-//     if (!gw.metadata?.name) return
-//     gw.spec.listeners.forEach(l => {
-//       try {
-//         var listenerKey = makeListener(gw, l)
-//         if (!currentListeners.some(k => isIdentical(k, listenerKey))) {
-//           currentListeners.push(listenerKey)
-//         }
-//       } catch (err) {
-//         console.error(err)
-//       }
-//     })
-//   })
-// }
-
 function makeListener(gateway, listener) {
   var key = makeListenerKey(listener)
   var port = key[0]
@@ -323,7 +307,7 @@ export function makeResourceWatcher(gatewayFilter) {
       var updatedListeners = []
       gateways.forEach(gw => {
         var name = gw.metadata?.name
-        if (name) {
+        if (name && gatewayFilter(gw)) {
           var isUpdated = dirtyGateways.includes(name)
           gw.spec.listeners.forEach(l => {
             try {

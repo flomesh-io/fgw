@@ -5,12 +5,13 @@ var DEFAULT_CONFIG_PATH = '/etc/fgw'
 var resources = null
 var files = {}
 var secrets = {}
+var updaters = {}
 
 var notifyCreate = () => {}
 var notifyDelete = () => {}
 var notifyUpdate = () => {}
 
-function init(pathname, onChange) {
+function init(pathname, onResourceChange) {
   var configFile = pipy.load('/config.json') || pipy.load('/config.yaml')
   var configDir = pipy.list('/config')
   var hasBuiltinConfig = (configDir.length > 0 || Boolean(configFile))
@@ -45,10 +46,6 @@ function init(pathname, onChange) {
     Object.entries(config.secrets || {}).forEach(([k, v]) => secrets[k] = v)
 
   } else {
-    notifyCreate = function (resource) { onChange(resource, null) }
-    notifyDelete = function (resource) { onChange(null, resource) }
-    notifyUpdate = function (resource, old) { onChange(resource, old) }
-
     pipy.list('/config').forEach(
       pathname => {
         var pathname = os.path.join('/config', pathname)
@@ -64,38 +61,18 @@ function init(pathname, onChange) {
       pipy.watch('/config/').then(pathnames => {
         log?.('Resource files changed:', pathnames)
         pathnames.forEach(pathname => {
-          var old = files[pathname]
-          var cur = readFile(pathname)
-          var oldKind = old?.kind
-          var curKind = cur?.kind
-          if (curKind && curKind === oldKind) {
-            files[pathname] = cur
-            notifyUpdate(cur, old)
-          } else if (curKind && oldKind) {
-            files[pathname] = cur
-            notifyDelete(old)
-            notifyCreate(cur)
-          } else if (cur) {
-            files[pathname] = cur
-            notifyCreate(cur)
-          } else if (old) {
-            delete files[pathname]
-            notifyDelete(old)
-          }
+          changeFile(pathname, readFile(pathname))
         })
         watch()
       })
     }
 
-    if (onChange) watch()
-  }
-}
-
-function list(kind) {
-  if (resources) {
-    return resources.filter(r => r.kind === kind)
-  } else {
-    return Object.values(files).filter(r => r.kind === kind)
+    if (onResourceChange) {
+      notifyCreate = function (resource) { onResourceChange(resource, null) }
+      notifyDelete = function (resource) { onResourceChange(null, resource) }
+      notifyUpdate = function (resource, old) { onResourceChange(resource, old) }
+      watch()
+    }
   }
 }
 
@@ -114,6 +91,27 @@ function readFile(pathname) {
   }
 }
 
+function changeFile(pathname, data) {
+  var old = files[pathname]
+  var cur = data
+  var oldKind = old?.kind
+  var curKind = cur?.kind
+  if (curKind && curKind === oldKind) {
+    files[pathname] = cur
+    notifyUpdate(cur, old)
+  } else if (curKind && oldKind) {
+    files[pathname] = cur
+    notifyDelete(old)
+    notifyCreate(cur)
+  } else if (cur) {
+    files[pathname] = cur
+    notifyCreate(cur)
+  } else if (old) {
+    delete files[pathname]
+    notifyDelete(old)
+  }
+}
+
 function isJSON(filename) {
   return filename.endsWith('.json')
 }
@@ -126,7 +124,13 @@ function isSecret(filename) {
   return filename.endsWith('.crt') || filename.endsWith('.key')
 }
 
-var updaters = {}
+function list(kind) {
+  if (resources) {
+    return resources.filter(r => r.kind === kind)
+  } else {
+    return Object.values(files).filter(r => r.kind === kind)
+  }
+}
 
 function setUpdater(kind, key, cb) {
   var listMap = (updaters[kind] ??= {})
@@ -152,8 +156,66 @@ function runUpdaters(kind, key, a, b, c) {
   return false
 }
 
+function initZTM({ mesh, app }, onResourceChange) {
+  var resourceFolder = `/users/${app.username}/`
+  return mesh.dir(resourceFolder).then(
+    paths => Promise.all(paths.map(
+      pathname => readFileZTM(mesh, app, pathname).then(
+        data => {
+          if (data && data.kind && data.spec) {
+            app.log(`Load resource file: ${pathname}`)
+            files[pathname] = data
+          }
+        }
+      )
+    )).then(() => {
+      function watch() {
+        mesh.watch(resourceFolder).then(pathnames => {
+          Promise.all(pathnames.map(
+            pathname => readFileZTM(mesh, app, pathname).then(
+              data => {
+                app.log(`Resource file changed: ${pathname}`)
+                changeFile(pathname, data)
+              }
+            )
+          ))
+        }).then(() => {
+          watch()
+        })
+      }
+
+      if (onResourceChange) {
+        notifyCreate = function (resource) { onResourceChange(resource, null) }
+        notifyDelete = function (resource) { onResourceChange(null, resource) }
+        notifyUpdate = function (resource, old) { onResourceChange(resource, old) }
+        watch()
+      }
+    })
+  )
+}
+
+function readFileZTM(mesh, app, pathname) {
+  return mesh.read(pathname).then(
+    data => {
+      try {
+        if (isJSON(pathname)) {
+          return JSON.decode(data)
+        } else if (isYAML(pathname)) {
+          return YAML.decode(data)
+        } else if (isSecret(pathname)) {
+          var name = os.path.basename(pathname)
+          secrets[name] = data
+        }
+      } catch {
+        app.log(`Cannot load or parse file: ${pathname}, skpped.`)
+      }
+    }
+  )
+}
+
 export default {
   init,
+  initZTM,
   list,
   secrets,
   setUpdater,

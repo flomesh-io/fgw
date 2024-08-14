@@ -158,7 +158,7 @@ function runUpdaters(kind, key, a, b, c) {
 
 function initZTM({ mesh, app }, onResourceChange) {
   allExports.ztm = { mesh, app }
-  var resourceDir = `/users/${app.username}/`
+  var resourceDir = `/users/${app.username}/resources/`
   return mesh.dir(resourceDir).then(
     paths => Promise.all(paths.map(
       pathname => readFileZTM(mesh, app, pathname).then(

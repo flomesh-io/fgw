@@ -103,7 +103,7 @@ function initCLI({ mesh, app, utils }) {
               --delete   Delete files that don't exist in the specified directory
             `,
             action: (args) => {
-              var meshDir = `/users/${app.username}`
+              var meshDir = `/users/${app.username}/resources/`
               var localDir = os.path.join(cwd, args['<dir>'])
               return mesh.dir(meshDir).then(meshPaths => {
                 var localPaths = []

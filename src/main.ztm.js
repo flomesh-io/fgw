@@ -18,13 +18,11 @@ export default function ({ mesh, app, utils }) {
   })
 
   function isLocalGateway(gw) {
-    var endpoints = gw.spec?.ztm?.endpoints
-    if (endpoints instanceof Array) {
-      var id = app.endpoint.id
-      var name = app.endpoint.name
-      return endpoints.some(ep => ep.id === id || ep.name === name)
-    }
-    return false
+    var endpoint = gw.spec?.ztm?.endpoint
+    var id = endpoint?.id
+    if (id) return id === app.endpoint.id
+    var name = endpoint?.name
+    return name === app.endpoint.name
   }
 
   var $ctx
@@ -37,7 +35,7 @@ export default function ({ mesh, app, utils }) {
   })
 
   var servePeer = utils.createServer({
-    '/backends/{name}/{target}': {
+    '/backends/{proto}/{name}/{target}': {
       'CONNECT': pipeline($=>$
         .onStart(p => { $params = p })
         .acceptHTTPTunnel(() => {
@@ -46,7 +44,16 @@ export default function ({ mesh, app, utils }) {
           app.log(`Forward to backend ${backend} target ${target}`)
           return new Message({ status: 200 })
         }).to($=>$
-          .connect(() => $params.target)
+          .pipe(() => $params.proto === 'udp' ? 'udp' : 'tcp', {
+            'tcp': ($=>$.connect(() => $params.target)),
+            'udp': ($=>$
+              .decodeWebSocket()
+              .replaceMessage(msg => msg.body)
+              .connect(() => $params.target, { protocol: 'udp' })
+              .replaceData(data => new Message(data))
+              .encodeWebSocket()
+            )
+          })
         )
       ),
     },

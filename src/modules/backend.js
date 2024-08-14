@@ -13,13 +13,16 @@ var cache = new algo.Cache(
       }
     )
 
+    var $protocol
     var $target
     var $endpoint
 
     var connect = pipeline($=>{
-      $.onStart(target => {
-        ($target = target).concurrency++
+      $.onStart(({ protocol, target }) => {
+        $protocol = protocol
+        $target = target
         backend.concurrency++
+        target.concurrency++
         if (ztm) {
           var ep = backendResource?.spec?.ztm?.endpoint
           var id = ep?.id
@@ -46,25 +49,44 @@ var cache = new algo.Cache(
 
       if (ztm) {
         $.pipe(() => {
+          var isUDP = ($protocol === 'udp')
           if (!$endpoint) return 'deny'
-          if ($endpoint === ztm.app.endpoint.id) return 'self'
-          return 'peer'
+          if ($endpoint === ztm.app.endpoint.id) return isUDP ? 'selfUDP' : 'selfTCP'
+          return isUDP ? 'peerUDP' : 'peerTCP'
         }, {
-          'peer': ($=>$
+          'peerTCP': ($=>$
             .connectHTTPTunnel(() => new Message({
               method: 'CONNECT',
-              path: `/backends/${backendName}/${$target.address}`,
+              path: `/backends/tcp/${backendName}/${$target.address}`,
             })).to($=>$
               .muxHTTP({ version: 2 }).to($=>$
                 .pipe(() => ztm.mesh.connect($endpoint))
               )
             )
           ),
-          'self': $=>$.connect(() => $target.address),
+          'peerUDP': ($=>$
+            .replaceData(data => new Message(data))
+            .encodeWebSocket()
+            .connectHTTPTunnel(() => new Message({
+              method: 'CONNECT',
+              path: `/backends/udp/${backendName}/${$target.address}`,
+            })).to($=>$
+              .muxHTTP({ version: 2 }).to($=>$
+                .pipe(() => ztm.mesh.connect($endpoint))
+              )
+            )
+            .decodeWebSocket()
+            .replaceMessage(msg => msg.body)
+          ),
+          'selfTCP': $=>$.connect(() => $target.address),
+          'selfUDP': $=>$.connect(() => $target.address, { protocol: 'udp' }),
           'deny': $=>$.replaceStreamStart(new StreamEnd)
         })
       } else {
-        $.connect(() => $target.address)
+        $.pipe(() => $protocol, {
+          'tcp': $=>$.connect(() => $target.address),
+          'udp': $=>$.connect(() => $target.address, { protocol: 'udp' }),
+        })
       }
 
       $.onEnd(() => {

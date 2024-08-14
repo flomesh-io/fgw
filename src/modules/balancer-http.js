@@ -6,6 +6,7 @@ import { log, stringifyHTTPHeaders, findPolicies } from '../utils.js'
 
 var $ctx
 var $session
+var $conn
 
 export default function (backendRef, backendResource, isHTTP2) {
   var name = backendResource.metadata.name
@@ -80,6 +81,10 @@ export default function (backendRef, backendResource, isHTTP2) {
       $.onStart(() => {
         $ctx.sendTime = Date.now()
         $ctx.target = $session.target.address
+        $conn = {
+          protocol: 'tcp',
+          target: $session.target,
+        }
       })
       $.muxHTTP(() => $session, { version: isHTTP2 ? 2 : 1 }).to($=>{
         if (tls) {
@@ -90,9 +95,11 @@ export default function (backendRef, backendResource, isHTTP2) {
                 log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} tls error:`, session.error)
               }
             }
-          }).to($=>$.pipe(backend.connect, () => $session.target))
+          }).to($=>$
+            .pipe(backend.connect, () => $conn)
+          )
         } else {
-          $.pipe(backend.connect, () => $session.target)
+          $.pipe(backend.connect, () => $conn)
         }
       })
 

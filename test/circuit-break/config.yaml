@@ -15,13 +15,15 @@ resources:
         port: 8000
     rules:
       - filters:
-        - type: RateLimit
+        - type: CircuitBreak
           key: xyz
-          rateLimit:
-            burst: 2
-            requests: 2
-            interval: 1
-            backlog: 5
+          circuitBreak:
+            latencyThreshold: 150
+            errorCountThreshold: 3
+            errorRatioThreshold: 0.5
+            concurrencyThreshold: 0
+            checkInterval: 5
+            breakInterval: 2.5
             response:
               status: 429
               headers:

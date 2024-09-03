@@ -6,22 +6,18 @@ export default function ({ fetch, log }) {
   )
 
   return Promise.all(new Array(10).fill().map(
-    (_, index) => {
+    (_, i) => {
       var t0 = Date.now()
       return fetch('localhost:8000', 'GET', 'http://localhost:8000').then(
-        res => ({
-          index,
-          status: res?.head?.status,
-          latency: Date.now() - t0,
-        })
+        res => {
+          var status = res?.head?.status
+          var latency = Date.now() - t0
+          log(i, 'status', status, 'latency', latency)
+          return { status, latency }
+        }
       )
     }
   )).then(results => {
-    results.forEach(
-      ({ index, status, latency }) => {
-        log(index, 'status', status, 'latency', latency)
-      }
-    )
     return (
       results[0].status === 200 &&
       results[1].status === 200 &&

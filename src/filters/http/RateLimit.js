@@ -1,15 +1,17 @@
 export default function (config) {
-  var $ctx
-
-  var key = config.rateLimit.key
+  var key = config.key
   var requests = Number.parseInt(config.rateLimit.requests)
   var interval = Number.parseFloat(config.rateLimit.interval)
   var burst = Number.parseInt(config.rateLimit.burst)
   var backlog = Number.parseInt(config.rateLimit.backlog)
-  var response = new Message({
-    status: config.rateLimit.response?.status || 429,
-    headers: config.rateLimit.response?.headers,
-  }, config.rateLimit.response?.body || 'Too many requests')
+
+  var response = new Message(
+    {
+      status: config.rateLimit.response?.status || 429,
+      headers: config.rateLimit.response?.headers,
+    },
+    config.rateLimit.response?.body || 'Too many requests'
+  )
 
   var rateQuota = new algo.Quota(burst || requests, {
       key: key ? `rate:${key}` : undefined,
@@ -23,7 +25,6 @@ export default function (config) {
   })
 
   return pipeline($=>$
-    .onStart(c => { $ctx = c })
     .pipe(
       evt => {
         if (evt instanceof MessageStart) {
@@ -43,7 +44,10 @@ export default function (config) {
             }
           })
         ),
-        'deny': ($=>$.replaceMessage(response))
+        'deny': ($=>$
+          .replaceData()
+          .replaceMessage(response)
+        )
       }
     )
   )

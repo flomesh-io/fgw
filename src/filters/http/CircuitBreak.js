@@ -38,20 +38,26 @@ export default function (config) {
     } else {
       var error = sharedStates.get('error')
     }
-    var start = sharedStates.get('start')
-    if (t - start >= checkInterval) {
-      var concurrency = sharedStates.get('concurrency')
-      if (
-        total > 0 &&
-        concurrency >= concurrencyThreshold &&
-        error >= errorCountThreshold &&
-        error / total >= errorRatioThreshold
-      ) {
-        sharedStates.set('brokenBefore', t + breakInterval)
-      }
-      sharedStates.set('start', t)
+    var concurrency = sharedStates.get('concurrency')
+    if (
+      total > 0 &&
+      concurrency >= concurrencyThreshold &&
+      error >= errorCountThreshold &&
+      error / total >= errorRatioThreshold
+    ) {
+      sharedStates.set('brokenBefore', t + breakInterval)
+      sharedStates.set('start', 0)
       sharedStates.set('total', 0)
       sharedStates.set('error', 0)
+    } else {
+      var start = sharedStates.get('start')
+      if (start && t - start >= checkInterval) {
+        sharedStates.set('start', t)
+        sharedStates.set('total', 0)
+        sharedStates.set('error', 0)
+      } else {
+        sharedStates.set('start', t)
+      }
     }
   }
 

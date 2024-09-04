@@ -7,7 +7,7 @@ export default function ({ fetch, log }) {
 
   return Promise.all(new Array(10).fill().map(
     (_, i) => {
-      return new Timeout(i * 1.5).wait().then(
+      return new Timeout(i * 1).wait().then(
         () => fetch('localhost:8000', 'GET', 'http://localhost:8000').then(
           res => {
             var status = res?.head?.status
@@ -22,13 +22,13 @@ export default function ({ fetch, log }) {
       results[0] === 200 &&
       results[1] === 200 &&
       results[2] === 200 &&
-      results[3] === 200 &&
-      results[4] === 200 &&
+      results[3] === 429 &&
+      results[4] === 429 &&
       results[5] === 429 &&
-      results[6] === 429 &&
+      results[6] === 200 &&
       results[7] === 200 &&
       results[8] === 200 &&
-      results[9] === 200
+      results[9] === 429
     )
   }).finally(() => {
     pipy.listen(8080, null)

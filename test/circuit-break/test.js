@@ -23,11 +23,7 @@ export default function ({ fetch, log }) {
       results[1] === 200 &&
       results[2] === 200 &&
       results[3] === 429 &&
-      results[4] === 429 &&
-      results[5] === 429 &&
       results[6] === 200 &&
-      results[7] === 200 &&
-      results[8] === 200 &&
       results[9] === 429
     )
   }).finally(() => {

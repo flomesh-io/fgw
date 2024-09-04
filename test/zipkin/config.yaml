@@ -1,0 +1,31 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    rules:
+      - filters:
+        - type: Zipkin
+          zipkin:
+            samplePercentage: 20
+        backendRefs:
+          - kind: Backend
+            name: hello
+
+- kind: Backend
+  metadata:
+    name: hello
+  spec:
+    targets:
+      - address: localhost
+        port: 8080

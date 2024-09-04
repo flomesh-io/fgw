@@ -35,6 +35,7 @@ resources:
     targetRefs:
       - kind: Backend
         name: test-service
+    algorithm: RoundRobin
     sessionPersistence:
       sessionName: user-id
       type: Cookie

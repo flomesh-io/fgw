@@ -1,0 +1,42 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    rules:
+      - filters:
+        - type: HTTPLog
+          key: xyz
+          httpLog:
+            target: http://localhost:8123/log
+            method: POST
+            headers:
+              foo: bar
+            batch:
+              size: 1
+              interval: 1
+              prefix: ""
+              postfix: ""
+              separator: "\n"
+            bufferLimit: 8388608
+        backendRefs:
+          - kind: Backend
+            name: hello
+
+- kind: Backend
+  metadata:
+    name: hello
+  spec:
+    targets:
+      - address: localhost
+        port: 8080

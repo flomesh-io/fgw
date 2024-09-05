@@ -65,6 +65,8 @@ function startFGW(path) {
     '--args',
     '--config', os.path.resolve(configFilename),
     '--debug',
+    '--pipy-options',
+    '--admin-port=6060',
   ]
 
   println(`  Starting fgw...`)

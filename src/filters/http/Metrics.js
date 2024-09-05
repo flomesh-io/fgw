@@ -14,19 +14,19 @@ var backends = new Set
 var meta_info = new stats.Gauge('fgw_meta_info', ['uuid', 'name', 'codebase', 'cluster'])
 meta_info.withLabels(PIPY_UUID, PIPY_NAME, PIPY_SOURCE, K8S_CLUSTER).set(1)
 
-var upstream_rq_retry = new stats.Counter('fgw_upstream_rq_retry', ['backend'])
-var upstream_rq_retry_success = new stats.Counter('fgw_upstream_rq_success', ['backend'])
-var upstream_rq_retry_limit_exceeded = new stats.Counter('fgw_upstream_rq_retry_limit_exceeded', ['backend'])
-var upstream_rq_retry_backoff_exponential = new stats.Counter('fgw_upstream_rq_retry_backoff_exponential', ['backend'])
-var upstream_connection_active = new stats.Gauge('fgw_upstream_connection_total', ['backend'])
-
 var bandwidth = new stats.Counter('fgw_bandwidth', ['type', 'backend', 'target', 'route'])
 var bandwidth_ingress = bandwidth.withLabels('ingress')
 var bandwidth_egress = bandwidth.withLabels('egress')
+var backend_connection_total = new stats.Gauge('fgw_backend_connection_total', ['backend'])
 
 var http_request_total = new stats.Counter('fgw_http_request_total')
 var http_status = new stats.Counter('fgw_http_status', ['backend', 'target', 'route', 'consumer', 'matched_host', 'matched_uri', 'code'])
 var http_latency = new stats.Histogram('fgw_http_latency', LATENCY_BUCKETS, ['backend', 'target', 'route', 'consumer', 'type'])
+
+var http_retry = new stats.Counter('fgw_http_retry', ['backend'])
+var http_retry_success = new stats.Counter('fgw_http_retry_success', ['backend'])
+var http_retry_limit_exceeded = new stats.Counter('fgw_http_retry_limit_exceeded', ['backend'])
+var http_retry_backoff_exponential = new stats.Counter('fgw_http_retry_backoff_exponential', ['backend'])
 
 export default function (config) {
   var sampleInterval = Number.parseFloat(config.metrics?.sampleInterval) || 5
@@ -34,7 +34,7 @@ export default function (config) {
   function updateUpstreamStats() {
     new Timeout(sampleInterval).wait().then(() => {
       backends.forEach(be => {
-        upstream_connection_active.withLabels(be.name).set(be.concurrency)
+        backend_connection_total.withLabels(be.name).set(be.concurrency)
       })
       updateUpstreamStats()
     })
@@ -76,14 +76,14 @@ export default function (config) {
 
       var retries = $ctx.retries
       if (retries.length > 0) {
-        upstream_rq_retry.withLabels(backend).increase()
+        http_retry.withLabels(backend).increase()
         if (retries[retries.length - 1].succeeded) {
-          upstream_rq_retry_success.withLabels(backend).increase()
+          http_retry_success.withLabels(backend).increase()
         } else {
-          upstream_rq_retry_limit_exceeded.withLabels(backend).increase()
+          http_retry_limit_exceeded.withLabels(backend).increase()
         }
         if (retries.length > 1) {
-          upstream_rq_retry_backoff_exponential.withLabels(backend).increase()
+          http_retry_backoff_exponential.withLabels(backend).increase()
         }
       }
       if ($ctx.backend) {

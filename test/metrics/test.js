@@ -39,7 +39,7 @@ export default function ({ fetch, log }) {
     res => {
       var lines = res.body.toString().split('\n').filter(
         line => (
-          line.startsWith('fgw_upstream_connection_total') ||
+          line.startsWith('fgw_backend_connection_total') ||
           line.startsWith('fgw_http_request_total') ||
           line.startsWith('fgw_http_status') ||
           line.startsWith('fgw_http_latency_bucket') ||
@@ -51,7 +51,7 @@ export default function ({ fetch, log }) {
         line => log(line)
       )
       return (
-        hasValue(lines, 'fgw_upstream_connection_total', 10) &&
+        hasValue(lines, 'fgw_backend_connection_total', 10) &&
         hasValue(lines, 'fgw_http_request_total', 11) &&
         hasValue(lines, 'fgw_http_status', 11) &&
         hasValue(lines, 'fgw_http_latency_bucket', 11) &&

@@ -12,9 +12,14 @@ export default function ({ fetch, log }) {
       req => {
         if (req.head.method === 'POST' && req.head.path === '/log') {
           req.body.toString().split('\n').forEach(
-            line => logs.push(JSON.parse(line))
+            line => {
+              var l = JSON.parse(line)
+              log(l.req.method, l.req.path, l.backend, l.target, l.res.status)
+              logs.push(l)
+            }
           )
         }
+        return new Message
       }
     )
   )

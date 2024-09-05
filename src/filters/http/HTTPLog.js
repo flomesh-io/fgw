@@ -46,7 +46,6 @@ export default function (config) {
       var response = $ctx.response
       var resHead = response.head
       var resTail = response.tail
-      println('log')
       log({
         type: 'fgw',
         meshName, node, pod,

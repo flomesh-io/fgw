@@ -23,7 +23,7 @@ resources:
             headers:
               foo: bar
             batch:
-              size: 1
+              size: 1000
               interval: 1
               prefix: ""
               postfix: ""

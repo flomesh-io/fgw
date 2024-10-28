@@ -28,6 +28,12 @@ resources:
         backendRefs:
           - kind: Backend
             name: service-retry
+        retry:
+          codes:
+            - 5xx
+            - 403
+          attempts: 3
+          backoff: 0.1
 
 - kind: Backend
   metadata:
@@ -44,15 +50,3 @@ resources:
     targets:
       - address: localhost
         port: 8080
-
-- kind: RetryPolicy
-  spec:
-    targetRefs:
-      - kind: Backend
-        name: service-retry
-    retry:
-      retryOn:
-        - 5xx
-        - 403
-      numRetries: 3
-      backoffBaseInterval: 0.1

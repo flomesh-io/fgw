@@ -188,7 +188,6 @@ export function makeResourceWatcher(gatewayFilter) {
         break
       case 'BackendLBPolicy':
       case 'BackendTLSPolicy':
-      case 'RetryPolicy':
         addDirtyRoutersByPolicy(res.spec?.targetRefs)
         if (oldResource && res !== oldResource) {
           addDirtyRoutersByPolicy(oldResource.spec?.targetRefs)

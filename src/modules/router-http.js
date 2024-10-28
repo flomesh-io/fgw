@@ -298,11 +298,72 @@ function makeRouter(listener, routeResources, gateway) {
   function makeBackendSelectorForRule(rule, isHTTP2) {
     var sessionPersistenceConfig = rule.sessionPersistence
     var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
+    var retryConfig = rule.retry
+    var retryPipeline = null
+
+    if (retryConfig) {
+      var retryCodes = {}
+      ;(retryConfig.codes || ['5xx']).forEach(code => {
+        if (code.toString().substring(1) === 'xx') {
+          var base = Number.parseInt(code.toString().charAt(0) + '00')
+          new Array(100).fill().forEach((_, i) => retryCodes[base + i] = true)
+        } else {
+          retryCodes[Number.parseInt(code)] = true
+        }
+      })
+
+      var $retryCounter = 0
+      retryPipeline = pipeline($=>$
+        .repeat(() => {
+          if ($retryCounter > 0) {
+            return new Timeout(retryConfig.backoff * Math.pow(2, $retryCounter - 1)).wait().then(true)
+          } else {
+            return false
+          }
+        }).to($=>$
+          .pipeNext()
+          .pipe(evt => {
+            if (evt instanceof MessageStart) {
+              var needRetry = (evt.head.status in retryCodes)
+              var wasRetry = ($retryCounter > 0)
+              if (wasRetry) {
+                $ctx.retries.push({
+                  target: $ctx.target,
+                  succeeded: !needRetry,
+                })
+              }
+              if (needRetry) {
+                if (++$retryCounter < retryConfig.attempts) {
+                  log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} retry ${$retryCounter} status ${evt.head.status}`)
+                  return 'retry'
+                } else {
+                  log?.(`Inb #${$ctx.parent.inbound.id} Req #${$ctx.id} retry ${$retryCounter} status ${evt.head.status} gave up`)
+                  $retryCounter = 0
+                  return 'conclude'
+                }
+              } else {
+                return 'conclude'
+              }
+            }
+          }, {
+            'retry': $=>$.replaceData().replaceMessage(new StreamEnd),
+            'conclude': $=>$,
+          })
+        )
+      )
+    }
+
     var selector = makeBackendSelector(
       'http', listener, rule,
+
       function (backendRef, backendResource, filters) {
         if (!backendResource && filters.length === 0) return response500
         var forwarder = backendResource ? [makeBalancer(backendRef, backendResource, gateway, isHTTP2)] : []
+
+        if (retryPipeline) {
+          forwarder.unshift(retryPipeline)
+        }
+
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve
           return pipeline($=>$
@@ -320,10 +381,12 @@ function makeRouter(listener, routeResources, gateway) {
         }
       }
     )
+
     if (sessionPersistence) {
       var restoreSession = sessionPersistence.restore
       return (head) => selector(restoreSession(head))
     }
+
     return () => selector()
   }
 }

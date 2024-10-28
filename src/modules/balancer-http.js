@@ -85,7 +85,7 @@ export default function (backendRef, backendResource, isHTTP2) {
           target: $session.target,
         }
       })
-      $.muxHTTP(() => $session, { version: isHTTP2 ? 2 : 1 }).to($=>{
+      $.muxHTTP(() => $session, { version: () => isHTTP2 || $session.target.protocol === 'h2c' ? 2 : 1 }).to($=>{
         if (tls) {
           $.connectTLS({
             ...tls,

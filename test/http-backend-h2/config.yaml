@@ -1,0 +1,30 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    rules:
+      - backendRefs:
+        - kind: Backend
+          name: test-svc
+
+- kind: Backend
+  metadata:
+    name: test-svc
+  spec:
+    targets:
+      - address: localhost
+        port: 8080
+      - address: localhost
+        port: 8080
+        appProtocol: h2c

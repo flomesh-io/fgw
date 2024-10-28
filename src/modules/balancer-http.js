@@ -8,11 +8,11 @@ var $ctx
 var $session
 var $conn
 
-export default function (backendRef, backendResource, isHTTP2) {
+export default function (backendRef, backendResource, gateway, isHTTP2) {
   var backend = makeBackend(backendResource.metadata.name)
   var balancer = backend.balancer
   var hc = makeHealthCheck(backendRef, backendResource)
-  var tls = makeBackendTLS(backendRef, backendResource)
+  var tls = makeBackendTLS(backendRef, backendResource, gateway)
 
   var backendLBPolicies = findPolicies('BackendLBPolicy', backendResource)
   var sessionPersistenceConfig = backendLBPolicies.find(r => r.spec.sessionPersistence)?.spec?.sessionPersistence

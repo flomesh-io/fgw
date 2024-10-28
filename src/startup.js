@@ -59,7 +59,7 @@ function makeListener(gateway, listener) {
 
   var routeResources = findRouteResources(gateway, listener)
   var routerKey = makeRouterKey(gateway, key)
-  var pipelines = [pipy.import(routeModuleName).default(routerKey, listener, routeResources)]
+  var pipelines = [pipy.import(routeModuleName).default(routerKey, listener, routeResources, gateway)]
 
   if (termTLS) {
     pipelines.unshift(

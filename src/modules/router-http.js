@@ -14,7 +14,7 @@ var $matchedRoute
 var $matchedRule
 var $selection
 
-export default function (routerKey, listener, routeResources) {
+export default function (routerKey, listener, routeResources, gateway) {
   var router = null
 
   function watch() {
@@ -22,7 +22,7 @@ export default function (routerKey, listener, routeResources) {
   }
 
   function update(listener, routeResources) {
-    router = makeRouter(listener, routeResources)
+    router = makeRouter(listener, routeResources, gateway)
     watch()
   }
 
@@ -92,7 +92,7 @@ export default function (routerKey, listener, routeResources) {
   )
 }
 
-function makeRouter(listener, routeResources) {
+function makeRouter(listener, routeResources, gateway) {
   var hostFullnames = {}
   var hostPostfixes = {}
 
@@ -302,7 +302,7 @@ function makeRouter(listener, routeResources) {
       'http', listener, rule,
       function (backendRef, backendResource, filters) {
         if (!backendResource && filters.length === 0) return response500
-        var forwarder = backendResource ? [makeBalancer(backendRef, backendResource, isHTTP2)] : []
+        var forwarder = backendResource ? [makeBalancer(backendRef, backendResource, gateway, isHTTP2)] : []
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve
           return pipeline($=>$

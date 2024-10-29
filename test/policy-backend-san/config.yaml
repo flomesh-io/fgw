@@ -1,0 +1,127 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    hostnames:
+      - www.test1.com
+    rules:
+      - backendRefs:
+        - kind: Backend
+          name: test-svc-1
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    hostnames:
+      - www.test2.com
+    rules:
+      - backendRefs:
+          - kind: Backend
+            name: test-svc-2
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+    hostnames:
+      - www.test3.com
+    rules:
+      - backendRefs:
+          - kind: Backend
+            name: test-svc-3
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8443
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8443
+
+- kind: Backend
+  metadata:
+    name: test-svc-3
+  spec:
+    targets:
+      - address: localhost
+        port: 8443
+
+- kind: BackendTLSPolicy
+  spec:
+    targetRefs:
+      - kind: Backend
+        name: test-svc-1
+    validation:
+      hostname: www.test.com
+      caCertificates:
+        - ca.crt: TestCA.crt
+      subjectAltNames:
+        - type: Hostname
+          hostname: foo.com
+
+- kind: BackendTLSPolicy
+  spec:
+    targetRefs:
+      - kind: Backend
+        name: test-svc-2
+    validation:
+      hostname: www.test.com
+      caCertificates:
+        - ca.crt: TestCA.crt
+      subjectAltNames:
+        - type: Hostname
+          hostname: bar.com
+
+- kind: BackendTLSPolicy
+  spec:
+    targetRefs:
+      - kind: Backend
+        name: test-svc-3
+    validation:
+      hostname: www.foo.com
+      caCertificates:
+        - ca.crt: TestCA.crt
+
+secrets:
+  TestCA.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIICqTCCAZECFG7H0Ao/z8NHFPUXWA/asNaKtDCDMA0GCSqGSIb3DQEBCwUAMBEx
+    DzANBgNVBAMMBlRlc3RDQTAeFw0yNDA4MDIxMjM0MzBaFw0zNDA3MzExMjM0MzBa
+    MBExDzANBgNVBAMMBlRlc3RDQTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoC
+    ggEBALLAl5GUj45J11GslJ98leKbTH58N024NcaF6i2OqXb5OA80LHPJf2cclf7E
+    bL67kS54IIEoCEEP4kkiNZIPKAC1dA2NCsSlNv3WKcQ7SAwQx8zki4v32Lk2p/5z
+    uEpRyYx6vNMf9Wj0WIsNVsXj5Tw//W/CW6tHbKqse9ZaJtQPw3aehxQrWtF7FNBR
+    nBwJXlJZXlCyCtxf5vdd5PcPiA+u/Zm/mbT7vA9qNcx1wLAvlWkV1bIaI8L1mrsl
+    i99iohPNlj0SE8reE0T6n/n2uV+E9Tlu33NQWEroeVue8qXFO4Grfe0bSetN/d0F
+    wvumpHpmdGjS9xiziu4UM5drB9ECAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAKLRJ
+    4cAM8DR/UTdsUbgwdxNQgBYEJxv5u0EfIxMDGHnm0Erhj2f0DXdyb+KJardz1szW
+    odBBdMbbsHCaHek4baaF6bBr6dLI1TN9IRP1MxRT27JCFLw8lz5L5cl0vHNXam0n
+    vM021mg6WuEY468G12Lom/oMiFdgL8GJUbB1p4ldp1+adIQER5N9p//8W4xQgfjW
+    WDvdeubOIybl1t/AWHHnIEenL6ye9rIrfBGQTIkywBsq6TPw6ziCAwK6EN0pwhYQ
+    FMsHmoShg9HIsepIw+Zi9ThajxReajWmyiPQhs/TZ48JbZ6RaiHj7vJeQYdm/Xy6
+    hrVaAT5GFGBqkckcWA==
+    -----END CERTIFICATE-----

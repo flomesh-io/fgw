@@ -17,27 +17,23 @@ resources:
       - matches:
         - path:
             type: Exact
-            value: /no-retry
+            value: /no-timeout
         backendRefs:
           - kind: Backend
-            name: test-svc
+            name: slow-svc
       - matches:
         - path:
             type: Exact
-            value: /retry
+            value: /timeout
         backendRefs:
           - kind: Backend
-            name: test-svc
-        retry:
-          codes:
-            - 5xx
-            - 403
-          attempts: 3
-          backoff: 0.1
+            name: slow-svc
+        timeouts:
+          request: 3
 
 - kind: Backend
   metadata:
-    name: test-svc
+    name: slow-svc
   spec:
     targets:
       - address: localhost

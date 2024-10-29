@@ -298,12 +298,33 @@ function makeRouter(listener, routeResources, gateway) {
   function makeBackendSelectorForRule(rule, isHTTP2) {
     var sessionPersistenceConfig = rule.sessionPersistence
     var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
+    var timeoutConfig = rule.timeouts
+    var timeoutPipeline = null
     var retryConfig = rule.retry
     var retryPipeline = null
+    var retryCodes = {}
+
+    if (timeoutConfig) {
+      var timeout = Math.min(
+        Number.parseFloat(timeoutConfig.request) || Number.POSITIVE_INFINITY,
+        Number.parseFloat(timeoutConfig.backendRequest) || Number.POSITIVE_INFINITY,
+      )
+      if (timeout > 0 && Number.isFinite(timeout)) {
+        var $branch
+        timeoutPipeline = pipeline($=>$
+          .forkRace(['forward', 'timeout']).to($=>$
+            .onStart(b => { $branch = b })
+            .pipe(() => $branch, {
+              'timeout': ($=>$.wait(() => new Timeout(timeout).wait()).replaceData().replaceMessage(new Message({ status: 504 }))),
+              'forward': ($=>$.pipeNext())
+            })
+          )
+        )
+      }
+    }
 
     if (retryConfig) {
-      var retryCodes = {}
-      ;(retryConfig.codes || ['5xx']).forEach(code => {
+      (retryConfig.codes || ['5xx']).forEach(code => {
         if (code.toString().substring(1) === 'xx') {
           var base = Number.parseInt(code.toString().charAt(0) + '00')
           new Array(100).fill().forEach((_, i) => retryCodes[base + i] = true)
@@ -360,9 +381,8 @@ function makeRouter(listener, routeResources, gateway) {
         if (!backendResource && filters.length === 0) return response500
         var forwarder = backendResource ? [makeBalancer(backendRef, backendResource, gateway, isHTTP2)] : []
 
-        if (retryPipeline) {
-          forwarder.unshift(retryPipeline)
-        }
+        if (retryPipeline) forwarder.unshift(retryPipeline)
+        if (timeoutPipeline) forwarder.unshift(timeoutPipeline)
 
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve

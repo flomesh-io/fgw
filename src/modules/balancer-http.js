@@ -54,7 +54,7 @@ export default function (backendRef, backendResource, gateway, isHTTP2) {
     $.handleMessageEnd(res => {
       var r = $ctx.response
       r.tail = res.tail
-      r.tailTime = res.tailTime
+      r.tailTime = Date.now()
     })
 
     if (log) {

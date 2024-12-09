@@ -1,0 +1,38 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test-dns
+        port: 5555
+        protocol: UDP
+
+- kind: UDPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test-dns
+    rules:
+      - filters:
+        - type: DNSModifier
+          dnsModifier:
+            domains:
+              - name: google.com
+                answer:
+                  rdata: 1.2.3.4
+              - name: x.com
+                answer:
+                  rdata: 0.0.0.0
+        backendRefs:
+          - kind: Backend
+            name: dns
+
+- kind: Backend
+  metadata:
+    name: dns
+  spec:
+    targets:
+      - address: 127.0.0.1
+        port: 5553

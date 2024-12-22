@@ -1,0 +1,44 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - port: 8000
+        protocol: HTTP
+        filters:
+          - type: IPRestriction
+            ipRestriction:
+              allowed:
+                - 0.0.0.0/0
+              forbidden:
+                - 127.0.0.1
+      - port: 8001
+        protocol: HTTP
+        filters:
+          - type: IPRestriction
+            ipRestriction:
+              allowed:
+                - 127.0.0.1
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        port: 8000
+      - kind: Gateway
+        name: test
+        port: 8001
+    rules:
+      - backendRefs:
+          - kind: Backend
+            name: hello
+
+- kind: Backend
+  metadata:
+    name: hello
+  spec:
+    targets:
+      - address: localhost
+        port: 8080

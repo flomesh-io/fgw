@@ -253,8 +253,10 @@
       ) => (
         (__host = attrs?.Host) ? (
           msg.head.headers.host = __host
-        ) : !proxyPreserveHostCache.get(__route) && (
+        ) : !proxyPreserveHostCache.get(__route) ? (
           msg.head.headers.host = __target
+        ) : (
+          __host = msg.head.headers.host
         ),
         attrs?.UpstreamCert ? (
           __cert = attrs?.UpstreamCert

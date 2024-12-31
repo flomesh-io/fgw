@@ -1,0 +1,25 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: hello
+        port: 8000
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: hello
+    rules:
+      - filters:
+        - type: RequestTermination
+          requestTermination:
+            response:
+              status: 200
+              headers:
+                foo: bar
+              body: Hello!

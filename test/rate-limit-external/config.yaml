@@ -1,0 +1,65 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test
+        port: 8000
+        protocol: HTTP
+
+- kind: Gateway
+  metadata:
+    name: throttle
+  spec:
+    listeners:
+      - name: throttle
+        port: 8001
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test
+    rules:
+      - filters:
+        - type: ExternalRateLimit
+          externalRateLimit:
+            throttleHost: localhost:8001
+            passHeaders:
+              - host
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: throttle
+        sectionName: throttle
+    rules:
+      - filters:
+        - type: RateLimit
+          key: xyz
+          rateLimit:
+            burst: 2
+            requests: 2
+            interval: 1
+            backlog: 5
+            response:
+              status: 429
+              headers:
+                foo: bar
+              body: Rate limit reached
+        - type: RequestTermination
+          requestTermination:
+            response:
+              status: 200
+
+- kind: Backend
+  metadata:
+    name: hello
+  spec:
+    targets:
+      - address: localhost
+        port: 8080

@@ -1,0 +1,48 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test
+        port: 8080
+        protocol: Dubbo
+
+- kind: DubboRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test
+    rules:
+      - matches:
+        - type: Exact
+          service: org.apache.dubbo.sample.UserProvider
+          version: v1
+          method: getUser
+          signature: I
+        backendRefs:
+          - kind: Backend
+            name: test-svc-1
+      - matches:
+        - type: RegularExpression
+          service: .*
+        backendRefs:
+          - kind: Backend
+            name: test-svc-2
+
+- kind: Backend
+  metadata:
+    name: test-svc-1
+  spec:
+    targets:
+      - address: localhost
+        port: 8081
+
+- kind: Backend
+  metadata:
+    name: test-svc-2
+  spec:
+    targets:
+      - address: localhost
+        port: 8082

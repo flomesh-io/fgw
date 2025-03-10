@@ -4,8 +4,13 @@ resources:
     name: test
   spec:
     listeners:
-      - name: test
+      - name: proxy
         port: 9090
+        protocol: TCP
+        filters:
+          - type: ProxyAccept
+      - name: proxy-mitm
+        port: 9091
         protocol: HTTP
         filters:
           - type: ProxyAccept
@@ -15,12 +20,22 @@ resources:
                 ca.crt: TestCA.crt
                 ca.key: TestCA.key
 
+- kind: TCPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: proxy
+    rules:
+      - filters:
+        - type: TCPForward
+
 - kind: HTTPRoute
   spec:
     parentRefs:
       - kind: Gateway
         name: test
-        sectionName: test
+        sectionName: proxy-mitm
     rules:
       - filters:
         - type: HTTPForward

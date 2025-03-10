@@ -7,11 +7,11 @@ export default function ({ log, fetchAll }) {
 
   var $response
 
-  var testSOCKS = pipeline($=>$
+  var testSOCKS = (proxyAddress) => pipeline($=>$
     .onStart(new Message({ headers: { host: 'localhost' }}))
     .muxHTTP().to($=>$
       .connectSOCKS(() => '127.0.0.1:8080').to($=>$
-        .connect('localhost:9090')
+        .connect(proxyAddress)
       )
     )
     .replaceMessage(msg => {
@@ -21,7 +21,7 @@ export default function ({ log, fetchAll }) {
     .onEnd(() => $response)
   )
 
-  var testHTTP = pipeline($=>$
+  var testHTTP = (proxyAddress) => pipeline($=>$
     .onStart(new Message({ headers: { host: 'localhost' }}))
     .muxHTTP().to($=>$
       .connectHTTPTunnel(
@@ -31,7 +31,7 @@ export default function ({ log, fetchAll }) {
         })
       ).to($=>$
         .muxHTTP().to($=>$
-          .connect('localhost:9090')
+          .connect(proxyAddress)
         )
       )
     )
@@ -43,8 +43,10 @@ export default function ({ log, fetchAll }) {
   )
 
   return Promise.all([
-    testSOCKS.spawn(),
-    testHTTP.spawn(),
+    testSOCKS('localhost:9090').spawn(),
+    testSOCKS('localhost:9091').spawn(),
+    testHTTP('localhost:9090').spawn(),
+    testHTTP('localhost:9091').spawn(),
   ]).then(responses => {
     var ok = responses.map(r => (
       r && r.head &&
@@ -52,7 +54,9 @@ export default function ({ log, fetchAll }) {
       r.body.toString() === 'hi'
     ))
     log(ok[0] ? 'PASS' : 'FAIL', 'Proxy via SOCKS')
-    log(ok[1] ? 'PASS' : 'FAIL', 'Proxy via HTTP')
+    log(ok[1] ? 'PASS' : 'FAIL', 'Proxy via SOCKS')
+    log(ok[2] ? 'PASS' : 'FAIL', 'Proxy via HTTP')
+    log(ok[3] ? 'PASS' : 'FAIL', 'Proxy via HTTP')
     return ok[0] && ok[1]
   }).finally(() => {
     pipy.listen(8080, null)

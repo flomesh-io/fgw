@@ -30,6 +30,9 @@ resources:
             throttleHost: localhost:8001
             passHeaders:
               - host
+        backendRefs:
+          - kind: Backend
+            name: hello
 
 - kind: HTTPRoute
   spec:

@@ -21,10 +21,11 @@ resources:
             domains:
               - name: google.com
                 answer:
-                  rdata: 1.2.3.4
+                  - type: A
+                    rdata: 1.2.3.4
               - name: x.com
                 answer:
-                  rdata: 0.0.0.0
+                  - rdata: 0.0.0.0
         backendRefs:
           - kind: Backend
             name: dns

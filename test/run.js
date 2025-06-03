@@ -36,7 +36,7 @@ function runOneTest() {
     kill = f
     println('  Running test...')
     os.chdir(os.path.join(rootpath, path))
-    var testMain =pipy.import(os.path.join('.', path, 'test.js')).default
+    var testMain = pipy.import(os.path.join('.', path, 'test.js')).default
     return testMain({ log, fetch, fetchAll })
   }).then(ok => {
     return new Timeout(1).wait().then(ok)
@@ -60,7 +60,7 @@ function startFGW(path) {
 
   var cmdline = [
     pipyFilename, '../src/main.js',
-    '--log-level=debug:thread',
+    '--log-level=debug:thread+dump',
     '--log-local-only',
     '--args',
     '--config', os.path.resolve(configFilename),
@@ -70,7 +70,6 @@ function startFGW(path) {
   ]
 
   println(`  Starting fgw...`)
-  println(`    ${cmdline.join(' ')}`)
 
   os.mkdir(logDirname, { recursive: true })
 
@@ -85,7 +84,7 @@ function startFGW(path) {
     .replaceStreamStart(evt => [new MessageStart, evt])
     .split('\n')
     .handleMessage(msg => {
-      if (msg.body.toString().indexOf('[thread] Thread 0 started') >= 0) {
+      if (msg.body.toString().indexOf('Start listening') >= 0) {
         println(`  Started.`)
         startupCallback(() => killProcess(new StreamEnd))
       }

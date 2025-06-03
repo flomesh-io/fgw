@@ -1,6 +1,6 @@
 import resources from '../resources.js'
 import makeBackendSelector from './backend-selector.js'
-import makeBalancer from './balancer-dubbo.js'
+import makeBalancer from './balancer.js'
 import { log } from '../utils.js'
 
 var response404 = pipeline($=>$.replaceMessage(new Message({ status: 404 })))
@@ -192,10 +192,9 @@ function makeRouter(listener, routeResources) {
   function makeBackendSelectorForRule(rule) {
     var selector = makeBackendSelector(
       'dubbo', listener, rule,
-
-      function (backendRef, backendResource, filters) {
+      function (backendRef, backendResource, filters, protocol) {
         if (!backendResource && filters.length === 0) return response500
-        var forwarder = backendResource ? [makeBalancer(backendRef, backendResource)] : []
+        var forwarder = backendResource ? [makeBalancer(protocol, backendRef, backendResource)] : []
         return pipeline($=>$
           .pipe([...filters, ...forwarder], () => $ctx)
           .onEnd(() => $selection.free?.())

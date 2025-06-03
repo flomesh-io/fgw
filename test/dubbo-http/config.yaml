@@ -1,0 +1,41 @@
+resources:
+- kind: Gateway
+  metadata:
+    name: test
+  spec:
+    listeners:
+      - name: test
+        port: 8080
+        protocol: HTTP
+
+- kind: HTTPRoute
+  spec:
+    parentRefs:
+      - kind: Gateway
+        name: test
+        sectionName: test
+    hostnames:
+      - test.com
+    rules:
+      - matches:
+          - path:
+              type: Exact
+              value: /user
+        filters:
+          - type: TranscodeDubbo
+            transcodeDubbo:
+              service: org.apache.dubbo.sample.UserProvider
+              version: v1
+              method: getUser
+              signature: I
+        backendRefs:
+          - kind: Backend
+            name: test-dubbo-svc
+
+- kind: Backend
+  metadata:
+    name: test-dubbo-svc
+  spec:
+    targets:
+      - address: localhost
+        port: 20880

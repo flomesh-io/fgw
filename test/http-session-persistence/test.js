@@ -21,7 +21,7 @@ export default function ({ fetch, log }) {
   var results = []
 
   function extractCookies(res) {
-    var cookies = res.head.headers['set-cookie'] || []
+    var cookies = res?.head?.headers?.['set-cookie'] || []
     if (typeof cookies === 'string') cookies = [cookies]
     return Object.fromEntries(
       cookies.map(

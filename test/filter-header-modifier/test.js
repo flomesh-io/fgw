@@ -23,6 +23,7 @@ export default function ({ fetch, log }) {
     log('REQ', req)
     log('RES', res)
     return (
+      req && res &&
       req.host === 'set-bar' &&
       req.accept === 'xxx' &&
       req['user-agent'] === undefined &&

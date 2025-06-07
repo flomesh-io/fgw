@@ -13,7 +13,7 @@ export default function (config) {
     .replaceMessage(
       req => {
         var body = req.body
-        var json = body.length > 0 ? JSON.decode(req.body) : []
+        var json = body.size > 0 ? JSON.decode(req.body) : []
         var params = (json instanceof Array ? json : [json])
         return new Message(
           {
@@ -23,7 +23,7 @@ export default function (config) {
             serializationType: 2,
           },
           Hessian.encode([
-            '2.0.2', service, version, method, signature, ...params
+            '2.0.2', service, version, method, signature, ...params, null
           ]
         ))
       }

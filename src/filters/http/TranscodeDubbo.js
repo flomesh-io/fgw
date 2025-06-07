@@ -12,11 +12,15 @@ export default function (config) {
     .onStart(c => { $ctx = c })
     .replaceMessage(
       req => {
-        var json = JSON.decode(req.body)
+        var body = req.body
+        var json = body.length > 0 ? JSON.decode(req.body) : []
         var params = (json instanceof Array ? json : [json])
         return new Message(
           {
             requestID: ++requestID,
+            isRequest: true,
+            isTwoWay: true,
+            serializationType: 2,
           },
           Hessian.encode([
             '2.0.2', service, version, method, signature, ...params

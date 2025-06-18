@@ -84,7 +84,7 @@ function startFGW(path) {
     .replaceStreamStart(evt => [new MessageStart, evt])
     .split('\n')
     .handleMessage(msg => {
-      if (msg.body.toString().indexOf('Start listening') >= 0) {
+      if (msg.body.toString().indexOf('FGW started') >= 0) {
         println(`  Started.`)
         startupCallback(() => killProcess(new StreamEnd))
       }

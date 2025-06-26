@@ -84,7 +84,7 @@ export default function (routerKey, listener, routeResources) {
 
   var handleStream = pipeline($=>$
     .decodeDubbo()
-    .demux().to(handleRequest)
+    .demuxQueue().to(handleRequest)
     .encodeDubbo()
   )
 

@@ -17,7 +17,7 @@ export default function ({ fetch, log }) {
           return new Message('hi')
         })
         .repeat(() => new Timeout(0.1).wait().then(() => --$counter > 0)).to($=>$
-          .mux({ maxIdle: 2 }).to($=>$
+          .muxQueue({ maxIdle: 2 }).to($=>$
             .connect('localhost:8000', { protocol: 'udp' })
             .replaceData(data => new Message(data))
           )

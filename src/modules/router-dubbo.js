@@ -95,10 +95,17 @@ export default function (routerKey, listener, routeResources) {
 }
 
 function makeRouter(listener, routeResources) {
+  var cache = new algo.Cache({ ttl: 3600 })
   var selector = makeRuleSelector(routeResources)
 
   return function (head, body) {
-    $selection = selector(body)
+    var key = body.slice(1,5).join(' ')
+    var val = cache.get(key)
+    if (val) {
+      $selection = val
+    } else {
+      cache.set(key, $selection = selector(body))
+    }
     log?.(
       `Inb #${$ctx.parent.inbound.id} Req #${$ctx.parent.messageCount+1}`, head.requestID,
       `backend ${$selection?.target?.backendRef?.name}`,

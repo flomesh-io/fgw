@@ -4,6 +4,8 @@ import makeBalancer from './balancer.js'
 import makeSessionPersistence from './session-persistence.js'
 import { log, stringifyHTTPHeaders } from '../utils.js'
 
+var USE_FAST_MATCH = true
+
 var response404 = pipeline($=>$.replaceMessage(new Message({ status: 404 })))
 var response500 = pipeline($=>$.replaceMessage(new Message({ status: 500 })))
 
@@ -131,6 +133,7 @@ function makeRouter(listener, routeResources, gateway) {
     var rules = routeResources.flatMap(resource => resource.spec.rules.map(
       r => [r, makeBackendSelectorForRule(r, kind === 'GRPCRoute'), resource]
     ))
+
     var matches = rules.flatMap(([rule, backendSelector, resource]) => {
       if (rule.matches) {
         return rule.matches.map(m => [m, backendSelector, resource, rule])
@@ -189,7 +192,7 @@ function makeRouter(listener, routeResources, gateway) {
             $matchedRule = rule
             return true
           }
-          return [matchFunc, backendSelector]
+          return [matchFunc, backendSelector, m]
         })
         break
       case 'GRPCRoute':
@@ -201,20 +204,80 @@ function makeRouter(listener, routeResources, gateway) {
             if (matchHeaders && !matchHeaders(head.headers)) return false
             return true
           }
-          return [matchFunc, backendSelector]
+          return [matchFunc, backendSelector, m]
         })
         break
       default: throw `route-http: unknown resource kind: '${kind}'`
     }
-    return function (head) {
-      var m = matches.find(([matchFunc]) => matchFunc(head))
-      if (m) return m[1](head)
+
+    var pathMatches = {}
+    var methodMatches = {}
+    var slowMatches = []
+
+    if (kind === 'HTTPRoute') {
+      matches.forEach(match => {
+        var m = match[2]
+        if (m.path && (m.path.type === 'Exact' || m.path.type === 'PathPrefix')) {
+          var path = m.path.value
+          if (m.path.type === 'PathPrefix') path = os.path.join(path, '*')
+          var methods = (pathMatches[path] ??= {})
+          var checks = (methods[m.method || '*'] ??= [])
+          checks.push(match)
+        } else if (m.path && m.path.type === 'PathPrefix') {
+          var path = m.path.value
+          if (m.path.type === 'PathPrefix') path = os.path.join(path, '*')
+          var methods = (pathMatches[path] ??= {})
+          var checks = (methods[m.method || '*'] ??= [])
+          checks.push(match)
+        } else if (m.method) {
+          var checks = (methodMatches[m.method] ??= [])
+          checks.push(match)
+        } else {
+          slowMatches.push(match)
+        }
+      })
+    } else {
+      slowMatches = matches
+    }
+
+    pathMatches = new algo.URLRouter(pathMatches)
+
+    if (USE_FAST_MATCH && kind === 'HTTPRoute') {
+      return function (head) {
+        var pm = pathMatches.find(head.path)
+        if (pm) {
+          var checks = pm[head.method] || pm['*']
+          if (checks) {
+            var m = checks.find(([matchFunc]) => matchFunc(head))
+            if (m) return m[1](head)
+          }
+        }
+
+        var checks = methodMatches[head.method]
+        if (checks) {
+          var m = checks.find(([matchFunc]) => matchFunc(head))
+          if (m) return m[1](head)
+        }
+
+        var m = slowMatches.find(([matchFunc]) => matchFunc(head))
+        if (m) return m[1](head)
+      }
+
+    } else {
+      return function (head) {
+        var m = matches.find(([matchFunc]) => matchFunc(head))
+        if (m) return m[1](head)
+      }
     }
   }
 
   function makeMethodMatcher(match) {
-    if (match) {
-      return method => method === match
+    if (USE_FAST_MATCH) {
+      return null
+    } else {
+      if (match) {
+        return method => method === match
+      }
     }
   }
 
@@ -224,15 +287,26 @@ function makeRouter(listener, routeResources, gateway) {
       var value = match.value
       switch (type) {
         case 'Exact':
-          var patterns = new algo.URLRouter({ [value]: true })
-          return path => patterns.find(path)
+          if (USE_FAST_MATCH) {
+            return null
+          } else {
+            var patterns = new algo.URLRouter({ [value]: true })
+            return path => patterns.find(path)
+          }
         case 'PathPrefix':
           var base = (value.endsWith('/') ? value.substring(0, value.length - 1) : value) || '/'
-          var patterns = new algo.URLRouter({ [base]: true, [base + '/*']: true })
-          return path => {
-            if (patterns.find(path)) {
+          if (USE_FAST_MATCH) {
+            return () => {
               $basePath = base
               return true
+            }
+          } else {
+            var patterns = new algo.URLRouter({ [base]: true, [base + '/*']: true })
+            return path => {
+              if (patterns.find(path)) {
+                $basePath = base
+                return true
+              }
             }
           }
         case 'RegularExpression':

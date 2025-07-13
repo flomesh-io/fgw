@@ -32,7 +32,7 @@ export default function (routerKey, listener, routeResources) {
           parent: $ctx,
           id: ++$ctx.messageCount,
           head: msg.head,
-          headTime: Date.now(),
+          headTime: pipy.performance.now(),
           tailTime: 0,
           sendTime: 0,
           body: null,
@@ -63,23 +63,10 @@ export default function (routerKey, listener, routeResources) {
     )
     .handleMessageEnd(
       function (msg) {
-        $ctx.tailTime = Date.now()
+        $ctx.tailTime = pipy.performance.now()
       }
     )
     .pipe(() => $selection ? $selection.target.pipeline : response404)
-    .handleMessageStart(
-      function (msg) {
-        var r = $ctx.response
-        r.head = msg.head
-        r.headTime = Date.now()
-      }
-    )
-    .handleMessageEnd(
-      function () {
-        var r = $ctx.response
-        r.tailTime = Date.now()
-      }
-    )
   )
 
   var handleStream = pipeline($=>$

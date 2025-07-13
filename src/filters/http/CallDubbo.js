@@ -1,3 +1,9 @@
+var latencyCount = new stats.Counter('fgw_dubbo_latency_count')
+var latencyTotal = new stats.Counter('fgw_dubbo_latency_total', ['scope'])
+var latencyTotalUpstream = latencyTotal.withLabels('upstream')
+var latencyTotalProxy = latencyTotal.withLabels('proxy')
+var latencyTotalRequest = latencyTotal.withLabels('request')
+
 export default function (config) {
   var conf = config.transcodeDubbo
   var version = conf.version || ''
@@ -6,6 +12,8 @@ export default function (config) {
   var signature = conf.signature || ''
 
   var $ctx
+  var $headTime
+
   var requestID = 0
 
   var pl = pipeline($=>$
@@ -24,15 +32,25 @@ export default function (config) {
           },
           Hessian.encode([
             '2.0.2', service, version, method, signature, ...params, null
-          ]
-        ))
+          ])
+        )
       }
     )
     .pipeNext()
+    .handleMessageStart(() => { $headTime = pipy.performance.now() })
     .replaceMessage(
       res => {
         var results = Hessian.decode(res.body)
-        return new Message(JSON.encode(results))
+        var msg = new Message(JSON.encode(results))
+        var response = $ctx.response
+        var timeRequest = $headTime - $ctx.headTime
+        var timeUpstream = response.headTime - $ctx.sendTime
+        var timeProxy = timeRequest - timeUpstream
+        latencyCount.increase()
+        latencyTotalUpstream.increase(timeUpstream)
+        latencyTotalProxy.increase(timeProxy)
+        latencyTotalRequest.increase(timeRequest)
+        return msg
       }
     )
   )

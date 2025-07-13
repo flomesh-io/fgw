@@ -38,7 +38,7 @@ export default function (routerKey, listener, routeResources, gateway) {
           host: $hostname,
           path: msg.head.path,
           head: msg.head,
-          headTime: Date.now(),
+          headTime: pipy.performance.now(),
           tail: null,
           tailTime: 0,
           sendTime: 0,
@@ -62,24 +62,10 @@ export default function (routerKey, listener, routeResources, gateway) {
     .handleMessageEnd(
       function (msg) {
         $ctx.tail = msg.tail
-        $ctx.tailTime = Date.now()
+        $ctx.tailTime = pipy.performance.now()
       }
     )
     .pipe(() => $selection ? $selection.target.pipeline : response404)
-    .handleMessageStart(
-      function (msg) {
-        var r = $ctx.response
-        r.head = msg.head
-        r.headTime = Date.now()
-      }
-    )
-    .handleMessageEnd(
-      function (msg) {
-        var r = $ctx.response
-        r.tail = msg.tail
-        r.tailTime = Date.now()
-      }
-    )
   )
 
   var handleStream = pipeline($=>$

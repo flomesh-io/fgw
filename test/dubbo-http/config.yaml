@@ -22,7 +22,7 @@ resources:
               type: Exact
               value: /user
         filters:
-          - type: TranscodeDubbo
+          - type: CallDubbo
             transcodeDubbo:
               service: org.apache.dubbo.sample.UserProvider
               version: v1

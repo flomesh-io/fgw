@@ -23,7 +23,7 @@ resources:
               value: /user
         filters:
           - type: CallDubbo
-            transcodeDubbo:
+            callDubbo:
               service: org.apache.dubbo.sample.UserProvider
               version: v1
               method: getUser

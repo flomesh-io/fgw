@@ -5,7 +5,7 @@ var latencyTotalProxy = latencyTotal.withLabels('proxy')
 var latencyTotalRequest = latencyTotal.withLabels('request')
 
 export default function (config) {
-  var conf = config.transcodeDubbo
+  var conf = config.callDubbo
   var version = conf.version || ''
   var service = conf.service || ''
   var method = conf.method || ''

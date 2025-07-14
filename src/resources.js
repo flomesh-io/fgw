@@ -23,7 +23,9 @@ function init(pathname, onResourceChange) {
       throw `configuration file or directory does not exist: ${pathname}`
     }
     if (s.isDirectory()) {
-      pipy.mount('config', pathname)
+      if (pipy.thread.id === 0) {
+        pipy.mount('config', pathname)
+      }
       configFile = null
     } else if (s.isFile()) {
       configFile = os.read(pathname)

@@ -36,6 +36,11 @@ resources:
       - kind: Backend
         name: test-service
     algorithm: RoundRobin
+    timeouts:
+      connect: 3
+      idle: 60
+      read: 60
+      write: 60
     sessionPersistence:
       sessionName: user-id
       type: Cookie

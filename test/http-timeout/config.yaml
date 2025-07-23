@@ -30,6 +30,15 @@ resources:
             name: slow-svc
         timeouts:
           request: 3
+      - matches:
+        - path:
+            type: Exact
+            value: /timeout-backend
+        backendRefs:
+          - kind: Backend
+            name: slow-svc
+        timeouts:
+          backendRequest: 3
 
 - kind: Backend
   metadata:

@@ -373,19 +373,16 @@ function makeRouter(listener, routeResources, gateway) {
     var sessionPersistenceConfig = rule.sessionPersistence
     var sessionPersistence = sessionPersistenceConfig && makeSessionPersistence(sessionPersistenceConfig)
     var timeoutConfig = rule.timeouts
-    var timeoutPipeline = null
+    var timeoutFrontendPipeline = null
+    var timeoutBackendPipeline = null
     var retryConfig = rule.retry
     var retryPipeline = null
     var retryCodes = {}
 
     if (timeoutConfig) {
-      var timeout = Math.min(
-        Number.parseFloat(timeoutConfig.request) || Number.POSITIVE_INFINITY,
-        Number.parseFloat(timeoutConfig.backendRequest) || Number.POSITIVE_INFINITY,
-      )
-      if (timeout > 0 && Number.isFinite(timeout)) {
+      var makeTimeoutPipeline = function (timeout) {
         var $branch
-        timeoutPipeline = pipeline($=>$
+        return pipeline($=>$
           .forkRace(['forward', 'timeout']).to($=>$
             .onStart(b => { $branch = b })
             .pipe(() => $branch, {
@@ -395,6 +392,10 @@ function makeRouter(listener, routeResources, gateway) {
           )
         )
       }
+      var timeoutFrontend = Number.parseFloat(timeoutConfig.request) || Number.POSITIVE_INFINITY
+      var timeoutBackend = Number.parseFloat(timeoutConfig.backendRequest) || Number.POSITIVE_INFINITY
+      if (timeoutFrontend > 0 && Number.isFinite(timeoutFrontend)) timeoutFrontendPipeline = makeTimeoutPipeline(timeoutFrontend)
+      if (timeoutBackend > 0 && Number.isFinite(timeoutBackend)) timeoutBackendPipeline = makeTimeoutPipeline(timeoutBackend)
     }
 
     if (retryConfig) {
@@ -457,13 +458,16 @@ function makeRouter(listener, routeResources, gateway) {
 
         if (protocol === 'http') {
           if (retryPipeline) forwarder.unshift(retryPipeline)
-          if (timeoutPipeline) forwarder.unshift(timeoutPipeline)
+          if (timeoutBackendPipeline) forwarder.unshift(timeoutBackendPipeline)
         }
+
+        var filterChain = [...filters, ...forwarder]
+        if (timeoutFrontendPipeline) filterChain.unshift(timeoutFrontendPipeline)
 
         if (sessionPersistence) {
           var preserveSession = sessionPersistence.preserve
           return pipeline($=>$
-            .pipe([...filters, ...forwarder], () => $ctx)
+            .pipe(filterChain, () => $ctx)
             .handleMessageStart(
               msg => preserveSession(msg.head, $selection?.target?.backendRef?.name)
             )
@@ -471,7 +475,7 @@ function makeRouter(listener, routeResources, gateway) {
           )
         } else {
           return pipeline($=>$
-            .pipe([...filters, ...forwarder], () => $ctx)
+            .pipe(filterChain, () => $ctx)
             .onEnd(() => $selection.free?.())
           )
         }

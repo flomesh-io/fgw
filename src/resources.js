@@ -148,11 +148,19 @@ function addUpdater(kind, key, cb) {
 function runUpdaters(kind, key, a, b, c) {
   var listMap = updaters[kind]
   if (listMap) {
-    var list = listMap[key]
-    if (list) {
-      delete listMap[key]
-      list.forEach(f => f(a, b, c))
+    if (key === undefined) {
+      delete updaters[kind]
+      Object.values(listMap).forEach(
+        list => list.forEach(f => f(a, b, c))
+      )
       return true
+    } else {
+      var list = listMap[key]
+      if (list) {
+        delete listMap[key]
+        list.forEach(f => f(a, b, c))
+        return true
+      }
     }
   }
   return false

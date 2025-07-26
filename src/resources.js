@@ -3,6 +3,7 @@ import { log, isIdentical } from './utils.js'
 var DEFAULT_CONFIG_PATH = '/etc/fgw'
 
 var resources = null
+var resourceMap = {}
 var files = {}
 var secrets = {}
 var updaters = {}
@@ -45,6 +46,7 @@ function init(pathname, onResourceChange) {
     }
 
     resources = config.resources
+    resources.forEach(r => appendResource(r))
     Object.entries(config.secrets || {}).forEach(([k, v]) => secrets[k] = v)
 
   } else {
@@ -55,6 +57,7 @@ function init(pathname, onResourceChange) {
         if (data && data.kind && data.spec) {
           log?.(`Load resource file: ${pathname}`)
           files[pathname] = data
+          appendResource(data)
         }
       }
     )
@@ -96,6 +99,8 @@ function readFile(pathname) {
 function changeFile(pathname, data) {
   var old = files[pathname]
   var cur = data
+  if (old) removeResource(old)
+  if (cur) appendResource(cur)
   var oldKind = old?.kind
   var curKind = cur?.kind
   if (curKind && curKind === oldKind) {
@@ -114,6 +119,29 @@ function changeFile(pathname, data) {
   }
 }
 
+function appendResource(resource) {
+  var kind = resource.kind
+  if (kind) {
+    var map = (resourceMap[kind] ??= { list: [], dict: {} })
+    var name = resource.metadata?.name
+    if (name) map.dict[name] = resource
+    map.list.push(resource)
+  }
+}
+
+function removeResource(resource) {
+  var kind = resource.kind
+  if (kind) {
+    var map = resourceMap[kind]
+    if (map) {
+      var i = map.list.indexOf(resource)
+      var name = resource.metadata?.name
+      if (name) delete map.dict[name]
+      if (i >= 0) map.list.splice(i, 1)
+    }
+  }
+}
+
 function isJSON(filename) {
   return filename.endsWith('.json')
 }
@@ -127,11 +155,13 @@ function isSecret(filename) {
 }
 
 function list(kind) {
-  if (resources) {
-    return resources.filter(r => r.kind === kind)
-  } else {
-    return Object.values(files).filter(r => r.kind === kind)
-  }
+  var list = resourceMap[kind]?.list
+  return list ? [...list] : []
+}
+
+function find(kind, name) {
+  var dict = resourceMap[kind]?.dict
+  return dict?.[name] || null
 }
 
 function setUpdater(kind, key, cb) {
@@ -228,6 +258,7 @@ var allExports = {
   init,
   initZTM,
   list,
+  find,
   secrets,
   setUpdater,
   addUpdater,

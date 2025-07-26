@@ -136,44 +136,45 @@ function makeRouter(listener, routeResources, gateway) {
 
     var matches = rules.flatMap(([rule, backendSelector, resource]) => {
       if (rule.matches) {
-        return rule.matches.map(m => [m, backendSelector, resource, rule])
+        return rule.matches.map(m => [m, backendSelector, resource, rule, ''])
       } else {
-        return [[{}, backendSelector, resource, rule]]
+        return [[{}, backendSelector, resource, rule, '']]
       }
+    })
+
+    matches.forEach((a, i) => {
+      a[4] = getMatchPriority(a[0], i)
     })
 
     matches.sort((a, b) => {
-      var ra = getMatchPriority(a[0])
-      var rb = getMatchPriority(b[0])
-      var i = ra.findIndex((r, i) => r !== rb[i])
-      if (i < 0) return 0
-      return ra[i] > rb[i] ? -1 : 1
+      return a[4] > b[4] ? -1 : 1
     })
 
-    function getMatchPriority(match) {
+    function getMatchPriority(match, index) {
       var ranks = new Array(5)
       switch (match.path?.type) {
         case 'Exact':
-          ranks[0] = 3
-          ranks[1] = match.path.value
+          ranks[0] = '3'
+          ranks[1] = '000'
           break
         case 'PathPrefix':
-          ranks[0] = 2
-          ranks[1] = match.path.value.length
+          ranks[0] = '2'
+          ranks[1] = match.path.value.length.toString().padStart(3, '0')
           break
         case 'RegularExpression':
-          ranks[0] = 1
-          ranks[1] = match.path.value.length
+          ranks[0] = '1'
+          ranks[1] = match.path.value.length.toString().padStart(3, '0')
           break
         default:
-          ranks[0] = 0
-          ranks[1] = 0
+          ranks[0] = '0'
+          ranks[1] = '000'
           break
       }
-      ranks[2] = Boolean(match.method)
-      ranks[3] = match.headers?.length || 0
-      ranks[4] = match.queryParams?.length || 0
-      return ranks
+      ranks[2] = (match.method ? '1' : '0')
+      ranks[3] = (match.headers?.length || 0).toString().padStart(3, '0')
+      ranks[4] = (match.queryParams?.length || 0).toString().padStart(3, '0')
+      ranks[5] = index.toString().padStart(6, '0')
+      return ranks.join('/')
     }
 
     switch (kind) {

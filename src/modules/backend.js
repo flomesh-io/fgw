@@ -142,9 +142,7 @@ var cache = new algo.Cache(
 )
 
 function findBackendResource(backendName) {
-  return resources.list('Backend').find(
-    r => r.metadata?.name === backendName
-  )
+  return resources.find('Backend', backendName)
 }
 
 function getTargets(backendResource) {

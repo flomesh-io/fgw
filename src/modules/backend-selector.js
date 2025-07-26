@@ -47,9 +47,7 @@ export default function (protocol, listener, rule, makeBalancer) {
     if (backendRef) {
       var kind = backendRef.kind || 'Backend'
       var name = backendRef.name
-      return resources.list(kind).find(
-        r => r.metadata.name === name
-      )
+      return resources.find(kind, name)
     }
   }
 }

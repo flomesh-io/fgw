@@ -18,14 +18,11 @@ var $selection
 
 export default function (routerKey, listener, routeResources, gateway) {
   var router = null
-
-  function watch() {
-    resources.setUpdater('Route', routerKey, update)
-  }
+  var watch = () => resources.setUpdater('Route', routerKey, update)
 
   function update(listener, routeResources) {
     router = makeRouter(listener, routeResources, gateway)
-    watch()
+    watch?.()
   }
 
   update(listener, routeResources)
@@ -74,10 +71,25 @@ export default function (routerKey, listener, routeResources, gateway) {
     .demuxHTTP().to(handleRequest)
   )
 
-  return pipeline($=>$
+  var p = pipeline($=>$
     .onStart(c => void ($ctx = c))
     .pipe(evt => evt instanceof MessageStart ? handleRequest : handleStream)
   )
+
+  log?.("Created router", routerKey)
+
+  var finalizer = new FinalizationRegistry(
+    () => {
+      log?.("Finalized router", routerKey)
+      router = null
+      watch = null
+      finalizer = null
+    }
+  )
+
+  finalizer.register(p)
+
+  return p
 }
 
 function makeRouter(listener, routeResources, gateway) {

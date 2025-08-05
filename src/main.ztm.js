@@ -1,6 +1,6 @@
 import resources from './resources.js'
 import { logEnable } from './utils.js'
-import { startGateway, makeResourceWatcher } from './startup.js'
+import { startGateway, makeResourceWatcher } from './gateway.js'
 
 export default function ({ mesh, app, utils }) {
   var cli = initCLI({ app, mesh, utils })

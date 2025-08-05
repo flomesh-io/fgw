@@ -2,7 +2,7 @@
 
 import options from './options.js'
 import resources from './resources.js'
-import { startGateway, makeResourceWatcher } from './startup.js'
+import { startGateway, makeResourceWatcher } from './gateway.js'
 import { enableLog, enableDump } from './utils.js'
 
 var opts = options(pipy.argv, {

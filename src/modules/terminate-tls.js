@@ -50,6 +50,8 @@ export default function (listener) {
     )
   }
 
+  var pqc = listener.tls?.pqc || null
+
   return pipeline($=>$
     .onStart(c => void ($ctx = c))
     .detectProtocol(proto => void ($proto = proto))
@@ -72,6 +74,7 @@ export default function (listener) {
                 .acceptTLS({
                   certificate: () => $ctx.serverCert,
                   trusted,
+                  pqc,
                   onState: session => {
                     if (session.state === 'connected') {
                       $ctx.clientCert = session.peer

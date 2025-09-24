@@ -5,6 +5,7 @@ export default function (backendRef, backendResource, gateway) {
   var backendTLSPolicies = findPolicies('BackendTLSPolicy', backendResource)
   var tlsCertificate = gateway.spec.backendTLS?.clientCertificate
   var tlsValidationConfig = backendTLSPolicies.find(r => r.spec.validation)?.spec?.validation
+  var tlsPQC = backendTLSPolicies.find(r => r.spec.pqc)?.spec?.pqc
   var tlsConfig = null
 
   if (tlsCertificate) {
@@ -37,5 +38,10 @@ export default function (backendRef, backendResource, gateway) {
       }
     }
   }
+
+  if (tlsPQC) {
+    tlsConfig.pqc = tlsPQC
+  }
+
   return tlsConfig
 }

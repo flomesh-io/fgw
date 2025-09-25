@@ -1,11 +1,11 @@
 import resources from './resources.js'
-import { logEnable } from './utils.js'
+import { enableLog } from './utils.js'
 import { startGateway, makeResourceWatcher } from './gateway.js'
 
 export default function ({ mesh, app, utils }) {
   var cli = initCLI({ app, mesh, utils })
 
-  logEnable(true)
+  enableLog(true)
 
   resources.initZTM(
     { mesh, app },
@@ -86,6 +86,7 @@ function initCLI({ mesh, app, utils }) {
       output('ztm: ')
       output(err.message || err.toString())
       output('\n')
+      if (err.stack) output(err.stack)
     }
 
     function flush() {
@@ -105,7 +106,8 @@ function initCLI({ mesh, app, utils }) {
             action: (args) => {
               var meshDir = `/users/${app.username}/resources/`
               var localDir = os.path.join(cwd, args['<dir>'])
-              return mesh.dir(meshDir).then(meshPaths => {
+              return mesh.list(meshDir).then(files => {
+                var meshPaths = Object.keys(files)
                 var localPaths = []
                 listDirTree(localPaths, localDir)
                 localPaths.forEach(localPath => {

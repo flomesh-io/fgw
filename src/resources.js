@@ -199,13 +199,14 @@ function runUpdaters(kind, key, a, b, c) {
 function initZTM({ mesh, app }, onResourceChange) {
   allExports.ztm = { mesh, app }
   var resourceDir = `/users/${app.username}/resources/`
-  return mesh.dir(resourceDir).then(
-    paths => Promise.all(paths.map(
+  return mesh.list(resourceDir).then(
+    list => Promise.all(Object.keys(list).map(
       pathname => readFileZTM(mesh, app, pathname).then(
         data => {
           if (data && data.kind && data.spec) {
             app.log(`Load resource file: ${pathname}`)
             files[pathname] = data
+            appendResource(data)
           }
         }
       )

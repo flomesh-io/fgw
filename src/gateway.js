@@ -87,6 +87,7 @@ function makeListener(gateway, listener) {
         originalTarget: undefined,
         originalServerName: undefined,
         messageCount: 0,
+        tls: null,
         serverName: undefined,
         serverCert: null,
         clientCert: null,

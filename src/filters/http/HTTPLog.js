@@ -40,6 +40,7 @@ export default function (config) {
     .pipeNext()
     .handleMessageEnd(() => {
       var inbound = $ctx.parent.inbound
+      var tls = $ctx.parent.tls
       var reqHead = $ctx.head
       var reqTail = $ctx.tail
       var headers = reqHead.headers
@@ -54,6 +55,18 @@ export default function (config) {
         localPort: inbound.localPort,
         remoteAddr: inbound.remoteAddr,
         remotePort: inbound.remotePort,
+        tls: tls && {
+          protocol: tls.protocol,
+          hostname: tls.hostname,
+          cipherName: tls.cipherName,
+          cipherVersion: tls.cipherVersion,
+          cipherBits: tls.cipherBits,
+          negotiatedGroup: tls.negotiatedGroup,
+          signature: tls.signature,
+          signatureType: tls.signatureType,
+          peerSignature: tls.peerSignature,
+          peerSignatureType: tls.peerSignatureType,
+        },
         reqTime: timeOrigin + $ctx.headTime,
         resTime: timeOrigin + response.headTime,
         endTime: timeOrigin + response.tailTime,

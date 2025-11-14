@@ -78,6 +78,7 @@ export default function (listener) {
                   onState: session => {
                     if (session.state === 'connected') {
                       $ctx.clientCert = session.peer
+                      $ctx.tls = session
                     } else if (session.error) {
                       log?.(`Inb #${$ctx.inbound.id} tls error:`, session.error)
                     }
